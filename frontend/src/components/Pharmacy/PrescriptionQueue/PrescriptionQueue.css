@@ -1,0 +1,59 @@
+.queue-container {
+  padding: 30px;
+  flex-grow: 1;
+  background-color: #ffffff;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background-color: #eef0ff;
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.left .name {
+  font-weight: 600;
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+.left .info {
+  display: flex;
+  gap: 20px;
+  color: #333;
+  font-size: 14px;
+  align-items: center;
+}
+
+.date {
+  display: flex;
+  align-items: center;
+}
+
+.details-btn {
+  background-color: #3A40DF;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.details-btn:hover {
+  background-color: #3A40DF;
+}
