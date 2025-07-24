@@ -1,0 +1,75 @@
+.inventory-container {
+  padding: 20px;
+  width: 100%;
+}
+
+.inventory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.inventory-header h2 {
+  font-size: 24px;
+  color: #000;
+}
+
+.add-medicine-btn {
+  padding: 10px 20px;
+  background-color: #3A40DF;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-right: 100px;
+  
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inventory-table th,
+.inventory-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.status {
+  font-weight: bold;
+}
+
+.status.in-stock {
+  color: green;
+}
+
+.status.low-stock {
+  color: orange;
+}
+
+.status.expired {
+  color: red;
+}
+
+.edit-btn {
+  background-color: #3A40DF;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  margin-right: 5px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.delete-btn {
+  background-color: red;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
