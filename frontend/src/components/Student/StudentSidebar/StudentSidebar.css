@@ -1,0 +1,75 @@
+/* Sidebar Container */
+.sidebar {
+  width: 240px;
+  height: 100vh;
+  background-color: #0e1b2c;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  justify-content: space-between;
+}
+
+/* Logo Image */
+.logo-img {
+  height: 100px;
+  width: 220px;
+  object-fit: contain;
+  margin-bottom: 20px;
+  margin-right: 35px;
+  align-items: center;
+}
+
+/* Menu Styles */
+.menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+  color: white;
+}
+
+/* Each menu item */
+.menu li {
+  margin-bottom: 10px;
+}
+
+/* Link inside menu items styled as button */
+.menu-button {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: white;
+  background-color: transparent;
+  transition: background-color 0.3s ease;
+}
+
+/* Icon style inside menu */
+.menu-icon {
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+/* Hover and active states */
+.menu-button:hover,
+.menu-button.active {
+  background-color: #3A40DF;
+}
+
+/* Settings Section */
+.settings {
+ 
+  align-items: center;
+  gap: 1px;
+  padding: 12px 16px;
+  cursor: pointer;
+  background-color: #0e1b2c;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+}
+
+.settings:hover {
+  background-color: #3A40DF;
+}
