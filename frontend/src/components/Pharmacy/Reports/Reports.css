@@ -1,0 +1,73 @@
+/* /components/Reports/Reports.css */
+.reports-container {
+  padding: 40px;
+  background: #f4f6f8;
+  min-height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.reports-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #2b2e4a;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 cards per row */
+  gap: 25px;
+}
+
+.report-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease-in-out;
+}
+
+.report-card:hover {
+  transform: translateY(-4px);
+}
+
+.report-card h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 20px;
+}
+
+.report-card table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.report-card th,
+.report-card td {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid #e0e0e0;
+  color: #333;
+}
+
+.report-card th {
+  font-weight: 600;
+  background-color: #f7f7f7;
+}
+
+.chart-card {
+  padding-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+  .reports-grid {
+    grid-template-columns: 1fr; /* Stack vertically on small screens */
+  }
+
+  .reports-title {
+    font-size: 26px;
+  }
+}
