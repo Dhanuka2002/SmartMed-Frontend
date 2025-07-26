@@ -1,0 +1,11 @@
+.topbar {
+  background-color: #3A40DF;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  color: white;
+  font-weight: bold;
+  font-size: 22px;
+  
+}
