@@ -1,3 +1,179 @@
+/* QR Form Card Styles */
+.qr-form-card {
+  width: 100%;
+  max-width: 600px;
+  margin: 32px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+  padding: 32px 28px 24px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.qr-form-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.qr-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.qr-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.qr-form-row label {
+  font-weight: 500;
+  color: #222;
+}
+.qr-form-row input,
+.qr-form-row select,
+.qr-form-row textarea {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 16px;
+  background: #f9fafb;
+  transition: border 0.2s;
+}
+.qr-form-row input:focus,
+.qr-form-row select:focus,
+.qr-form-row textarea:focus {
+  border: 1.5px solid #2563eb;
+  outline: none;
+  background: #fff;
+}
+.qr-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 18px;
+}
+.qr-form-cancel {
+  background: #e5e7eb;
+  color: #222;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.qr-form-cancel:hover {
+  background: #d1d5db;
+}
+.qr-form-submit {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.qr-form-submit:hover {
+  background: #174bbd;
+}
+/* Full-width Generate QR Card styles */
+.generate-qr-card {
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 24px;
+  margin: 24px 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.generate-qr-content {
+  flex: 1;
+}
+
+.generate-qr-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.generate-qr-desc {
+  color: #666;
+  margin-bottom: 0;
+  text-align: left;
+  font-size: 16px;
+}
+
+.generate-qr-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 36px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-left: 32px;
+}
+.generate-qr-btn:hover {
+  background: #174bbd;
+}
+/* Full-width Generate QR Card styles */
+.generate-qr-card {
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 24px;
+  margin: 24px 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.generate-qr-card h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.generate-qr-card p {
+  color: #666;
+  margin-bottom: 0;
+  text-align: left;
+  font-size: 16px;
+}
+
+.generate-qr-card button {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 36px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-left: 32px;
+}
+.generate-qr-card button:hover {
+  background: #174bbd;
+}
 /* Modern Student Dashboard Styles */
 .dashboard-container {
   padding: 0;
