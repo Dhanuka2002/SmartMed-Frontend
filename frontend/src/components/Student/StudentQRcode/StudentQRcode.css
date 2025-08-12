@@ -221,6 +221,8 @@
   line-height: 1.5;
 }
 
+
+
 /* Responsive Design */
 @media (max-width: 480px) {
   .qr-main-container {

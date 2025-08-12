@@ -29,37 +29,25 @@ const Login = () => {
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) {
-        // If server returns error status, get error message
-        const errorData = await response.json();
-        alert(errorData.message || "Login failed");
-        return;
-      }
+      // ✅ Use text() not json()
+      const result = await response.text();
+      alert(result);
 
-      const result = await response.json(); // Parse JSON here
-
-      alert(result.message);
-
-      if (result.status === "success") {
-        // Save name and role to localStorage
-        localStorage.setItem("studentName", result.name);
-        localStorage.setItem("userRole", result.role);
-
-        if (result.role === "Student") {
+      if (result.includes("Login successful")) {
+        // ✅ Extract role from text
+        if (result.includes("Student")) {
           navigate("/student/dashboard");
-        } else if (result.role === "Doctor") {
+        } else if (result.includes("Doctor")) {
           navigate("/doctor/dashboard");
-        } else if (result.role === "Pharmacy") {
+        } else if (result.includes("Pharmacy")) {
           navigate("/");
         } else {
           alert("Unknown role!");
         }
-      } else {
-        alert(result.message || "Login failed");
       }
     } catch (error) {
-      console.error("Login error:", error);
-      alert("Error occurred during login");
+      console.error(error);
+      alert("Error occurred!");
     }
   };
 
@@ -111,4 +99,4 @@ const Login = () => {
   );
 };
 
-export default Login;  
+export default Login;

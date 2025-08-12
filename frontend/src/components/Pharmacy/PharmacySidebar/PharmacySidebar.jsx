@@ -16,7 +16,7 @@ function Sidebar() {
       <ul className="menu">
         <li>
           <NavLink 
-            to="/" 
+            to="/pharmacy/queue" 
             end
             className={({ isActive }) => isActive ? "menu-button active" : "menu-button"}
           >
