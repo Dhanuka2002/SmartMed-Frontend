@@ -58,15 +58,6 @@ function Sidebar() {
             <FiBarChart2 size={18} className="menu-icon" />
             Reports
           </NavLink>
-
-           <NavLink 
-            to="/student/entering-details"
-            className={({ isActive }) => isActive ? "menu-button active" : "menu-button"}
-          >
-            <FiBarChart2 size={18} className="menu-icon" />
-            Entering Details
-          </NavLink>
-
         </li>
       </ul>
 
