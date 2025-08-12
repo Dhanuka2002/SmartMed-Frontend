@@ -167,7 +167,7 @@ function InventoryManagement() {
         <div className="alerts-section">
           {lowStockMedicines.length > 0 && (
             <div className="alert low-stock-alert">
-              <h4>⚠️ Low Stock Alert</h4>
+              <h4>⚠ Low Stock Alert</h4>
               <p>{lowStockMedicines.length} medicine(s) are running low: {lowStockMedicines.map(med => med.name).join(", ")}</p>
             </div>
           )}
