@@ -202,7 +202,7 @@
 .queue-table th:nth-child(2) { width: 25%; } /* Student Name */
 .queue-table th:nth-child(3) { width: 15%; } /* Status */
 .queue-table th:nth-child(4) { width: 15%; } /* Priority */
-.queue-table th:nth-child(5) { width: 13%; } /* Wait Time */
+
 .queue-table th:nth-child(6) { width: 20%; } /* Action */
 
 .queue-table td {
@@ -301,12 +301,7 @@
   color: #6b7280;
 }
 
-.wait-time {
-  font-weight: 600;
-  color: #6b7280;
-  font-size: 0.9rem;
-  text-align: center;
-}
+
 
 /* Action Select */
 .action-select {
@@ -330,25 +325,7 @@
   transform: translateY(-1px);
 }
 
-.action-skip {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #ffffff;
-}
 
-.action-skip:hover {
-  background: linear-gradient(135deg, #d97706, #b45309);
-  transform: translateY(-1px);
-}
-
-.action-hold {
-  background: linear-gradient(135deg, #6b7280, #4b5563);
-  color: #ffffff;
-}
-
-.action-hold:hover {
-  background: linear-gradient(135deg, #4b5563, #374151);
-  transform: translateY(-1px);
-}
 
 /* Empty State */
 .empty-state {
@@ -449,5 +426,91 @@
   .action-select {
     min-width: 90px;
     font-size: 0.8rem;
+  }
+}
+
+/* -------- Modal Styles -------- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background-color: #fff;
+  padding: 24px 32px;
+  border-radius: 12px;
+  width: 400px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal h2 {
+  margin-bottom: 16px;
+  font-size: 20px;
+  color: #333;
+}
+
+.modal form {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal input[type="text"],
+.modal select {
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  transition: border-color 0.2s;
+}
+
+.modal input[type="text"]:focus,
+.modal select:focus {
+  outline: none;
+  border-color: #3b82f6; /* Blue */
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.modal .btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.modal .btn-primary {
+  background-color: #3b82f6;
+  color: #fff;
+}
+
+.modal .btn-cancel {
+  background-color: #e5e7eb;
+  color: #111827;
+}
+
+@keyframes fadeIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }
