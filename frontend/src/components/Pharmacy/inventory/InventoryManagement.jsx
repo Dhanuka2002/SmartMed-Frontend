@@ -1,60 +1,80 @@
 import React, { useState, useEffect } from "react";
 import "./InventoryManagement.css";
+import { usePrescription } from "../../../contexts/PrescriptionContext";
+import { useMedicineInventory } from "../../../contexts/MedicineInventoryContext";
 
 function InventoryManagement() {
-  const [medicines, setMedicines] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
+  const { 
+    prescriptions, 
+    dispensedPrescriptions, 
+    dispensePrescription: contextDispensePrescription,
+    addPrescription 
+  } = usePrescription();
 
-  // Track the medicine we want to edit; null means "add new"
-  const [editMedicine, setEditMedicine] = useState(null);
+  const {
+    medicines,
+    addMedicine,
+    updateMedicine,
+    deleteMedicine,
+    dispenseMedicines,
+    getLowStockMedicines,
+    getExpiredMedicines,
+    getNearExpiryMedicines
+  } = useMedicineInventory();
 
-  const [newMedicine, setNewMedicine] = useState({
+  const [activeTab, setActiveTab] = useState("inventory");
+
+  const [showModal, setShowModal] = useState(false);
+  const [editingMedicine, setEditingMedicine] = useState(null);
+  const [formData, setFormData] = useState({
     name: "",
     quantity: "",
     expiry: "",
     category: "",
-    status: "In Stock",
+    minStock: "",
+    dosage: "",
+    batchNumber: "",
   });
 
-  // Fetch medicines on component load
-  useEffect(() => {
-    fetchMedicines();
-  }, []);
-
-  // If editMedicine changes, update the form fields
-  useEffect(() => {
-    if (editMedicine) {
-      setNewMedicine({
-        name: editMedicine.name,
-        quantity: editMedicine.quantity,
-        expiry: editMedicine.expiry,
-        category: editMedicine.category,
-        status: editMedicine.status,
-        id: editMedicine.id,
-      });
-      setShowForm(true);
+  const getStatus = (medicine) => {
+    const today = new Date();
+    const expiryDate = new Date(medicine.expiry);
+    const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+    
+    if (expiryDate < today) {
+      return "Expired";
+    } else if (daysUntilExpiry <= 30 && daysUntilExpiry > 0) {
+      return "Near Expiry";
+    } else if (medicine.quantity <= medicine.minStock) {
+      return "Low Stock";
     } else {
-      setNewMedicine({
-        name: "",
-        quantity: "",
-        expiry: "",
-        category: "",
-        status: "In Stock",
-      });
+      return "In Stock";
     }
-  }, [editMedicine]);
+  };
 
-  const fetchMedicines = async () => {
-    try {
-      const response = await fetch("http://localhost:8081/api/medicines");
-      if (!response.ok) throw new Error("Failed to fetch medicines");
-      const data = await response.json();
-      setMedicines(data);
-    } catch (error) {
-      console.error(error);
-      alert("Error fetching medicines");
+  const dispensePrescription = (prescriptionId) => {
+    const prescription = prescriptions.find(p => p.id === prescriptionId);
+    if (!prescription) return;
+
+    let canDispense = true;
+    const insufficientMedicines = [];
+
+    prescription.medicines.forEach(prescMed => {
+      const medicine = medicines.find(m => m.id === prescMed.medicineId);
+      if (!medicine || medicine.quantity < prescMed.quantity) {
+        canDispense = false;
+        insufficientMedicines.push(prescMed.medicineName);
+      }
+    });
+
+    if (!canDispense) {
+      alert(`Cannot dispense prescription. Insufficient stock for: ${insufficientMedicines.join(", ")}`);
+      return;
     }
+
+    // Use the context function to update medicine quantities
+    dispenseMedicines(prescription.medicines);
+    contextDispensePrescription(prescriptionId);
   };
 
   const getStatusClass = (status) => {
@@ -63,6 +83,8 @@ function InventoryManagement() {
         return "status in-stock";
       case "Low Stock":
         return "status low-stock";
+      case "Near Expiry":
+        return "status near-expiry";
       case "Expired":
         return "status expired";
       default:
@@ -72,195 +94,473 @@ function InventoryManagement() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewMedicine({ ...newMedicine, [name]: value });
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  // Handle form submit for add or edit
-  const handleSaveMedicine = async (e) => {
-    e.preventDefault();
-
-    if (!newMedicine.name || !newMedicine.quantity || !newMedicine.expiry) {
-      alert("Please fill in all required fields!");
-      return;
-    }
-
-    // Automatically set status based on quantity
-    let status = "In Stock";
-    if (Number(newMedicine.quantity) < 20) {
-      status = "Low Stock";
-    }
-
-    const medicineToSave = { ...newMedicine, status };
-
-    try {
-      let response;
-      if (editMedicine) {
-        // Editing existing medicine - PUT request
-        response = await fetch(
-          `http://localhost:8081/api/medicines/${newMedicine.id}`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(medicineToSave),
-          }
-        );
-      } else {
-        // Adding new medicine - POST request
-        response = await fetch("http://localhost:8081/api/medicines", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(medicineToSave),
-        });
-      }
-
-      if (!response.ok) throw new Error("Failed to save medicine");
-
-      await fetchMedicines();
-
-      setNewMedicine({
-        name: "",
-        quantity: "",
-        expiry: "",
-        category: "",
-        status: "In Stock",
-      });
-      closeModal();
-    } catch (error) {
-      console.error(error);
-      alert("Error saving medicine");
-    }
+  const openAddModal = () => {
+    setEditingMedicine(null);
+    setFormData({
+      name: "",
+      quantity: "",
+      expiry: "",
+      category: "",
+      minStock: "",
+      dosage: "",
+      batchNumber: "",
+    });
+    setShowModal(true);
   };
 
-  // Delete medicine by id
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this medicine?")) return;
-
-    try {
-      const response = await fetch(
-        `http://localhost:8081/api/medicines/${id}`,
-        {
-          method: "DELETE",
-        }
-      );
-      if (!response.ok) throw new Error("Failed to delete medicine");
-
-      setMedicines(medicines.filter((med) => med.id !== id));
-    } catch (error) {
-      console.error(error);
-      alert("Error deleting medicine");
-    }
-  };
-
-  // Open modal to edit existing medicine
   const openEditModal = (medicine) => {
-    setEditMedicine(medicine);
+    setEditingMedicine(medicine);
+    setFormData({
+      name: medicine.name,
+      quantity: medicine.quantity.toString(),
+      expiry: medicine.expiry,
+      category: medicine.category,
+      minStock: medicine.minStock.toString(),
+      dosage: medicine.dosage || "",
+      batchNumber: medicine.batchNumber || "",
+    });
+    setShowModal(true);
   };
 
   const closeModal = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      setShowForm(false);
-      setIsClosing(false);
-      setEditMedicine(null);
-    }, 300);
+    setShowModal(false);
+    setEditingMedicine(null);
+    setFormData({
+      name: "",
+      quantity: "",
+      expiry: "",
+      category: "",
+      minStock: "",
+      dosage: "",
+      batchNumber: "",
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.quantity || !formData.expiry || !formData.category || !formData.minStock || !formData.dosage || !formData.batchNumber) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    const medicineData = {
+      name: formData.name,
+      quantity: parseInt(formData.quantity),
+      expiry: formData.expiry,
+      category: formData.category,
+      minStock: parseInt(formData.minStock),
+      dosage: formData.dosage,
+      batchNumber: formData.batchNumber,
+    };
+
+    if (editingMedicine) {
+      // Edit existing medicine using context
+      updateMedicine(editingMedicine.id, medicineData);
+    } else {
+      // Add new medicine using context
+      addMedicine(medicineData);
+    }
+
+    closeModal();
+  };
+
+  const handleDeleteMedicine = (id) => {
+    if (window.confirm("Are you sure you want to delete this medicine?")) {
+      deleteMedicine(id);
+    }
+  };
+
+  const lowStockMedicines = getLowStockMedicines();
+  const expiredMedicines = getExpiredMedicines();
+  const nearExpiryMedicines = getNearExpiryMedicines();
+
+  // Demo function to add sample prescription (for testing)
+  const addSamplePrescription = () => {
+    const samplePatients = [
+      { name: "John Doe", id: "22IT099" },
+      { name: "Jane Smith", id: "22CS045" },
+      { name: "Mike Johnson", id: "22ME078" },
+      { name: "Sarah Wilson", id: "22EE032" }
+    ];
+    const sampleDoctors = ["Dr. Smith", "Dr. Johnson", "Dr. Brown", "Dr. Davis"];
+    
+    const randomPatient = samplePatients[Math.floor(Math.random() * samplePatients.length)];
+    const randomDoctor = sampleDoctors[Math.floor(Math.random() * sampleDoctors.length)];
+    
+    const samplePrescription = {
+      patientName: randomPatient.name,
+      patientId: randomPatient.id,
+      doctorName: randomDoctor,
+      medicines: [
+        { 
+          medicineId: 1, 
+          medicineName: "Paracetamol", 
+          quantity: Math.floor(Math.random() * 15) + 5, 
+          dosage: "500mg", 
+          instructions: "Take 1 tablet twice daily after meals" 
+        },
+        { 
+          medicineId: 2, 
+          medicineName: "Amoxicillin", 
+          quantity: Math.floor(Math.random() * 10) + 5, 
+          dosage: "250mg", 
+          instructions: "Take 1 tablet three times daily" 
+        }
+      ]
+    };
+    
+    addPrescription(samplePrescription);
   };
 
   return (
-    <div className={`inventory-container ${showForm ? "modal-open" : ""}`}>
-      <div className="inventory-header">
-        <h2>Inventory Management</h2>
-        <button
-          className="add-medicine-btn"
-          onClick={() => {
-            setEditMedicine(null); // new medicine mode
-            setShowForm(true);
-          }}
+    <div className="inventory-container">
+      {/* Navigation Tabs */}
+      <div className="tab-navigation">
+        <button 
+          className={activeTab === "inventory" ? "tab-button active" : "tab-button"}
+          onClick={() => setActiveTab("inventory")}
         >
-          + Add Medicine
+          Inventory Management
+        </button>
+        <button 
+          className={activeTab === "prescriptions" ? "tab-button active" : "tab-button"}
+          onClick={() => setActiveTab("prescriptions")}
+        >
+          Prescription Queue ({prescriptions.length})
+        </button>
+        <button 
+          className={activeTab === "dispensed" ? "tab-button active" : "tab-button"}
+          onClick={() => setActiveTab("dispensed")}
+        >
+          Dispensed History
         </button>
       </div>
 
-      <table className="inventory-table">
-        <thead>
-          <tr>
-            <th>Medicine</th>
-            <th>Quantity</th>
-            <th>Expiry Date</th>
-            <th>Category</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {medicines.map((item) => (
-            <tr key={item.id}>
-              <td>{item.name}</td>
-              <td>{item.quantity}</td>
-              <td>{item.expiry}</td>
-              <td>{item.category}</td>
-              <td className={getStatusClass(item.status)}>{item.status}</td>
-              <td>
-                <button className="edit-btn" onClick={() => openEditModal(item)}>
-                  Edit
-                </button>
-                <button
-                  className="delete-btn"
-                  onClick={() => handleDelete(item.id)}
+      {/* Alerts Section */}
+      {(lowStockMedicines.length > 0 || expiredMedicines.length > 0 || nearExpiryMedicines.length > 0) && (
+        <div className="alerts-section">
+          {lowStockMedicines.length > 0 && (
+            <div className="alert low-stock-alert">
+              <h4>⚠️ Low Stock Alert</h4>
+              <p>{lowStockMedicines.length} medicine(s) are running low: {lowStockMedicines.map(med => med.name).join(", ")}</p>
+            </div>
+          )}
+          {nearExpiryMedicines.length > 0 && (
+            <div className="alert near-expiry-alert">
+              <h4>⏰ Near Expiry Alert</h4>
+              <p>{nearExpiryMedicines.length} medicine(s) expire within 30 days: {nearExpiryMedicines.map(med => med.name).join(", ")}</p>
+            </div>
+          )}
+          {expiredMedicines.length > 0 && (
+            <div className="alert expired-alert">
+              <h4>🚨 Expired Medicines</h4>
+              <p>{expiredMedicines.length} medicine(s) have expired: {expiredMedicines.map(med => med.name).join(", ")}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Inventory Tab Content */}
+      {activeTab === "inventory" && (
+        <>
+          <div className="inventory-header">
+            <h2>Inventory Management</h2>
+            <button className="add-medicine-btn" onClick={openAddModal}>
+              + Add Medicine
+            </button>
+          </div>
+
+          <table className="inventory-table">
+            <thead>
+              <tr>
+                <th>Medicine</th>
+                <th>Dosage</th>
+                <th>Quantity</th>
+                <th>Min Stock</th>
+                <th>Expiry Date</th>
+                <th>Category</th>
+                <th>Batch No.</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {medicines.map((item) => {
+                const status = getStatus(item);
+                return (
+                  <tr key={item.id}>
+                    <td>{item.name}</td>
+                    <td>{item.dosage}</td>
+                    <td>{item.quantity}</td>
+                    <td>{item.minStock}</td>
+                    <td>{item.expiry}</td>
+                    <td>{item.category}</td>
+                    <td>{item.batchNumber}</td>
+                    <td className={getStatusClass(status)}>{status}</td>
+                    <td>
+                      <button 
+                        className="edit-btn" 
+                        onClick={() => openEditModal(item)}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        className="delete-btn" 
+                        onClick={() => handleDeleteMedicine(item.id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {medicines.length === 0 && (
+            <div className="empty-state">
+              <p>No medicines in inventory. Click "Add Medicine" to get started.</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Prescription Queue Tab Content */}
+      {activeTab === "prescriptions" && (
+        <div className="prescriptions-section">
+          <div className="section-header">
+            <h2>Prescription Queue</h2>
+            <p>Prescriptions waiting to be dispensed</p>
+            <button 
+              className="add-medicine-btn" 
+              onClick={addSamplePrescription}
+              style={{ fontSize: '12px', padding: '8px 16px' }}
+            >
+              + Add Demo Prescription
+            </button>
+          </div>
+          
+          {prescriptions.length === 0 ? (
+            <div className="empty-state">
+              <p>No pending prescriptions.</p>
+            </div>
+          ) : (
+            <div className="prescriptions-grid">
+              {prescriptions.map((prescription) => (
+                <div key={prescription.id} className="prescription-card">
+                  <div className="prescription-header">
+                    <h3>Prescription #{prescription.id}</h3>
+                    <span className="prescription-date">{prescription.prescriptionDate}</span>
+                  </div>
+                  
+                  <div className="patient-info">
+                    <p><strong>Patient:</strong> {prescription.patientName} (ID: {prescription.patientId})</p>
+                    <p><strong>Doctor:</strong> {prescription.doctorName}</p>
+                  </div>
+                  
+                  <div className="medicines-list">
+                    <h4>Prescribed Medicines:</h4>
+                    {prescription.medicines.map((med, index) => {
+                      const availableMedicine = medicines.find(m => m.id === med.medicineId);
+                      const isAvailable = availableMedicine && availableMedicine.quantity >= med.quantity;
+                      
+                      return (
+                        <div key={index} className={`medicine-item ${!isAvailable ? 'insufficient' : ''}`}>
+                          <div className="medicine-details">
+                            <span className="medicine-name">{med.medicineName} ({med.dosage})</span>
+                            <span className="medicine-quantity">Qty: {med.quantity}</span>
+                            {!isAvailable && (
+                              <span className="availability-warning">
+                                ⚠️ Available: {availableMedicine ? availableMedicine.quantity : 0}
+                              </span>
+                            )}
+                          </div>
+                          <p className="instructions">{med.instructions}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="prescription-actions">
+                    <button 
+                      className="dispense-btn"
+                      onClick={() => dispensePrescription(prescription.id)}
+                    >
+                      Dispense Prescription
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Dispensed History Tab Content */}
+      {activeTab === "dispensed" && (
+        <div className="dispensed-section">
+          <div className="section-header">
+            <h2>Dispensed Prescriptions History</h2>
+            <p>Previously dispensed prescriptions</p>
+          </div>
+          
+          {dispensedPrescriptions.length === 0 ? (
+            <div className="empty-state">
+              <p>No prescriptions have been dispensed yet.</p>
+            </div>
+          ) : (
+            <div className="dispensed-grid">
+              {dispensedPrescriptions.map((prescription) => (
+                <div key={prescription.id} className="dispensed-card">
+                  <div className="prescription-header">
+                    <h3>Prescription #{prescription.id}</h3>
+                    <div className="dates">
+                      <span className="prescription-date">Prescribed: {prescription.prescriptionDate}</span>
+                      <span className="dispensed-date">Dispensed: {prescription.dispensedDate} at {prescription.dispensedTime}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="patient-info">
+                    <p><strong>Patient:</strong> {prescription.patientName} (ID: {prescription.patientId})</p>
+                    <p><strong>Doctor:</strong> {prescription.doctorName}</p>
+                  </div>
+                  
+                  <div className="medicines-list">
+                    <h4>Dispensed Medicines:</h4>
+                    {prescription.medicines.map((med, index) => (
+                      <div key={index} className="medicine-item dispensed">
+                        <div className="medicine-details">
+                          <span className="medicine-name">{med.medicineName} ({med.dosage})</span>
+                          <span className="medicine-quantity">Qty: {med.quantity}</span>
+                        </div>
+                        <p className="instructions">{med.instructions}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Modal */}
+      {showModal && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{editingMedicine ? "Edit Medicine" : "Add New Medicine"}</h3>
+              <button className="close-btn" onClick={closeModal}>×</button>
+            </div>
+            <div className="modal-form">
+              <div className="form-group">
+                <label htmlFor="name">Medicine Name *</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter medicine name"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="quantity">Quantity *</label>
+                <input
+                  type="number"
+                  id="quantity"
+                  name="quantity"
+                  value={formData.quantity}
+                  onChange={handleInputChange}
+                  placeholder="Enter quantity"
+                  min="0"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="minStock">Minimum Stock Level *</label>
+                <input
+                  type="number"
+                  id="minStock"
+                  name="minStock"
+                  value={formData.minStock}
+                  onChange={handleInputChange}
+                  placeholder="Enter minimum stock level"
+                  min="0"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="expiry">Expiry Date *</label>
+                <input
+                  type="date"
+                  id="expiry"
+                  name="expiry"
+                  value={formData.expiry}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="dosage">Dosage *</label>
+                <input
+                  type="text"
+                  id="dosage"
+                  name="dosage"
+                  value={formData.dosage}
+                  onChange={handleInputChange}
+                  placeholder="e.g., 500mg, 250mg"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="batchNumber">Batch Number *</label>
+                <input
+                  type="text"
+                  id="batchNumber"
+                  name="batchNumber"
+                  value={formData.batchNumber}
+                  onChange={handleInputChange}
+                  placeholder="Enter batch number"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="category">Category *</label>
+                <select
+                  id="category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  required
                 >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {showForm && (
-        <div className={`modal ${isClosing ? "closing" : ""}`}>
-          <div className="modal-content">
-            <h3>{editMedicine ? "Edit Medicine" : "Add Medicine"}</h3>
-            <form onSubmit={handleSaveMedicine}>
-              <input
-                type="text"
-                name="name"
-                placeholder="Medicine Name"
-                value={newMedicine.name}
-                onChange={handleInputChange}
-                required
-              />
-              <input
-                type="number"
-                name="quantity"
-                placeholder="Quantity"
-                value={newMedicine.quantity}
-                onChange={handleInputChange}
-                required
-              />
-              <input
-                type="date"
-                name="expiry"
-                value={newMedicine.expiry}
-                onChange={handleInputChange}
-                required
-              />
-              <input
-                type="text"
-                name="category"
-                placeholder="Category"
-                value={newMedicine.category}
-                onChange={handleInputChange}
-              />
-
-
+                  <option value="">Select category</option>
+                  <option value="Analgesic">Analgesic</option>
+                  <option value="Antibiotic">Antibiotic</option>
+                  <option value="Anti-inflammatory">Anti-inflammatory</option>
+                  <option value="Antacid">Antacid</option>
+                  <option value="Vitamin">Vitamin</option>
+                  <option value="Antiseptic">Antiseptic</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
               <div className="modal-actions">
-                <button type="submit" className="save-btn">
-                  {editMedicine ? "Update" : "Save"}
-                </button>
                 <button type="button" className="cancel-btn" onClick={closeModal}>
                   Cancel
                 </button>
+                <button type="button" className="save-btn" onClick={handleSubmit}>
+                  {editingMedicine ? "Update Medicine" : "Add Medicine"}
+                </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}

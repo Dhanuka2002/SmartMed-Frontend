@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './DoctorTelemed.css'; // optional, match your style
 import telemeddoctor from '../../../assets/telemeddoctor.png';
 
 function DoctorTelemed() {
   const [isCallStarting, setIsCallStarting] = useState(false);
   const [showVideoCall, setShowVideoCall] = useState(false);
+  const navigate = useNavigate();
 
   const handleJoinCall = () => {
     setIsCallStarting(true);
@@ -19,13 +21,25 @@ function DoctorTelemed() {
     if (showVideoCall) {
       const domain = "meet.jit.si";
       const options = {
-        roomName: "SmartMed_Room_123", // ⚡️ Make sure it matches Student side!
+        roomName: "SmartMed-Telemed-Room", // standardized room name
         width: "100%",
         height: 600,
         parentNode: document.getElementById("doctor-jitsi-container"),
         userInfo: {
-          displayName: "Doctor Name", // Or doctor’s real name
+          displayName: "Dr. SmartMed",
+          email: "doctor@smartmed.com"
         },
+        configOverwrite: {
+          prejoinPageEnabled: false,
+          startWithAudioMuted: false,
+          startWithVideoMuted: false,
+        },
+        interfaceConfigOverwrite: {
+          TOOLBAR_BUTTONS: [
+            'microphone', 'camera', 'hangup', 'chat',
+            'raisehand', 'participants-pane', 'tileview'
+          ]
+        }
       };
       const api = new window.JitsiMeetExternalAPI(domain, options);
 
@@ -75,7 +89,29 @@ function DoctorTelemed() {
       )}
 
       {showVideoCall && (
-        <div id="doctor-jitsi-container" style={{ width: "100%", height: "600px" }} />
+        <div style={{ padding: '20px' }}>
+          <h2 style={{ marginBottom: '20px', color: '#333' }}>Telemedicine Call with Patient</h2>
+          <div id="doctor-jitsi-container" style={{ width: "100%", height: "600px", border: '1px solid #ddd', borderRadius: '8px' }} />
+          <button
+            onClick={() => {
+              setShowVideoCall(false);
+              navigate('/doctor/dashboard');
+            }}
+            style={{
+              marginTop: '20px',
+              padding: '12px 24px',
+              background: '#ff4d4d',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: 'bold',
+            }}
+          >
+            End Call
+          </button>
+        </div>
       )}
     </div>
   );

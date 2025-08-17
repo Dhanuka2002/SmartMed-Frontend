@@ -103,7 +103,7 @@ body {
 }
 
 .stat-content {
-  display: flex;
+  margin-left: 80px;
   align-items: center;
 }
 

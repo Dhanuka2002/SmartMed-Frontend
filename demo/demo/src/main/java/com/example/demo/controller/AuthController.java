@@ -3,7 +3,6 @@ package com.example.demo.controller;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.MailService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +12,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")  // Allow all origins (you can restrict this to http://localhost:3000 later)
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     @Autowired
@@ -22,9 +21,8 @@ public class AuthController {
     @Autowired
     private MailService mailService;
 
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    // ✅ Register Endpoint
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> register(@RequestBody User user) {
         Map<String, Object> response = new HashMap<>();
@@ -36,115 +34,16 @@ public class AuthController {
             return ResponseEntity.badRequest().body(response);
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        // Encrypt password before saving
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
 
-        // ✅ Try sending confirmation email
+        // Send confirmation email - wrap in try-catch to avoid failure on mail issues
         try {
             mailService.sendRegistrationEmail(user.getEmail(), user.getName());
         } catch (Exception e) {
             System.err.println("Failed to send email: " + e.getMessage());
+            // Optional: add this info to response if you want
+            // response.put("mailStatus", "Email sending failed");
         }
 
         response.put("status", "success");
@@ -152,22 +51,16 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    // ✅ Login Endpoint
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody User loginRequest) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody User user) {
         Map<String, Object> response = new HashMap<>();
 
-        Optional<User> userOptional = userRepository.findByEmail(loginRequest.getEmail());
-
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-
-            if (passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+        Optional<User> existUser = userRepository.findByEmail(user.getEmail());
+        if (existUser.isPresent()) {
+            if (passwordEncoder.matches(user.getPassword(), existUser.get().getPassword())) {
                 response.put("status", "success");
                 response.put("message", "Login successful");
-                response.put("role", user.getRole());
-                response.put("name", user.getName());  // ✅ Send name to display on dashboard
-                response.put("email", user.getEmail());  // Optional: in case frontend needs it
+                response.put("role", existUser.get().getRole());
                 return ResponseEntity.ok(response);
             } else {
                 response.put("status", "error");
@@ -175,13 +68,11 @@ public class AuthController {
                 return ResponseEntity.status(401).body(response);
             }
         }
-
         response.put("status", "error");
         response.put("message", "User not found!");
         return ResponseEntity.status(404).body(response);
     }
 
-    // ✅ Optional: Get All Users
     @GetMapping("/users")
     public List<User> getAllUsers() {
         return userRepository.findAll();

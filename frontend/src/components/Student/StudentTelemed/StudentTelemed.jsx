@@ -1,18 +1,55 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './StudentTelemed.css';
 import telemeddoctor from '../../../assets/telemeddoctor.png';
 
 function StudentTelemed() {
-  const [isCallStarting, setIsCallStarting] = useState(false);
+  const [isRequestSent, setIsRequestSent] = useState(false);
+  const [isWaitingResponse, setIsWaitingResponse] = useState(false);
+  const navigate = useNavigate();
 
-  const handleVideoCall = () => {
-    setIsCallStarting(true);
-    console.log('Starting video call...');
+  const sendVideoCallRequest = () => {
+    setIsRequestSent(true);
+    setIsWaitingResponse(true);
+    
+    const notification = {
+      type: 'video_call_request',
+      title: 'Video Conference Request',
+      message: 'A student is requesting a video conference consultation',
+      studentName: 'Student User', // In real app, get from auth context
+      studentId: 'STU001', // In real app, get from auth context
+      status: 'pending'
+    };
+
+    const existingNotifications = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
+    existingNotifications.push(notification);
+    localStorage.setItem('telemed_notifications', JSON.stringify(existingNotifications));
+
+    console.log('Video call request sent to doctor');
+
+    const checkForResponse = setInterval(() => {
+      const currentNotifications = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
+      const myRequest = currentNotifications.find(n => 
+        n.type === 'video_call_request' && 
+        n.studentId === 'STU001' && 
+        n.status === 'accepted'
+      );
+
+      if (myRequest) {
+        clearInterval(checkForResponse);
+        setIsWaitingResponse(false);
+        navigate('/student/telemed-call');
+      }
+    }, 1000);
 
     setTimeout(() => {
-      setIsCallStarting(false);
-      // Actual video call logic goes here
-    }, 3000);
+      clearInterval(checkForResponse);
+      if (isWaitingResponse) {
+        setIsWaitingResponse(false);
+        alert('No response from doctor. Please try again later.');
+        setIsRequestSent(false);
+      }
+    }, 30000);
   };
 
   return (
@@ -28,19 +65,24 @@ function StudentTelemed() {
             Connect instantly with certified doctors through secure video calls.
           </p>
           <button
-            onClick={handleVideoCall}
-            disabled={isCallStarting}
-            className={`primary-button ${isCallStarting ? 'loading' : ''}`}
+            onClick={sendVideoCallRequest}
+            disabled={isWaitingResponse || isRequestSent}
+            className={`primary-button ${isWaitingResponse ? 'loading' : ''}`}
           >
-            {isCallStarting ? (
+            {isWaitingResponse ? (
               <>
                 <div className="loading-spinner"></div>
-                Connecting...
+                Waiting for Doctor Response...
+              </>
+            ) : isRequestSent ? (
+              <>
+                <span className="video-icon">✅</span>
+                Request Sent - Please Wait
               </>
             ) : (
               <>
                 <span className="video-icon">📹</span>
-                Start Video Call Now
+                Request Video Call
                 <span className="arrow-icon">→</span>
               </>
             )}
