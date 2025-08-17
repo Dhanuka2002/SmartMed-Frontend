@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Register.css";
+
 import { FaUser, FaEnvelope, FaLock, FaUserTag } from "react-icons/fa";
 
 const Register = () => {
@@ -62,9 +63,9 @@ const Register = () => {
         return;
       }
 
-      alert(result.message);
+      alert(result.message + " Please login with your credentials.");
 
-      // ✅ Always go to login after registration
+      // Redirect to login page after successful registration
       navigate("/login");
 
     } catch (error) {
@@ -107,7 +108,7 @@ const Register = () => {
           <div className="input-group">
             <FaUser className="icon" />
             <input
-              type="text"
+              type="name"
               name="name"
               placeholder="Your Name"
               value={formData.name}

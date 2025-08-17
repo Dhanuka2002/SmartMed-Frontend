@@ -21,7 +21,7 @@ public class SecurityConfig {
         http
             .csrf().disable()  // Disable CSRF for simplicity, or configure it properly later
             .authorizeHttpRequests()
-                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()  // Allow public access here
+                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/medical-records/**", "/api/student-details/**").permitAll()  // Allow public access here
                 .anyRequest().authenticated()  // Other requests require authentication
             .and()
             .httpBasic();  // You can change to formLogin or JWT as needed

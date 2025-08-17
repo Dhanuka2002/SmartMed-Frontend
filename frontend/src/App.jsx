@@ -1,14 +1,16 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import "./App.css";
+import { PrescriptionProvider } from "./contexts/PrescriptionContext";
+import { MedicineInventoryProvider } from "./contexts/MedicineInventoryContext";
 
 // Pharmacy
 import PharmacyTopBar from "./components/Pharmacy/PharmacyTopBar/TopBar";
 import PharmacySidebar from "./components/Pharmacy/PharmacySidebar/PharmacySidebar";
-import PrescriptionQueue from "./components/pharmacy/PrescriptionQueue/PrescriptionQueue";
-import InventoryManagement from "./components/pharmacy/Inventory/InventoryManagement";
-import MedicineRequests from "./components/pharmacy/MedicineRequests/MedicineRequests";
-import Reports from "./components/pharmacy/Reports/Reports";
+import PrescriptionQueue from "./components/Pharmacy/PrescriptionQueue/PrescriptionQueue";
+import InventoryManagement from "./components/Pharmacy/inventory/InventoryManagement";
+import MedicineRequests from "./components/Pharmacy/MedicineRequests/MedicineRequests";
+import Reports from "./components/Pharmacy/Reports/Reports";
 
 // Student
 import StudentTopBar from "./components/Student/StudentTopBar/StudentTopBar";
@@ -31,6 +33,7 @@ import DoctorPatient from './components/Doctor/DoctorPatient/DoctorPatient';
 import DoctorPharmacy from './components/Doctor/DoctorPharmacy/DoctorPharmacy';
 import DoctorTelemed from './components/Doctor/DoctorTelemed/DoctorTelemed';
 import DoctorTelemedCall from './components/Doctor/DoctorTelemedCall/DoctorTelemedCall';
+import DoctorReport from './components/Doctor/DoctorReport/DoctorReport';
 
 // Receptionist
 import ReceptionistTopBar from './components/Receptionist/ReceptionistTopBar/ReceptionistTopBar';
@@ -41,7 +44,7 @@ import ReceptionistNotifications from './components/Receptionist/ReceptionistNot
 
 // Auth
 import Register from './components/Register/Register';
-import Login from './components/Login/Login';
+import Login from './components/Login/login';
 
 // Users page
 import Users from './pages/Users';
@@ -68,22 +71,24 @@ function App() {
   const isPharmacy = !isStudent && !isDoctor && !isReceptionist && !isRegister && !isLogin && !isHospitalStaff && !isIntro;
 
   return (
-    <div className="app-container">
-      {/* Top Bars */}
-      {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isStudent && <StudentTopBar />}
-      {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isDoctor && <DoctorTopBar />}
-      {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isReceptionist && <ReceptionistTopBar />}
-      {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isPharmacy && <PharmacyTopBar />}
+    <MedicineInventoryProvider>
+      <PrescriptionProvider>
+        <div className="app-container">
+        {/* Top Bars */}
+        {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isStudent && <StudentTopBar />}
+        {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isDoctor && <DoctorTopBar />}
+        {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isReceptionist && <ReceptionistTopBar />}
+        {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isPharmacy && <PharmacyTopBar />}
 
-      <div className="main-content">
-        {/* Sidebars */}
-        {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isStudent && <StudentSidebar />}
-        {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isDoctor && <DoctorSidebar />}
-        {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isReceptionist && <ReceptionistSidebar />}
-        {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isPharmacy && <PharmacySidebar />}
+        <div className="main-content">
+          {/* Sidebars */}
+          {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isStudent && <StudentSidebar />}
+          {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isDoctor && <DoctorSidebar />}
+          {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isReceptionist && <ReceptionistSidebar />}
+          {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isPharmacy && <PharmacySidebar />}
 
-        <div className="content-area">
-          <Routes>
+          <div className="content-area">
+            <Routes>
 
             {/* ✅ Intro Landing Page */}
             <Route path="/" element={<Intro />} />
@@ -112,6 +117,7 @@ function App() {
             <Route path="/doctor/pharmacy" element={<DoctorPharmacy />} />
             <Route path="/doctor/telemed" element={<DoctorTelemed />} />
             <Route path="/doctor/telemed-call" element={<DoctorTelemedCall />} />
+            <Route path="/doctor/report" element={<DoctorReport />} />
 
             {/* Receptionist Routes */}
             <Route path="/receptionist/dashboard" element={<ReceptionistDashboard />} />
@@ -130,8 +136,10 @@ function App() {
 
           </Routes>
         </div>
-      </div>
-    </div>
+        </div>
+        </div>
+      </PrescriptionProvider>
+    </MedicineInventoryProvider>
   );
 }
 

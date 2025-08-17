@@ -1,17 +1,40 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import "./PharmacySidebar.css";
 
 // Icons
-import { FiSettings, FiClipboard, FiBox, FiFileText, FiBarChart2 } from "react-icons/fi";
+import { FiSettings, FiClipboard, FiBox, FiFileText, FiBarChart2, FiLogOut } from "react-icons/fi";
 
 // ✅ Correct import path (if logo is in src/assets)
-import logo from "../../../assets/logo.png";
+
 
 function Sidebar() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear all session data
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('studentName');
+    localStorage.removeItem('studentEmail');
+    
+    // Clear any cached data
+    const allKeys = Object.keys(localStorage);
+    allKeys.forEach(key => {
+      if (key.startsWith('qrCodeData_') || key.startsWith('medicalRecordId_') || 
+          key.startsWith('studentData_') || key.startsWith('hospitalData_')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // Redirect to login
+    navigate('/login');
+  };
+
+
   return (
     <div className="sidebar">
-      <img src={logo} alt="Pharmacy Logo" className="logo-img" />
+      
+      
 
       <ul className="menu">
         <li>
@@ -33,15 +56,7 @@ function Sidebar() {
             Inventory
           </NavLink>
         </li>
-        <li>
-          <NavLink 
-            to="/medicine-requests"
-            className={({ isActive }) => isActive ? "menu-button active" : "menu-button"}
-          >
-            <FiFileText size={18} className="menu-icon" />
-            Medicine Requests
-          </NavLink>
-        </li>
+        
         <li>
           <NavLink 
             to="/reports"
@@ -53,9 +68,31 @@ function Sidebar() {
         </li>
       </ul>
 
-      <div className="settings">
-        <FiSettings size={20} />
-        <span>Settings</span>
+      <div className="sidebar-bottom">
+        <button 
+          onClick={handleLogout}
+          className="logout-button"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            width: '100%',
+            padding: '0.75rem 1rem',
+            background: '#dc3545',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            marginTop: '0.5rem',
+            fontSize: '0.9rem',
+            transition: 'background 0.2s'
+          }}
+          onMouseOver={(e) => e.target.style.background = '#c82333'}
+          onMouseOut={(e) => e.target.style.background = '#dc3545'}
+        >
+          <FiLogOut size={18} />
+          <span>Logout</span>
+        </button>
       </div>
     </div>
   );

@@ -2,12 +2,16 @@ import React, { useState } from "react";
 import "./StudentEnteringDetails.css";
 
 function StudentEnteringDetails() {
+  // Get current user data and auto-populate
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+  
   const [formData, setFormData] = useState({
-    // Basic Information
-    fullName: "",
+    // Basic Information - auto-populate from registration
+    fullName: currentUser.name || "",
     nic: "",
     studentRegistrationNumber: "",
     academicDivision: "",
+    email: currentUser.email || "",
     
     // Personal Details
     dateOfBirth: "",
@@ -63,7 +67,11 @@ function StudentEnteringDetails() {
       rubella: "",
       hepatitisB: "",
       chickenPox: ""
-    }
+    },
+
+    // Certification
+    certificationDate: "",
+    signature: ""
   });
 
   const handleInputChange = (e) => {
@@ -110,10 +118,36 @@ function StudentEnteringDetails() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form Data:", formData);
-    alert("Form submitted successfully!");
+    
+    try {
+      const response = await fetch('http://localhost:8081/api/student-details/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+      
+      if (result.status === 'success') {
+        // Save student data to localStorage for QR code generation
+        localStorage.setItem('studentFormData', JSON.stringify(formData));
+        localStorage.setItem(`studentData_${formData.email}`, JSON.stringify(formData));
+        localStorage.setItem('studentName', formData.fullName);
+        localStorage.setItem('studentEmail', formData.email || 'No Email');
+        
+        alert('Student details saved successfully!');
+        console.log('Saved with ID:', result.studentId);
+      } else {
+        alert('Error: ' + result.message);
+      }
+    } catch (error) {
+      console.error('Error saving student details:', error);
+      alert('Failed to save student details. Please try again.');
+    }
   };
 
   return (
@@ -189,6 +223,19 @@ function StudentEnteringDetails() {
                 <option value="faculty-of-arts">Faculty of Arts</option>
                 <option value="faculty-of-management">Faculty of Management</option>
               </select>
+            </div>
+          </div>
+          
+          <div className="form-row">
+            <div className="form-group">
+              <input
+                type="email"
+                name="email"
+                placeholder="Email Address"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+              />
             </div>
           </div>
         </div>
@@ -594,11 +641,24 @@ function StudentEnteringDetails() {
             <div className="signature-section">
               <div className="signature-field">
                 <label>Date</label>
-                <input type="date" required />
+                <input 
+                  type="date" 
+                  name="certificationDate"
+                  value={formData.certificationDate}
+                  onChange={handleInputChange}
+                  required 
+                />
               </div>
               <div className="signature-field">
                 <label>Signature</label>
-                <input type="text" placeholder="Your signature" required />
+                <input 
+                  type="text" 
+                  name="signature"
+                  placeholder="Your signature" 
+                  value={formData.signature}
+                  onChange={handleInputChange}
+                  required 
+                />
               </div>
             </div>
           </div>

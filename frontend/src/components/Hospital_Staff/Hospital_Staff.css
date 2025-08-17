@@ -12,6 +12,14 @@ body {
   line-height: 1.6;
 }
 
+/* Hospital Container - Full Screen Override */
+.hospital-container {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 100vh !important;
+  background-color: #f5f5f5;
+}
+
 /* Form Container */
 .form-container {
   max-width: 900px;
@@ -638,3 +646,60 @@ input[type="radio"] {
             border: 1px solid #000 !important;
           }
         }
+
+/* Signatures Section */
+.signatures-section {
+  background-color: #f8f9ff;
+  border: 2px solid #3A40DF;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.signature-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  margin-bottom: 2rem;
+}
+
+.signature-item {
+  text-align: center;
+}
+
+.signature-item > label {
+  display: block;
+  font-weight: bold;
+  font-size: 1rem;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.signature-actions {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.clear-all-btn {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.clear-all-btn:hover {
+  background-color: #c0392b;
+}
+
+@media (max-width: 768px) {
+  .signature-row {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}

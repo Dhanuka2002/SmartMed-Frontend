@@ -1,10 +1,29 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./StudentDashboard.css";
 import qrCode from "../../../assets/qr.png";
 import studentAvatar from "../../../assets/student.jpg";
 import doctorImage from "../../../assets/doctors.png";
 
 function Dashboard() {
+  const [studentData, setStudentData] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    // Get current user data from localStorage
+    const userData = localStorage.getItem('currentUser');
+    if (userData) {
+      setCurrentUser(JSON.parse(userData));
+    }
+
+    // Get detailed student data if available
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    if (user.email) {
+      const detailedData = localStorage.getItem(`studentData_${user.email}`);
+      if (detailedData) {
+        setStudentData(JSON.parse(detailedData));
+      }
+    }
+  }, []);
   return (
     <div className="dashboard-container">
       {/* Header Section */}
@@ -16,7 +35,9 @@ function Dashboard() {
           </div>
           <div className="header-right">
             <div className="user-info">
-              <span className="greeting">Hello, Franklin!</span>
+              <span className="greeting">
+                Hello, {currentUser?.name || studentData?.fullName || 'Student'}!
+              </span>
               <div className="user-status">
                 <span className="status-dot"></span>
                 <span className="status-text">Active</span>
@@ -42,22 +63,81 @@ function Dashboard() {
               </svg>
             </div>
           </div>
+          
+          {!studentData && currentUser && (
+            <div className="incomplete-profile-notice">
+              <p>Complete your medical profile to access all features.</p>
+              <a href="/student/entering-details" className="complete-profile-btn">
+                Complete Profile
+              </a>
+            </div>
+          )}
+          
+          {!currentUser && (
+            <div className="no-user-notice">
+              <p>Please log in to view your student information.</p>
+              <a href="/login" className="login-btn">
+                Login
+              </a>
+            </div>
+          )}
           <div className="student-details">
             <div className="detail-row">
               <span className="detail-label">Full Name</span>
-              <span className="detail-value">John Franklin</span>
+              <span className="detail-value">
+                {studentData?.fullName || currentUser?.name || 'Not provided'}
+              </span>
             </div>
             <div className="detail-row">
               <span className="detail-label">Student ID</span>
-              <span className="detail-value">22IT0999</span>
+              <span className="detail-value">
+                {studentData?.studentRegistrationNumber || 'Not provided'}
+              </span>
             </div>
             <div className="detail-row">
-              <span className="detail-label">Batch</span>
-              <span className="detail-value">83</span>
+              <span className="detail-label">Email</span>
+              <span className="detail-value">
+                {studentData?.email || currentUser?.email || 'Not provided'}
+              </span>
             </div>
             <div className="detail-row">
-              <span className="detail-label">Department</span>
-              <span className="detail-value">Information Technology</span>
+              <span className="detail-label">Academic Division</span>
+              <span className="detail-value">
+                {studentData?.academicDivision ? 
+                  studentData.academicDivision.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 
+                  'Not provided'
+                }
+              </span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Age</span>
+              <span className="detail-value">
+                {studentData?.age || 'Not provided'}
+              </span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Gender</span>
+              <span className="detail-value">
+                {studentData?.gender ? 
+                  studentData.gender.charAt(0).toUpperCase() + studentData.gender.slice(1) : 
+                  'Not provided'
+                }
+              </span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Contact Number</span>
+              <span className="detail-value">
+                {studentData?.telephoneNumber || 'Not provided'}
+              </span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Emergency Contact</span>
+              <span className="detail-value">
+                {studentData?.emergencyName ? 
+                  `${studentData.emergencyName} (${studentData.emergencyTelephone || 'No phone'})` : 
+                  'Not provided'
+                }
+              </span>
             </div>
           </div>
         </section>
@@ -92,46 +172,7 @@ function Dashboard() {
           </div>
         </section>
 
-        {/* Health Services Card */}
-        <section className="services-card">
-          <div className="card-header">
-            <h2 className="card-title">Available Health Services</h2>
-            <div className="card-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L12 22M2 12L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-            </div>
-          </div>
-          <div className="services-content">
-            <div className="service-stats">
-              <div className="stat-item">
-                <span className="stat-number">24/7</span>
-                <span className="stat-label">Emergency Care</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-number">15+</span>
-                <span className="stat-label">Specialists</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-number">100%</span>
-                <span className="stat-label">Coverage</span>
-              </div>
-            </div>
-            <div className="doctors-image-container">
-              <img src={doctorImage} alt="Available Doctors" className="doctors-image" />
-            </div>
-            <button className="appointment-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
-                <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="2"/>
-                <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="2"/>
-                <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-              Book Appointment
-            </button>
-          </div>
-        </section>
+     
       </main>
     </div>
   );

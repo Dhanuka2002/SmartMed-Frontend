@@ -1,40 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import "./InventoryManagement.css";
+import { usePrescription } from "../../../contexts/PrescriptionContext";
+import { useMedicineInventory } from "../../../contexts/MedicineInventoryContext";
 
 function InventoryManagement() {
-  const [medicines, setMedicines] = useState([
-    {
-      id: 1,
-      name: "Paracetamol",
-      quantity: 15,
-      expiry: "2025-08-10",
-      category: "Analgesic",
-      minStock: 20,
-    },
-    {
-      id: 2,
-      name: "Amoxicillin",
-      quantity: 50,
-      expiry: "2025-12-15",
-      category: "Antibiotic",
-      minStock: 30,
-    },
-    {
-      id: 3,
-      name: "Aspirin",
-      quantity: 5,
-      expiry: "2024-06-20",
-      category: "Analgesic",
-      minStock: 25,
-    },
-    {
-      id: 4,
-      name: "Ibuprofen",
-      quantity: 75,
-      expiry: "2026-03-10",
-      category: "Anti-inflammatory",
-      minStock: 20,
-    },
-  ]);
+  const { 
+    prescriptions, 
+    dispensedPrescriptions, 
+    dispensePrescription: contextDispensePrescription,
+    addPrescription 
+  } = usePrescription();
+
+  const {
+    medicines,
+    addMedicine,
+    updateMedicine,
+    deleteMedicine,
+    dispenseMedicines,
+    getLowStockMedicines,
+    getExpiredMedicines,
+    getNearExpiryMedicines
+  } = useMedicineInventory();
+
+  const [activeTab, setActiveTab] = useState("inventory");
 
   const [showModal, setShowModal] = useState(false);
   const [editingMedicine, setEditingMedicine] = useState(null);
@@ -44,19 +32,49 @@ function InventoryManagement() {
     expiry: "",
     category: "",
     minStock: "",
+    dosage: "",
+    batchNumber: "",
   });
 
   const getStatus = (medicine) => {
     const today = new Date();
     const expiryDate = new Date(medicine.expiry);
+    const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
     
     if (expiryDate < today) {
       return "Expired";
+    } else if (daysUntilExpiry <= 30 && daysUntilExpiry > 0) {
+      return "Near Expiry";
     } else if (medicine.quantity <= medicine.minStock) {
       return "Low Stock";
     } else {
       return "In Stock";
     }
+  };
+
+  const dispensePrescription = (prescriptionId) => {
+    const prescription = prescriptions.find(p => p.id === prescriptionId);
+    if (!prescription) return;
+
+    let canDispense = true;
+    const insufficientMedicines = [];
+
+    prescription.medicines.forEach(prescMed => {
+      const medicine = medicines.find(m => m.id === prescMed.medicineId);
+      if (!medicine || medicine.quantity < prescMed.quantity) {
+        canDispense = false;
+        insufficientMedicines.push(prescMed.medicineName);
+      }
+    });
+
+    if (!canDispense) {
+      alert(`Cannot dispense prescription. Insufficient stock for: ${insufficientMedicines.join(", ")}`);
+      return;
+    }
+
+    // Use the context function to update medicine quantities
+    dispenseMedicines(prescription.medicines);
+    contextDispensePrescription(prescriptionId);
   };
 
   const getStatusClass = (status) => {
@@ -65,6 +83,8 @@ function InventoryManagement() {
         return "status in-stock";
       case "Low Stock":
         return "status low-stock";
+      case "Near Expiry":
+        return "status near-expiry";
       case "Expired":
         return "status expired";
       default:
@@ -88,6 +108,8 @@ function InventoryManagement() {
       expiry: "",
       category: "",
       minStock: "",
+      dosage: "",
+      batchNumber: "",
     });
     setShowModal(true);
   };
@@ -100,6 +122,8 @@ function InventoryManagement() {
       expiry: medicine.expiry,
       category: medicine.category,
       minStock: medicine.minStock.toString(),
+      dosage: medicine.dosage || "",
+      batchNumber: medicine.batchNumber || "",
     });
     setShowModal(true);
   };
@@ -113,13 +137,15 @@ function InventoryManagement() {
       expiry: "",
       category: "",
       minStock: "",
+      dosage: "",
+      batchNumber: "",
     });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.quantity || !formData.expiry || !formData.category || !formData.minStock) {
+    if (!formData.name || !formData.quantity || !formData.expiry || !formData.category || !formData.minStock || !formData.dosage || !formData.batchNumber) {
       alert("Please fill in all fields");
       return;
     }
@@ -130,45 +156,106 @@ function InventoryManagement() {
       expiry: formData.expiry,
       category: formData.category,
       minStock: parseInt(formData.minStock),
+      dosage: formData.dosage,
+      batchNumber: formData.batchNumber,
     };
 
     if (editingMedicine) {
-      // Edit existing medicine
-      setMedicines(prev => prev.map(med => 
-        med.id === editingMedicine.id 
-          ? { ...medicineData, id: editingMedicine.id }
-          : med
-      ));
+      // Edit existing medicine using context
+      updateMedicine(editingMedicine.id, medicineData);
     } else {
-      // Add new medicine
-      const newMedicine = {
-        ...medicineData,
-        id: Date.now(), // Simple ID generation
-      };
-      setMedicines(prev => [...prev, newMedicine]);
+      // Add new medicine using context
+      addMedicine(medicineData);
     }
 
     closeModal();
   };
 
-  const deleteMedicine = (id) => {
+  const handleDeleteMedicine = (id) => {
     if (window.confirm("Are you sure you want to delete this medicine?")) {
-      setMedicines(prev => prev.filter(med => med.id !== id));
+      deleteMedicine(id);
     }
   };
 
-  const lowStockMedicines = medicines.filter(med => getStatus(med) === "Low Stock");
-  const expiredMedicines = medicines.filter(med => getStatus(med) === "Expired");
+  const lowStockMedicines = getLowStockMedicines();
+  const expiredMedicines = getExpiredMedicines();
+  const nearExpiryMedicines = getNearExpiryMedicines();
+
+  // Demo function to add sample prescription (for testing)
+  const addSamplePrescription = () => {
+    const samplePatients = [
+      { name: "John Doe", id: "22IT099" },
+      { name: "Jane Smith", id: "22CS045" },
+      { name: "Mike Johnson", id: "22ME078" },
+      { name: "Sarah Wilson", id: "22EE032" }
+    ];
+    const sampleDoctors = ["Dr. Smith", "Dr. Johnson", "Dr. Brown", "Dr. Davis"];
+    
+    const randomPatient = samplePatients[Math.floor(Math.random() * samplePatients.length)];
+    const randomDoctor = sampleDoctors[Math.floor(Math.random() * sampleDoctors.length)];
+    
+    const samplePrescription = {
+      patientName: randomPatient.name,
+      patientId: randomPatient.id,
+      doctorName: randomDoctor,
+      medicines: [
+        { 
+          medicineId: 1, 
+          medicineName: "Paracetamol", 
+          quantity: Math.floor(Math.random() * 15) + 5, 
+          dosage: "500mg", 
+          instructions: "Take 1 tablet twice daily after meals" 
+        },
+        { 
+          medicineId: 2, 
+          medicineName: "Amoxicillin", 
+          quantity: Math.floor(Math.random() * 10) + 5, 
+          dosage: "250mg", 
+          instructions: "Take 1 tablet three times daily" 
+        }
+      ]
+    };
+    
+    addPrescription(samplePrescription);
+  };
 
   return (
     <div className="inventory-container">
+      {/* Navigation Tabs */}
+      <div className="tab-navigation">
+        <button 
+          className={activeTab === "inventory" ? "tab-button active" : "tab-button"}
+          onClick={() => setActiveTab("inventory")}
+        >
+          Inventory Management
+        </button>
+        <button 
+          className={activeTab === "prescriptions" ? "tab-button active" : "tab-button"}
+          onClick={() => setActiveTab("prescriptions")}
+        >
+          Prescription Queue ({prescriptions.length})
+        </button>
+        <button 
+          className={activeTab === "dispensed" ? "tab-button active" : "tab-button"}
+          onClick={() => setActiveTab("dispensed")}
+        >
+          Dispensed History
+        </button>
+      </div>
+
       {/* Alerts Section */}
-      {(lowStockMedicines.length > 0 || expiredMedicines.length > 0) && (
+      {(lowStockMedicines.length > 0 || expiredMedicines.length > 0 || nearExpiryMedicines.length > 0) && (
         <div className="alerts-section">
           {lowStockMedicines.length > 0 && (
             <div className="alert low-stock-alert">
               <h4>⚠️ Low Stock Alert</h4>
               <p>{lowStockMedicines.length} medicine(s) are running low: {lowStockMedicines.map(med => med.name).join(", ")}</p>
+            </div>
+          )}
+          {nearExpiryMedicines.length > 0 && (
+            <div className="alert near-expiry-alert">
+              <h4>⏰ Near Expiry Alert</h4>
+              <p>{nearExpiryMedicines.length} medicine(s) expire within 30 days: {nearExpiryMedicines.map(med => med.name).join(", ")}</p>
             </div>
           )}
           {expiredMedicines.length > 0 && (
@@ -180,59 +267,187 @@ function InventoryManagement() {
         </div>
       )}
 
-      <div className="inventory-header">
-        <h2>Inventory Management</h2>
-        <button className="add-medicine-btn" onClick={openAddModal}>
-          + Add Medicine
-        </button>
-      </div>
+      {/* Inventory Tab Content */}
+      {activeTab === "inventory" && (
+        <>
+          <div className="inventory-header">
+            <h2>Inventory Management</h2>
+            <button className="add-medicine-btn" onClick={openAddModal}>
+              + Add Medicine
+            </button>
+          </div>
 
-      <table className="inventory-table">
-        <thead>
-          <tr>
-            <th>Medicine</th>
-            <th>Quantity</th>
-            <th>Min Stock</th>
-            <th>Expiry Date</th>
-            <th>Category</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {medicines.map((item) => {
-            const status = getStatus(item);
-            return (
-              <tr key={item.id}>
-                <td>{item.name}</td>
-                <td>{item.quantity}</td>
-                <td>{item.minStock}</td>
-                <td>{item.expiry}</td>
-                <td>{item.category}</td>
-                <td className={getStatusClass(status)}>{status}</td>
-                <td>
-                  <button 
-                    className="edit-btn" 
-                    onClick={() => openEditModal(item)}
-                  >
-                    Edit
-                  </button>
-                  <button 
-                    className="delete-btn" 
-                    onClick={() => deleteMedicine(item.id)}
-                  >
-                    Delete
-                  </button>
-                </td>
+          <table className="inventory-table">
+            <thead>
+              <tr>
+                <th>Medicine</th>
+                <th>Dosage</th>
+                <th>Quantity</th>
+                <th>Min Stock</th>
+                <th>Expiry Date</th>
+                <th>Category</th>
+                <th>Batch No.</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {medicines.map((item) => {
+                const status = getStatus(item);
+                return (
+                  <tr key={item.id}>
+                    <td>{item.name}</td>
+                    <td>{item.dosage}</td>
+                    <td>{item.quantity}</td>
+                    <td>{item.minStock}</td>
+                    <td>{item.expiry}</td>
+                    <td>{item.category}</td>
+                    <td>{item.batchNumber}</td>
+                    <td className={getStatusClass(status)}>{status}</td>
+                    <td>
+                      <button 
+                        className="edit-btn" 
+                        onClick={() => openEditModal(item)}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        className="delete-btn" 
+                        onClick={() => handleDeleteMedicine(item.id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
 
-      {medicines.length === 0 && (
-        <div className="empty-state">
-          <p>No medicines in inventory. Click "Add Medicine" to get started.</p>
+          {medicines.length === 0 && (
+            <div className="empty-state">
+              <p>No medicines in inventory. Click "Add Medicine" to get started.</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Prescription Queue Tab Content */}
+      {activeTab === "prescriptions" && (
+        <div className="prescriptions-section">
+          <div className="section-header">
+            <h2>Prescription Queue</h2>
+            <p>Prescriptions waiting to be dispensed</p>
+            <button 
+              className="add-medicine-btn" 
+              onClick={addSamplePrescription}
+              style={{ fontSize: '12px', padding: '8px 16px' }}
+            >
+              + Add Demo Prescription
+            </button>
+          </div>
+          
+          {prescriptions.length === 0 ? (
+            <div className="empty-state">
+              <p>No pending prescriptions.</p>
+            </div>
+          ) : (
+            <div className="prescriptions-grid">
+              {prescriptions.map((prescription) => (
+                <div key={prescription.id} className="prescription-card">
+                  <div className="prescription-header">
+                    <h3>Prescription #{prescription.id}</h3>
+                    <span className="prescription-date">{prescription.prescriptionDate}</span>
+                  </div>
+                  
+                  <div className="patient-info">
+                    <p><strong>Patient:</strong> {prescription.patientName} (ID: {prescription.patientId})</p>
+                    <p><strong>Doctor:</strong> {prescription.doctorName}</p>
+                  </div>
+                  
+                  <div className="medicines-list">
+                    <h4>Prescribed Medicines:</h4>
+                    {prescription.medicines.map((med, index) => {
+                      const availableMedicine = medicines.find(m => m.id === med.medicineId);
+                      const isAvailable = availableMedicine && availableMedicine.quantity >= med.quantity;
+                      
+                      return (
+                        <div key={index} className={`medicine-item ${!isAvailable ? 'insufficient' : ''}`}>
+                          <div className="medicine-details">
+                            <span className="medicine-name">{med.medicineName} ({med.dosage})</span>
+                            <span className="medicine-quantity">Qty: {med.quantity}</span>
+                            {!isAvailable && (
+                              <span className="availability-warning">
+                                ⚠️ Available: {availableMedicine ? availableMedicine.quantity : 0}
+                              </span>
+                            )}
+                          </div>
+                          <p className="instructions">{med.instructions}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="prescription-actions">
+                    <button 
+                      className="dispense-btn"
+                      onClick={() => dispensePrescription(prescription.id)}
+                    >
+                      Dispense Prescription
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Dispensed History Tab Content */}
+      {activeTab === "dispensed" && (
+        <div className="dispensed-section">
+          <div className="section-header">
+            <h2>Dispensed Prescriptions History</h2>
+            <p>Previously dispensed prescriptions</p>
+          </div>
+          
+          {dispensedPrescriptions.length === 0 ? (
+            <div className="empty-state">
+              <p>No prescriptions have been dispensed yet.</p>
+            </div>
+          ) : (
+            <div className="dispensed-grid">
+              {dispensedPrescriptions.map((prescription) => (
+                <div key={prescription.id} className="dispensed-card">
+                  <div className="prescription-header">
+                    <h3>Prescription #{prescription.id}</h3>
+                    <div className="dates">
+                      <span className="prescription-date">Prescribed: {prescription.prescriptionDate}</span>
+                      <span className="dispensed-date">Dispensed: {prescription.dispensedDate} at {prescription.dispensedTime}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="patient-info">
+                    <p><strong>Patient:</strong> {prescription.patientName} (ID: {prescription.patientId})</p>
+                    <p><strong>Doctor:</strong> {prescription.doctorName}</p>
+                  </div>
+                  
+                  <div className="medicines-list">
+                    <h4>Dispensed Medicines:</h4>
+                    {prescription.medicines.map((med, index) => (
+                      <div key={index} className="medicine-item dispensed">
+                        <div className="medicine-details">
+                          <span className="medicine-name">{med.medicineName} ({med.dosage})</span>
+                          <span className="medicine-quantity">Qty: {med.quantity}</span>
+                        </div>
+                        <p className="instructions">{med.instructions}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -291,6 +506,30 @@ function InventoryManagement() {
                   name="expiry"
                   value={formData.expiry}
                   onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="dosage">Dosage *</label>
+                <input
+                  type="text"
+                  id="dosage"
+                  name="dosage"
+                  value={formData.dosage}
+                  onChange={handleInputChange}
+                  placeholder="e.g., 500mg, 250mg"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="batchNumber">Batch Number *</label>
+                <input
+                  type="text"
+                  id="batchNumber"
+                  name="batchNumber"
+                  value={formData.batchNumber}
+                  onChange={handleInputChange}
+                  placeholder="Enter batch number"
                   required
                 />
               </div>

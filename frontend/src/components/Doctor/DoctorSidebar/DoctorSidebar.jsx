@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import "./DoctorSidebar.css";
 
 // Icons
@@ -11,15 +11,27 @@ import {
   FiClipboard, 
   FiBell, 
   FiFileText, 
-  FiActivity 
+  FiActivity,
+  FiLogOut
 } from "react-icons/fi";
 
-import logo from "../../../assets/logo.png";
+
 
 function DoctorSidebar() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('studentName');
+    localStorage.removeItem('studentEmail');
+    navigate('/login');
+  };
+
+
   return (
     <div className="sidebar">
-      <img src={logo} alt="Doctor Logo" className="logo-img" />
+    
+      
 
       <ul className="menu">
         <li>
@@ -64,7 +76,7 @@ function DoctorSidebar() {
 
         <li>
           <NavLink 
-            to="/doctor/reports"
+            to="/doctor/report"
             className={({ isActive }) => isActive ? "menu-button active" : "menu-button"}
           >
             <FiFileText size={18} className="menu-icon" />
@@ -83,9 +95,31 @@ function DoctorSidebar() {
         </li>
       </ul>
 
-      <div className="settings">
-        <FiSettings size={20} />
-        <span>Settings</span>
+      <div className="sidebar-bottom">
+        <button 
+          onClick={handleLogout}
+          className="logout-button"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            width: '100%',
+            padding: '0.75rem 1rem',
+            background: '#dc3545',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            marginTop: '0.5rem',
+            fontSize: '0.9rem',
+            transition: 'background 0.2s'
+          }}
+          onMouseOver={(e) => e.target.style.background = '#c82333'}
+          onMouseOut={(e) => e.target.style.background = '#dc3545'}
+        >
+          <FiLogOut size={18} />
+          <span>Logout</span>
+        </button>
       </div>
     </div>
   );

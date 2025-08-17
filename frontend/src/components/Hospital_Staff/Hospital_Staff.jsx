@@ -135,7 +135,11 @@ const SignaturePad = ({ onSignatureChange, label, clearSignal, width = 300, heig
 };
 
 const Hospital_Staff = () => {
+  // Get current user email for tracking purposes
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+  
   const [formData, setFormData] = useState({
+    studentEmail: currentUser.role === 'Student' ? currentUser.email : '',
     vaccinated: '',
     weight: '',
     height: '',
@@ -177,7 +181,7 @@ const Hospital_Staff = () => {
     bloodGroup: '',
     hemoglobin: '',
     specialistReferral: '',
-    condition: '',
+    medicalCondition: '',
     studentName: '',
     fitForStudies: '',
     reason: '',
@@ -204,15 +208,73 @@ const Hospital_Staff = () => {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Check if both signatures are present
     if (!formData.medicalOfficerSignature || !formData.itumMedicalOfficerSignature) {
       alert('Please provide both digital signatures before submitting.');
       return;
     }
     
-    console.log('Form submitted:', formData);
-    alert('Medical record submitted successfully!');
+    // Check if student email is provided
+    if (!formData.studentEmail || formData.studentEmail.trim() === '') {
+      alert('Please provide the student email address.');
+      return;
+    }
+    
+    // Check if student name is provided
+    if (!formData.studentName || formData.studentName.trim() === '') {
+      alert('Please provide the student name.');
+      return;
+    }
+
+    try {
+      // You may need to add authentication headers here
+      // For example, if you have a token: 'Authorization': 'Bearer ' + token
+      const response = await fetch('http://localhost:8081/api/medical-records/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add authentication headers if needed
+        },
+        body: JSON.stringify(formData)
+      });
+
+      // Check if the response is ok
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Check if the response has content before parsing
+      const text = await response.text();
+      if (!text) {
+        throw new Error('Empty response from server');
+      }
+
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (parseError) {
+        console.error('Invalid JSON response:', text);
+        throw new Error('Server returned invalid JSON');
+      }
+
+      if (result.status === 'success') {
+        // Save hospital data to localStorage for QR code generation
+        localStorage.setItem('hospitalFormData', JSON.stringify(formData));
+        localStorage.setItem(`hospitalData_${formData.studentEmail}`, JSON.stringify(formData));
+        
+        alert('Medical record saved successfully to database!');
+        console.log('Record ID:', result.recordId);
+        
+        // Optionally reset the form
+        // resetForm();
+      } else {
+        alert('Error saving medical record: ' + (result.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error saving medical record:', error);
+      alert('Failed to save medical record. Please check your connection and try again.');
+    }
   };
 
   const clearAllSignatures = () => {
@@ -247,6 +309,26 @@ const Hospital_Staff = () => {
         </div>
 
         <div className="medical-form">
+          {/* Student Email Input */}
+          <div className="form-section">
+            <label className="form-label">Student Email Address</label>
+            <input
+              type="email"
+              name="studentEmail"
+              value={formData.studentEmail}
+              onChange={handleInputChange}
+              placeholder="Enter student's email address"
+              required
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '2px solid #ddd',
+                borderRadius: '6px',
+                fontSize: '1rem',
+                marginBottom: '1rem'
+              }}
+            />
+          </div>
           {/* Vaccination Status */}
           <div className="form-section">
             <label className="form-label">a. Has the student been successfully vaccinated?</label>
@@ -768,8 +850,8 @@ const Hospital_Staff = () => {
                   If so, what is the condition?
                 </label>
                 <textarea 
-                  name="condition" 
-                  value={formData.condition}
+                  name="medicalCondition" 
+                  value={formData.medicalCondition}
                   onChange={handleInputChange}
                   rows="3"
                   placeholder="Describe the condition..."
@@ -829,6 +911,35 @@ const Hospital_Staff = () => {
           </div>
 
           {/* Digital Signatures Section */}
+          <div className="signatures-section">
+            <div className="signature-row">
+              <div className="signature-item">
+                <label>Medical Officer Signature</label>
+                <SignaturePad
+                  onSignatureChange={(data) => handleSignatureChange('medicalOfficerSignature', data)}
+                  label="Medical Officer"
+                  clearSignal={clearSignatures}
+                  width={300}
+                  height={120}
+                />
+              </div>
+              <div className="signature-item">
+                <label>ITUM Medical Officer Signature</label>
+                <SignaturePad
+                  onSignatureChange={(data) => handleSignatureChange('itumMedicalOfficerSignature', data)}
+                  label="ITUM Medical Officer"
+                  clearSignal={clearSignatures}
+                  width={300}
+                  height={120}
+                />
+              </div>
+            </div>
+            <div className="signature-actions">
+              <button type="button" className="clear-all-btn" onClick={clearAllSignatures}>
+                Clear All Signatures
+              </button>
+            </div>
+          </div>
 
           <div className="submit-section">
             <button type="button" className="submit-btn" onClick={handleSubmit}>

@@ -34,13 +34,44 @@ const Login = () => {
       alert(result);
 
       if (result.includes("Login successful")) {
-        // ✅ Extract role from text
-        if (result.includes("Student")) {
-          navigate("/student/dashboard");
-        } else if (result.includes("Doctor")) {
-          navigate("/doctor/dashboard");
-        } else if (result.includes("Pharmacy")) {
-          navigate("/");
+        // Store user session data
+        const userRole = result.includes("Student") ? "Student" :
+                        result.includes("Doctor") ? "Doctor" :
+                        result.includes("Pharmacy") ? "Pharmacy" :
+                        result.includes("Hospital Staff") ? "Hospital Staff" :
+                        result.includes("Receptionist") ? "Receptionist" : "";
+
+        if (userRole) {
+          // Get user name from result or use email as fallback
+          const userName = result.match(/Welcome,?\s+([^!]+)/i)?.[1] || formData.email.split('@')[0];
+          
+          localStorage.setItem('currentUser', JSON.stringify({
+            role: userRole,
+            name: userName,
+            email: formData.email
+          }));
+
+          // Store role-specific data
+          if (userRole === "Student") {
+            localStorage.setItem('studentName', userName);
+            localStorage.setItem('studentEmail', formData.email);
+            
+            // Check if user has existing data to show QR or redirect to dashboard
+            const existingData = localStorage.getItem(`studentData_${formData.email}`);
+            if (existingData) {
+              navigate("/student/qrcode");
+            } else {
+              navigate("/student/dashboard");
+            }
+          } else if (userRole === "Doctor") {
+            navigate("/doctor/dashboard");
+          } else if (userRole === "Pharmacy") {
+            navigate("/inventory");
+          } else if (userRole === "Hospital Staff") {
+            navigate("/hospital-staff");
+          } else if (userRole === "Receptionist") {
+            navigate("/receptionist/dashboard");
+          }
         } else {
           alert("Unknown role!");
         }
