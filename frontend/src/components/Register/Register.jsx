@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 import "./Register.css";
+
 import { FaUser, FaEnvelope, FaLock, FaUserTag } from "react-icons/fa";
 
 const Register = () => {
@@ -26,7 +27,7 @@ const Register = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -54,26 +55,19 @@ const Register = () => {
         }),
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        // Try to parse error message if possible
-        let errorMessage = "Registration failed";
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch {
-          errorMessage = await response.text();
-        }
-        alert(errorMessage);
+        alert(result.message || "Registration failed");
         setIsSubmitting(false);
         return;
       }
 
-      const result = await response.json();
-      alert(result.message);
+      alert(result.message + " Please login with your credentials.");
 
-      if (result.status === "success") {
-        navigate("/login");
-      }
+      // Redirect to login page after successful registration
+      navigate("/login");
+
     } catch (error) {
       console.error("Registration error:", error);
       alert("Error occurred during registration!");
@@ -103,7 +97,7 @@ const Register = () => {
               required
             >
               <option value="">Select Category</option>
-              {userRoles.map(role => (
+              {userRoles.map((role) => (
                 <option key={role} value={role}>
                   {role}
                 </option>
@@ -114,7 +108,7 @@ const Register = () => {
           <div className="input-group">
             <FaUser className="icon" />
             <input
-              type="text"
+              type="name"
               name="name"
               placeholder="Your Name"
               value={formData.name}

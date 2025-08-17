@@ -19,16 +19,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf().disable()
+            .csrf().disable()  // Disable CSRF for simplicity, or configure it properly later
             .authorizeHttpRequests()
-                .requestMatchers(
-                    "/api/auth/register",
-                    "/api/auth/login",
-                    "/api/students/**"  // ✅ Allow student form save/fetch
-                ).permitAll()
-                .anyRequest().authenticated()
+                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/medical-records/**", "/api/student-details/**").permitAll()  // Allow public access here
+                .anyRequest().authenticated()  // Other requests require authentication
             .and()
-            .httpBasic();
+            .httpBasic();  // You can change to formLogin or JWT as needed
 
         return http.build();
     }
