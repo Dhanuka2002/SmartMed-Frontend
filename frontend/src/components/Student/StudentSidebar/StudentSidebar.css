@@ -27,6 +27,50 @@
   background: linear-gradient(90deg, transparent 0%, #3A40DF 50%, transparent 100%);
 }
 
+/* Sidebar Profile Section */
+.sidebar-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  margin-bottom: 24px;
+  transition: all 0.3s ease;
+}
+
+.sidebar-profile:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(58, 64, 223, 0.3);
+}
+
+.sidebar-avatar {
+  flex-shrink: 0;
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-role {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+  font-weight: 400;
+}
+
 /* Enhanced Logo */
 .logo-img {
   height: 100px;

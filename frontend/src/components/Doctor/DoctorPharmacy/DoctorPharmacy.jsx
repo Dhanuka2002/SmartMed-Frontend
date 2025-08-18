@@ -222,19 +222,16 @@ function DoctorPharmacy() {
       <div className="doctor-pharmacy-container">
         {/* Header Section */}
         <div className="pharmacy-header">
-       
+        <div className="header-content">
+          <h1 className="page-title">
+            <span className="title-icon">💊</span>
+            Pharmacy Management
+          </h1>
+          <p className="page-subtitle">Manage medications and prescriptions</p>
+        </div>
         
         <div className="stats-overview">
-          <div className="stat-card">
-            
-            <div className="stat-content">
-              <span className="stat-value">{stockStats.total}</span>
-              <span className="stat-label">Total Medications</span>
-              <div className="stat-icon">📦</div>
-              <span className="stat-sublabel">${stockStats.totalValue.toFixed(2)} value</span>
-              
-            </div>
-          </div>
+          
           <div className="stat-card warning">
             
             <div className="stat-content">
@@ -254,7 +251,15 @@ function DoctorPharmacy() {
             </div>
             
           </div>
-          
+          <div className="stat-card success">
+            
+            <div className="stat-content">
+              <span className="stat-value">${prescriptionStats.totalRevenue.toFixed(0)}</span>
+              <span className="stat-label">Total Revenue</span>
+              <div className="stat-icon">💰</div>
+              <span className="stat-sublabel">{prescriptionStats.completed} completed</span>
+            </div>
+          </div>
           <div className="stat-card info">
            
             <div className="stat-content">
