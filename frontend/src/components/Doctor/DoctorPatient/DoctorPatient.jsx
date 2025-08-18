@@ -42,6 +42,7 @@ import { useMedicineInventory } from "../../../contexts/MedicineInventoryContext
 import "./DoctorPatient.css";
 import qr from "../../../assets/qr.png";
 import patientAvatar from "../../../assets/student.jpg";
+import Avatar from "../../common/Avatar/Avatar";
 
 function DoctorPatient() {
   const { addPrescription } = usePrescription();
@@ -64,6 +65,7 @@ function DoctorPatient() {
   const [currentSearchItemId, setCurrentSearchItemId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [patientFormData, setPatientFormData] = useState(null);
 
   // Load selected patient from localStorage (set from DoctorQueue)
   useEffect(() => {
@@ -99,6 +101,15 @@ function DoctorPatient() {
             weight: examination.physicalMeasurements?.weight || "",
             height: examination.physicalMeasurements?.height || ""
           });
+        }
+        
+        // Load patient image from studentFormData if available
+        const formData = localStorage.getItem('studentFormData');
+        if (formData) {
+          const parsedFormData = JSON.parse(formData);
+          if (parsedFormData.email === patient.email || parsedFormData.fullName === patient.studentName) {
+            setPatientFormData(parsedFormData);
+          }
         }
       } else {
         if (selectedPatient) {
@@ -616,7 +627,12 @@ function DoctorPatient() {
         <div className="patient-card">
           <div className="patient-avatar-section">
             <div className="avatar-container">
-              <img src={patientAvatar} alt="Patient Avatar" className="patient-avatar-img" />
+              <Avatar 
+                src={patientFormData?.profileImage}
+                alt={patientInfo.name || 'Patient'}
+                size="large"
+                className="patient-avatar-img"
+              />
               <div className="status-indicator online"></div>
             </div>
             <div className="patient-basic-info">

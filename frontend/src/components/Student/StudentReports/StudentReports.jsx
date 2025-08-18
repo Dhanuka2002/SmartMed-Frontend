@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import "./StudentReports.css";
 import qrCode from "../../../assets/qr.png";
 import studentAvatar from "../../../assets/student.jpg";
+import Avatar from "../../common/Avatar/Avatar";
 
 function StudentReports() {
   const [studentData, setStudentData] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [studentFormData, setStudentFormData] = useState(null);
 
   useEffect(() => {
     // Get current user data from localStorage
@@ -21,6 +23,12 @@ function StudentReports() {
       if (detailedData) {
         setStudentData(JSON.parse(detailedData));
       }
+    }
+    
+    // Get student form data for profile image
+    const formData = localStorage.getItem('studentFormData');
+    if (formData) {
+      setStudentFormData(JSON.parse(formData));
     }
   }, []);
 
@@ -103,8 +111,13 @@ function StudentReports() {
             {/* Profile Header */}
             <div className="profile-header">
               <div className="profile-info">
-                <div className="avatar-container">
-                  <img src={studentAvatar} alt="Student" className="student-avatar" />
+                <div className="profile-avatar-wrapper">
+                  <Avatar 
+                    src={studentFormData?.profileImage || studentData?.profileImage}
+                    alt={studentData?.fullName || currentUser?.name || 'Student'}
+                    size="large"
+                    className="student-avatar"
+                  />
                   <div className="avatar-status"></div>
                 </div>
                 <div className="student-details">

@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import "./StudentEnteringDetails.css";
+import Avatar from "../../common/Avatar/Avatar";
 
 function StudentEnteringDetails() {
   // Get current user data and auto-populate
@@ -12,6 +13,7 @@ function StudentEnteringDetails() {
     studentRegistrationNumber: "",
     academicDivision: "",
     email: currentUser.email || "",
+    profileImage: null,
     
     // Personal Details
     dateOfBirth: "",
@@ -74,12 +76,31 @@ function StudentEnteringDetails() {
     signature: ""
   });
 
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imageData = event.target.result;
+        setImagePreview(imageData);
+        setFormData(prev => ({
+          ...prev,
+          profileImage: imageData
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleFamilyHistoryChange = (member, field, value) => {
@@ -176,8 +197,24 @@ function StudentEnteringDetails() {
             </div>
             <div className="upload-section">
               <div className="upload-box">
-                <span>Upload Your Image</span>
-                <input type="file" accept="image/*" />
+                <Avatar 
+                  src={imagePreview}
+                  alt={formData.fullName || "Student"}
+                  size="large"
+                  showUploadIcon={!imagePreview}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="upload-avatar"
+                />
+                <input 
+                  ref={fileInputRef}
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleImageUpload}
+                  style={{ display: 'none' }}
+                />
+                <div className="upload-text">
+                  {imagePreview ? 'Click to change image' : 'Click to upload your image'}
+                </div>
               </div>
             </div>
           </div>
@@ -217,11 +254,11 @@ function StudentEnteringDetails() {
                 required
               >
                 <option value="">Select Academic Division</option>
-                <option value="faculty-of-medicine">Information Technology</option>
-                <option value="faculty-of-engineering">Electical Engineering</option>
-                <option value="faculty-of-science">Electronic Engineering</option>
-                <option value="faculty-of-arts">Textitle Engineering</option>
-                <option value="faculty-of-management">Mechanical Engineering</option>
+                <option value="faculty-of-medicine">Faculty of Medicine</option>
+                <option value="faculty-of-engineering">Faculty of Engineering</option>
+                <option value="faculty-of-science">Faculty of Science</option>
+                <option value="faculty-of-arts">Faculty of Arts</option>
+                <option value="faculty-of-management">Faculty of Management</option>
               </select>
             </div>
           </div>

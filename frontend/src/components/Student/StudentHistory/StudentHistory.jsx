@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import "./StudentHistory.css";
 import qrCode from "../../../assets/qr.png";
 import studentAvatar from "../../../assets/student.jpg";
+import Avatar from "../../common/Avatar/Avatar";
 
 function StudentHistory() {
   const [studentData, setStudentData] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [studentFormData, setStudentFormData] = useState(null);
 
   useEffect(() => {
     // Get current user data from localStorage
@@ -21,6 +23,12 @@ function StudentHistory() {
       if (detailedData) {
         setStudentData(JSON.parse(detailedData));
       }
+    }
+    
+    // Get student form data for profile image
+    const formData = localStorage.getItem('studentFormData');
+    if (formData) {
+      setStudentFormData(JSON.parse(formData));
     }
   }, []);
 
@@ -73,7 +81,12 @@ function StudentHistory() {
         ) : (
           <div className="profile-main">
             <div className="avatar-section">
-              <img src={studentAvatar} alt="Student Avatar" className="student-avatar" />
+              <Avatar 
+                src={studentFormData?.profileImage || studentData?.profileImage}
+                alt={studentData?.fullName || currentUser?.name || 'Student'}
+                size="large"
+                className="student-avatar"
+              />
               <div className="student-info">
                 <h2>{studentData?.fullName || currentUser?.name || 'Student Name'}</h2>
                 <div className="student-meta">
