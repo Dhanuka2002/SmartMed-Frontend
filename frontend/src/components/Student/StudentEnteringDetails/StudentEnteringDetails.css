@@ -181,11 +181,27 @@
   background-color: #f8f9ff !important;
   transition: all 0.3s ease !important;
   cursor: pointer !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 15px !important;
 }
 
 .entering-details-container .upload-box:hover {
   border-color: #3A40DF !important;
   background-color: #e8f4f8 !important;
+}
+
+.entering-details-container .upload-box .upload-avatar {
+  margin-bottom: 0 !important;
+}
+
+.entering-details-container .upload-text {
+  color: #3A40DF !important;
+  font-weight: 500 !important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  font-size: 0.9rem !important;
+  text-align: center !important;
 }
 
 .entering-details-container .upload-box span {

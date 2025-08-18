@@ -3,10 +3,12 @@ import "./StudentDashboard.css";
 import qrCode from "../../../assets/qr.png";
 import studentAvatar from "../../../assets/student.jpg";
 import doctorImage from "../../../assets/doctors.png";
+import Avatar from "../../common/Avatar/Avatar";
 
 function Dashboard() {
   const [studentData, setStudentData] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [studentFormData, setStudentFormData] = useState(null);
 
   useEffect(() => {
     // Get current user data from localStorage
@@ -22,6 +24,12 @@ function Dashboard() {
       if (detailedData) {
         setStudentData(JSON.parse(detailedData));
       }
+    }
+    
+    // Get student form data for profile image
+    const formData = localStorage.getItem('studentFormData');
+    if (formData) {
+      setStudentFormData(JSON.parse(formData));
     }
   }, []);
   return (
@@ -44,7 +52,19 @@ function Dashboard() {
               </div>
             </div>
             <div className="avatar-container">
-              <img src={studentAvatar} alt="Student Avatar" className="avatar" />
+              {(studentFormData?.profileImage || studentData?.profileImage) ? (
+                <img 
+                  src={studentFormData?.profileImage || studentData?.profileImage}
+                  alt={currentUser?.name || studentData?.fullName || 'Student'}
+                  className="dashboard-avatar-image"
+                />
+              ) : (
+                <div className="avatar-placeholder">
+                  <span className="avatar-initials">
+                    {(currentUser?.name || studentData?.fullName || 'Student').split(' ').map(name => name[0]).join('').toUpperCase().slice(0, 2)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
