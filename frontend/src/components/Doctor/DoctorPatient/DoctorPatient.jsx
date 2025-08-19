@@ -67,6 +67,111 @@ function DoctorPatient() {
   const [notification, setNotification] = useState(null);
   const [patientFormData, setPatientFormData] = useState(null);
 
+  // Function to load patient form data and profile image from multiple sources
+  const loadPatientFormData = (patient) => {
+    if (!patient) {
+      setPatientFormData(null);
+      return;
+    }
+
+    let profileImageSrc = null;
+    
+    // Method 1: Check if profile image is already in the medical data
+    if (patient.medicalData?.student?.profileImage) {
+      profileImageSrc = patient.medicalData.student.profileImage;
+    }
+    
+    // Method 2: Check studentFormData in localStorage by email
+    const formData = localStorage.getItem('studentFormData');
+    if (formData) {
+      try {
+        const parsedFormData = JSON.parse(formData);
+        if (parsedFormData.email === patient.email || 
+            parsedFormData.fullName === patient.studentName ||
+            parsedFormData.studentRegistrationNumber === patient.studentId) {
+          setPatientFormData(parsedFormData);
+          if (parsedFormData.profileImage && !profileImageSrc) {
+            profileImageSrc = parsedFormData.profileImage;
+          }
+          return;
+        }
+      } catch (error) {
+        console.error('Error parsing studentFormData:', error);
+      }
+    }
+    
+    // Method 3: Check for student-specific data in localStorage
+    const studentDataKey = `studentData_${patient.email}`;
+    const studentData = localStorage.getItem(studentDataKey);
+    if (studentData) {
+      try {
+        const parsedStudentData = JSON.parse(studentData);
+        if (parsedStudentData.profileImage && !profileImageSrc) {
+          profileImageSrc = parsedStudentData.profileImage;
+        }
+        setPatientFormData({
+          ...parsedStudentData,
+          profileImage: profileImageSrc || parsedStudentData.profileImage
+        });
+        return;
+      } catch (error) {
+        console.error('Error parsing student data:', error);
+      }
+    }
+    
+    // Method 4: Create minimal form data with available profile image
+    if (profileImageSrc) {
+      setPatientFormData({
+        profileImage: profileImageSrc,
+        email: patient.email,
+        fullName: patient.studentName
+      });
+    } else {
+      // No profile image found, set empty form data
+      setPatientFormData({
+        email: patient.email,
+        fullName: patient.studentName,
+        profileImage: null
+      });
+    }
+  };
+
+  // Function to get the profile image source with fallback logic
+  const getProfileImageSrc = () => {
+    // Priority order for profile image sources:
+    
+    // 1. From patientFormData (localStorage studentFormData)
+    if (patientFormData?.profileImage) {
+      return patientFormData.profileImage;
+    }
+    
+    // 2. From medical data (if included in QR scan data)
+    if (selectedPatient?.medicalData?.student?.profileImage) {
+      return selectedPatient.medicalData.student.profileImage;
+    }
+    
+    // 3. From patient queue data (if profile image was stored there)
+    if (selectedPatient?.profileImage) {
+      return selectedPatient.profileImage;
+    }
+    
+    // 4. Check current user data (if same student)
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+      try {
+        const userData = JSON.parse(currentUser);
+        if (userData.email === selectedPatient?.email && userData.profileImage) {
+          return userData.profileImage;
+        }
+      } catch (error) {
+        console.error('Error parsing currentUser data:', error);
+      }
+    }
+    
+    // 5. Return null to use Avatar component's fallback (initials)
+    return null;
+  };
+
   // Load selected patient from localStorage (set from DoctorQueue)
   useEffect(() => {
     const loadSelectedPatient = () => {
@@ -103,14 +208,8 @@ function DoctorPatient() {
           });
         }
         
-        // Load patient image from studentFormData if available
-        const formData = localStorage.getItem('studentFormData');
-        if (formData) {
-          const parsedFormData = JSON.parse(formData);
-          if (parsedFormData.email === patient.email || parsedFormData.fullName === patient.studentName) {
-            setPatientFormData(parsedFormData);
-          }
-        }
+        // Load patient image from multiple sources
+        loadPatientFormData(patient);
       } else {
         if (selectedPatient) {
           setNotification({
@@ -628,7 +727,7 @@ function DoctorPatient() {
           <div className="patient-avatar-section">
             <div className="avatar-container">
               <Avatar 
-                src={patientFormData?.profileImage}
+                src={getProfileImageSrc()}
                 alt={patientInfo.name || 'Patient'}
                 size="large"
                 className="patient-avatar-img"

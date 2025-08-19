@@ -9,6 +9,53 @@ const generateQueueNumber = () => {
 // Add student to reception queue from QR scan
 export const addStudentToReceptionQueue = (medicalData) => {
   try {
+    // Get existing reception queue
+    const existingQueue = JSON.parse(localStorage.getItem('receptionQueue') || '[]');
+    
+    // Check if student already exists in queue (prevent duplicates)
+    const existingStudent = existingQueue.find(entry => 
+      entry.studentId === medicalData.student.studentRegistrationNumber ||
+      entry.nic === medicalData.student.nic ||
+      entry.medicalRecordId === medicalData.id
+    );
+    
+    if (existingStudent) {
+      console.log('Student already exists in queue:', existingStudent);
+      throw new Error(`Student ${medicalData.student.fullName} is already in the reception queue (Queue #${existingStudent.queueNo})`);
+    }
+    
+    // Try to get student profile image from various sources
+    let profileImage = null;
+    
+    // Check studentFormData first
+    const formData = localStorage.getItem('studentFormData');
+    if (formData) {
+      try {
+        const parsedFormData = JSON.parse(formData);
+        if (parsedFormData.email === medicalData.student.email && parsedFormData.profileImage) {
+          profileImage = parsedFormData.profileImage;
+        }
+      } catch (error) {
+        console.error('Error parsing studentFormData for profile image:', error);
+      }
+    }
+    
+    // Check student-specific data
+    if (!profileImage) {
+      const studentDataKey = `studentData_${medicalData.student.email}`;
+      const studentData = localStorage.getItem(studentDataKey);
+      if (studentData) {
+        try {
+          const parsedStudentData = JSON.parse(studentData);
+          if (parsedStudentData.profileImage) {
+            profileImage = parsedStudentData.profileImage;
+          }
+        } catch (error) {
+          console.error('Error parsing student data for profile image:', error);
+        }
+      }
+    }
+    
     const queueNumber = generateQueueNumber();
     const currentTime = new Date().toISOString();
     
@@ -21,6 +68,7 @@ export const addStudentToReceptionQueue = (medicalData) => {
       phone: medicalData.student.telephoneNumber,
       medicalRecordId: medicalData.id,
       medicalData: medicalData,
+      profileImage: profileImage, // Add profile image to queue entry
       status: 'Waiting',
       priority: 'Normal',
       addedTime: currentTime,
@@ -28,9 +76,6 @@ export const addStudentToReceptionQueue = (medicalData) => {
       action: 'Call Now',
       stage: 'reception' // reception -> doctor -> pharmacy
     };
-    
-    // Get existing reception queue
-    const existingQueue = JSON.parse(localStorage.getItem('receptionQueue') || '[]');
     
     // Add new entry
     existingQueue.push(queueEntry);

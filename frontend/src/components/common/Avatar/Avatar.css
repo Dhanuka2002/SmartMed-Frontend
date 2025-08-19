@@ -3,17 +3,12 @@
   display: inline-block;
   border-radius: 50%;
   overflow: hidden;
-  background-color: #f0f0f0;
-  border: 2px solid #ddd;
+  background-color: transparent;
+  border: none;
 }
 
 .avatar-container.clickable {
   cursor: pointer;
-  transition: border-color 0.3s ease;
-}
-
-.avatar-container.clickable:hover {
-  border-color: #007bff;
 }
 
 .avatar-small {
@@ -44,7 +39,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #e9ecef;
+  background-color: transparent;
   color: #6c757d;
 }
 
