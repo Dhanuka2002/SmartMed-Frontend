@@ -30,8 +30,8 @@ const QRScanner = ({ onScanResult, onClose }) => {
               // Ignore decode errors - they happen constantly while scanning
             },
             preferredCamera: 'environment',
-            highlightScanRegion: false,
-            highlightCodeOutline: false,
+            highlightScanRegion: true,
+            highlightCodeOutline: true,
           }
         );
 
