@@ -45,6 +45,9 @@ import ReceptionistNotifications from './components/Receptionist/ReceptionistNot
 import Register from './components/Register/Register';
 import Login from './components/Login/login';
 
+// Admin
+import AdminDashboard from './components/Admin/AdminDashboard/AdminDashboard';
+
 // Users page
 import Users from './pages/Users';
 
@@ -54,6 +57,9 @@ import HospitalStaff from './components/Hospital_Staff/Hospital_Staff';
 // ✅ Intro Page
 import Intro from './components/Intro/Intro';
 
+// Protected Route
+import ProtectedRoute from './components/common/ProtectedRoute/ProtectedRoute';
+
 function App() {
   const location = useLocation();
   const pathname = location.pathname;
@@ -61,19 +67,21 @@ function App() {
   const isStudent = pathname.startsWith("/student");
   const isDoctor = pathname.startsWith("/doctor");
   const isReceptionist = pathname.startsWith("/receptionist");
+  const isAdmin = pathname.startsWith("/admin");
   const isRegister = pathname === "/register";
   const isLogin = pathname === "/login";
   const isUsers = pathname === "/users";
   const isHospitalStaff = pathname === "/hospital-staff";
-  const isIntro = pathname === "/intro" || pathname === "/"; // Optional: treat root as intro
+  const isIntro = pathname === "/intro" || pathname === "/";
 
-  const isPharmacy = !isStudent && !isDoctor && !isReceptionist && !isRegister && !isLogin && !isHospitalStaff && !isIntro;
+  const isPharmacy = !isStudent && !isDoctor && !isReceptionist && !isAdmin && !isRegister && !isLogin && !isHospitalStaff && !isIntro;
 
   // Helper function to get user role
   const getUserRole = () => {
     if (isStudent) return "Student";
     if (isDoctor) return "Doctor";
     if (isReceptionist) return "Receptionist";
+    if (isAdmin) return "Admin";
     if (isPharmacy) return "Pharmacy";
     return "User";
   };
@@ -98,8 +106,8 @@ function App() {
     <MedicineInventoryProvider>
       <PrescriptionProvider>
         <div className="app-container">
-        {/* TopBar - Show for all authenticated users */}
-        {!isRegister && !isLogin && !isHospitalStaff && !isIntro && (
+        {/* TopBar - Show for all authenticated users except admin, register, login, hospital staff, and intro */}
+        {!isRegister && !isLogin && !isHospitalStaff && !isIntro && !isAdmin && (
           <TopBar 
             userRole={getUserRole()}
             userName="John Doe" // This should come from authentication context/localStorage
@@ -109,12 +117,12 @@ function App() {
           />
         )}
 
-        <div className="main-content">
-          {/* Sidebars */}
-          {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isStudent && <StudentSidebar />}
-          {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isDoctor && <DoctorSidebar />}
-          {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isReceptionist && <ReceptionistSidebar />}
-          {!isRegister && !isLogin && !isHospitalStaff && !isIntro && isPharmacy && <PharmacySidebar />}
+        <div className={isAdmin ? "admin-content-wrapper" : "main-content"}>
+          {/* Sidebars - not shown for admin, register, login, hospital staff, and intro */}
+          {!isRegister && !isLogin && !isHospitalStaff && !isIntro && !isAdmin && isStudent && <StudentSidebar />}
+          {!isRegister && !isLogin && !isHospitalStaff && !isIntro && !isAdmin && isDoctor && <DoctorSidebar />}
+          {!isRegister && !isLogin && !isHospitalStaff && !isIntro && !isAdmin && isReceptionist && <ReceptionistSidebar />}
+          {!isRegister && !isLogin && !isHospitalStaff && !isIntro && !isAdmin && isPharmacy && <PharmacySidebar />}
 
           <div className="content-area">
             <Routes>
@@ -124,34 +132,129 @@ function App() {
             <Route path="/intro" element={<Intro />} />
 
             {/* Pharmacy Routes */}
-            <Route path="/inventory" element={<InventoryManagement />} />
-            <Route path="/medicine-requests" element={<MedicineRequests />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/pharmacy/queue" element={<PrescriptionQueue />} />
+            <Route path="/inventory" element={
+              <ProtectedRoute allowedRoles={['Pharmacy']}>
+                <InventoryManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/medicine-requests" element={
+              <ProtectedRoute allowedRoles={['Pharmacy']}>
+                <MedicineRequests />
+              </ProtectedRoute>
+            } />
+            <Route path="/reports" element={
+              <ProtectedRoute allowedRoles={['Pharmacy']}>
+                <Reports />
+              </ProtectedRoute>
+            } />
+            <Route path="/pharmacy/queue" element={
+              <ProtectedRoute allowedRoles={['Pharmacy']}>
+                <PrescriptionQueue />
+              </ProtectedRoute>
+            } />
 
             {/* Student Routes */}
-            <Route path="/student/dashboard" element={<StudentDashboard />} />
-            <Route path="/student/profile" element={<StudentProfile />} />
-            <Route path="/student/history" element={<StudentHistory />} />
-            <Route path="/student/reports" element={<StudentReports />} />
-            <Route path="/student/telemed" element={<StudentTelemed />} />
-            <Route path="/student/telemed-call" element={<StudentTelemedCall />} />
-            <Route path="/student/qrcode" element={<StudentQRcode />} />
-            <Route path="/student/entering-details" element={<StudentEnteringDetails />} />
+            <Route path="/student/dashboard" element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <StudentDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/profile" element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <StudentProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/history" element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <StudentHistory />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/reports" element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <StudentReports />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/telemed" element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <StudentTelemed />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/telemed-call" element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <StudentTelemedCall />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/qrcode" element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <StudentQRcode />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/entering-details" element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <StudentEnteringDetails />
+              </ProtectedRoute>
+            } />
 
             {/* Doctor Routes */}
-            <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
-            <Route path="/doctor/queue" element={<DoctorQueue />} />
-            <Route path="/doctor/patient" element={<DoctorPatient />} />
-            <Route path="/doctor/pharmacy" element={<DoctorPharmacy />} />
-            <Route path="/doctor/telemed" element={<DoctorTelemed />} />
-            <Route path="/doctor/telemed-call" element={<DoctorTelemedCall />} />
-            <Route path="/doctor/report" element={<DoctorReport />} />
+            <Route path="/doctor/dashboard" element={
+              <ProtectedRoute allowedRoles={['Doctor']}>
+                <DoctorDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/doctor/queue" element={
+              <ProtectedRoute allowedRoles={['Doctor']}>
+                <DoctorQueue />
+              </ProtectedRoute>
+            } />
+            <Route path="/doctor/patient" element={
+              <ProtectedRoute allowedRoles={['Doctor']}>
+                <DoctorPatient />
+              </ProtectedRoute>
+            } />
+            <Route path="/doctor/pharmacy" element={
+              <ProtectedRoute allowedRoles={['Doctor']}>
+                <DoctorPharmacy />
+              </ProtectedRoute>
+            } />
+            <Route path="/doctor/telemed" element={
+              <ProtectedRoute allowedRoles={['Doctor']}>
+                <DoctorTelemed />
+              </ProtectedRoute>
+            } />
+            <Route path="/doctor/telemed-call" element={
+              <ProtectedRoute allowedRoles={['Doctor']}>
+                <DoctorTelemedCall />
+              </ProtectedRoute>
+            } />
+            <Route path="/doctor/report" element={
+              <ProtectedRoute allowedRoles={['Doctor']}>
+                <DoctorReport />
+              </ProtectedRoute>
+            } />
 
             {/* Receptionist Routes */}
-            <Route path="/receptionist/dashboard" element={<ReceptionistDashboard />} />
-            <Route path="/receptionist/queue" element={<ReceptionistQueue />} />
-            <Route path="/receptionist/notifications" element={<ReceptionistNotifications />} />
+            <Route path="/receptionist/dashboard" element={
+              <ProtectedRoute allowedRoles={['Receptionist']}>
+                <ReceptionistDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/receptionist/queue" element={
+              <ProtectedRoute allowedRoles={['Receptionist']}>
+                <ReceptionistQueue />
+              </ProtectedRoute>
+            } />
+            <Route path="/receptionist/notifications" element={
+              <ProtectedRoute allowedRoles={['Receptionist']}>
+                <ReceptionistNotifications />
+              </ProtectedRoute>
+            } />
+
+            {/* Admin Routes */}
+            <Route path="/admin/dashboard" element={
+              <ProtectedRoute allowedRoles={['Admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
 
             {/* Auth Pages */}
             <Route path="/register" element={<Register />} />
@@ -161,7 +264,11 @@ function App() {
             <Route path="/users" element={<Users />} />
 
             {/* Hospital Staff Page */}
-            <Route path="/hospital-staff" element={<HospitalStaff />} />
+            <Route path="/hospital-staff" element={
+              <ProtectedRoute allowedRoles={['Hospital Staff']}>
+                <HospitalStaff />
+              </ProtectedRoute>
+            } />
 
           </Routes>
         </div>

@@ -15,21 +15,24 @@ const Avatar = ({
     large: "avatar-large"
   };
 
-  // Only render if there's an image source
-  if (!src) {
-    return null;
-  }
-
   return (
     <div 
       className={`avatar-container ${sizeClasses[size]} ${className} ${onClick ? 'clickable' : ''}`}
       onClick={onClick}
     >
-      <img 
-        src={src} 
-        alt={alt} 
-        className="avatar-image"
-      />
+      {src ? (
+        <img 
+          src={src} 
+          alt={alt} 
+          className="avatar-image"
+        />
+      ) : (
+        <div className="avatar-placeholder">
+          <span className="avatar-initials">
+            {alt.split(' ').map(name => name[0]).join('').toUpperCase().slice(0, 2)}
+          </span>
+        </div>
+      )}
       {showUploadIcon && (
         <div className="avatar-upload-overlay">
           <span className="upload-icon">📷</span>

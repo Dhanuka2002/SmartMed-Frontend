@@ -51,12 +51,21 @@ function Dashboard() {
                 <span className="status-text">Active</span>
               </div>
             </div>
-            <Avatar
-              src={studentFormData?.profileImage || studentData?.profileImage}
-              alt={currentUser?.name || studentData?.fullName || 'Student'}
-              size="large"
-              className="dashboard-avatar"
-            />
+            <div className="avatar-container">
+              {(studentFormData?.profileImage || studentData?.profileImage) ? (
+                <img 
+                  src={studentFormData?.profileImage || studentData?.profileImage}
+                  alt={currentUser?.name || studentData?.fullName || 'Student'}
+                  className="dashboard-avatar-image"
+                />
+              ) : (
+                <div className="avatar-placeholder">
+                  <span className="avatar-initials">
+                    {(currentUser?.name || studentData?.fullName || 'Student').split(' ').map(name => name[0]).join('').toUpperCase().slice(0, 2)}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
