@@ -29,21 +29,49 @@ const Login = () => {
         body: JSON.stringify(formData),
       });
 
-      // ✅ Use text() not json()
-      const result = await response.text();
-      alert(result);
+      // ✅ Use json() to parse the response
+      const result = await response.json();
+      
+      if (result.status === "success") {
+        alert("Login successful!");
+        
+        // Store user session data
+        const userData = {
+          role: result.role,
+          name: result.name,
+          email: result.email,
+          userId: result.userId
+        };
+        
+        localStorage.setItem('currentUser', JSON.stringify(userData));
 
-      if (result.includes("Login successful")) {
-        // ✅ Extract role from text
-        if (result.includes("Student")) {
-          navigate("/student/dashboard");
-        } else if (result.includes("Doctor")) {
+        // Store role-specific data and navigate based on role
+        if (result.role === "Student") {
+          localStorage.setItem('studentName', result.name);
+          localStorage.setItem('studentEmail', result.email);
+          
+          // Check if user has existing data to show QR or redirect to dashboard
+          const existingData = localStorage.getItem(`studentData_${result.email}`);
+          if (existingData) {
+            navigate("/student/qrcode");
+          } else {
+            navigate("/student/dashboard");
+          }
+        } else if (result.role === "Doctor") {
           navigate("/doctor/dashboard");
-        } else if (result.includes("Pharmacy")) {
-          navigate("/");
+        } else if (result.role === "Pharmacy") {
+          navigate("/inventory");
+        } else if (result.role === "Hospital Staff") {
+          navigate("/hospital-staff");
+        } else if (result.role === "Receptionist") {
+          navigate("/receptionist/dashboard");
+        } else if (result.role === "Admin") {
+          navigate("/admin/dashboard");
         } else {
           alert("Unknown role!");
         }
+      } else {
+        alert(result.message || "Login failed!");
       }
     } catch (error) {
       console.error(error);

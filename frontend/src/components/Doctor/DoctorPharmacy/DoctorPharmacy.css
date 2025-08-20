@@ -44,7 +44,7 @@
 
 .stats-overview {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
 }
 
@@ -53,13 +53,13 @@
   backdrop-filter: blur(20px);
   padding: 1.5rem;
   border-radius: 16px;
-  display: flex;
-  align-items: center;
+  margin-left: 40px;
   gap: 1rem;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
   transition: transform 0.3s ease;
 }
+
 
 .stat-card:hover {
   transform: translateY(-3px);
@@ -345,4 +345,402 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 1rem;
+}
+
+/* Enhanced DoctorPharmacy Styles */
+
+/* Stat Cards Enhancement */
+.stat-sublabel {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.stat-card.warning {
+  border-left: 4px solid #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(217, 119, 6, 0.03));
+}
+
+.stat-card.success {
+  border-left: 4px solid #22c55e;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(21, 128, 61, 0.03));
+}
+
+.stat-card.info {
+  border-left: 4px solid #3b82f6;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(37, 99, 235, 0.03));
+}
+
+/* Analytics Section Enhancement */
+.refresh-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  background: rgba(107, 114, 128, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+}
+
+.refresh-icon {
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.chart-container {
+  padding: 1rem;
+}
+
+.stock-details, .prescription-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stock-count, .prescription-count {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.stock-label, .prescription-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.stock-percentage {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.revenue-summary {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.revenue-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.revenue-amount {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+/* Category Distribution */
+.category-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.category-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.category-name {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.category-count {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.category-value {
+  font-weight: 700;
+  color: #059669;
+}
+
+/* Top Medicines */
+.top-medicines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.top-medicine-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.medicine-rank {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.medicine-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.medicine-details {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.medicine-total {
+  font-weight: 700;
+  color: #059669;
+  font-size: 1.125rem;
+}
+
+/* Alerts Section */
+.alert-card {
+  border-left: 4px solid #ef4444;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(220, 38, 38, 0.03));
+}
+
+.alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.alert-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid;
+}
+
+.alert-item.low-stock-alert {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.alert-item.expired-alert {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.alert-item.near-expiry-alert {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.alert-item.success-alert {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.alert-icon {
+  font-size: 1.5rem;
+}
+
+.alert-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.alert-title {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.alert-desc {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Enhanced Quick Actions */
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.quick-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.quick-action-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.quick-icon {
+  font-size: 1.25rem;
+}
+
+/* Analytics Section */
+.analytics-section {
+  padding: 0;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.analytics-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.analytics-card.full-width {
+  grid-column: 1 / -1;
+}
+
+.analytics-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 1.5rem 0;
+}
+
+.chart-placeholder {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stock-breakdown,
+.prescription-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+.stock-item,
+.prescription-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.stock-color,
+.prescription-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+
+.stock-color.available {
+  background: #22c55e;
+}
+
+.stock-color.low-stock {
+  background: #f59e0b;
+}
+
+.stock-color.out-of-stock {
+  background: #ef4444;
+}
+
+.prescription-color.pending {
+  background: #3b82f6;
+}
+
+.prescription-color.ready {
+  background: #22c55e;
+}
+
+.prescription-color.completed {
+  background: #6b7280;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .stats-overview {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-overview {
+    grid-template-columns: 1fr;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+  
+  .top-medicine-item, .category-item, .alert-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
 }

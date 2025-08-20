@@ -1,30 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import QRScanner from '../../QRScanner/QRScanner';
+import { getReceptionQueue, moveStudentToDoctor, updateQueueEntryStatus } from '../../../services/queueService';
 import './ReceptionistQueue.css';
 
 const ReceptionistQueue = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [queueList, setQueueList] = useState([
-    { queueNo: '012', studentName: 'Amali Perera', status: 'Waiting', action: 'Call Now', priority: 'Normal', waitTime: '5 min' },
-    { queueNo: '013', studentName: 'Franklin John', status: 'Waiting', action: 'Skip', priority: 'High', waitTime: '12 min' },
-    { queueNo: '014', studentName: 'Lahiru Silva', status: 'Waiting', action: 'Call Now', priority: 'Normal', waitTime: '3 min' },
-    { queueNo: '015', studentName: 'Sarah Williams', status: 'Called', action: 'Hold', priority: 'Low', waitTime: '8 min' },
-    { queueNo: '016', studentName: 'Michael Chen', status: 'Waiting', action: 'Call Now', priority: 'High', waitTime: '15 min' },
-  ]);
+  const [queueList, setQueueList] = useState([]);
+  const [showScanner, setShowScanner] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+
+  // Load queue data on component mount and set up refresh interval
+  useEffect(() => {
+    loadQueueData();
+    const interval = setInterval(loadQueueData, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadQueueData = () => {
+    const receptionQueue = getReceptionQueue();
+    setQueueList(receptionQueue);
+  };
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  const handleActionChange = (queueNo, action) => {
-    const updatedList = queueList.map(item => 
-      item.queueNo === queueNo ? { ...item, action } : item
-    );
-    setQueueList(updatedList);
+  const handleActionChange = async (queueNo, action) => {
+    try {
+      if (action === 'Send to Doctor') {
+        // Move student to doctor queue
+        await moveStudentToDoctor(queueNo);
+        alert('Student sent to doctor queue successfully!');
+        loadQueueData(); // Refresh the queue
+      } else {
+        // Update status
+        await updateQueueEntryStatus('reception', queueNo, { action, status: action });
+        loadQueueData(); // Refresh the queue
+      }
+    } catch (error) {
+      console.error('Error updating action:', error);
+      alert('Error updating student status');
+    }
   };
 
   const handleRefresh = () => {
+    loadQueueData();
     console.log('Queue refreshed');
-    // Simulate refresh animation or fetch new data
+  };
+
+  const handleScanResult = (medicalData) => {
+    console.log('QR scan result:', medicalData);
+    setShowScanner(false);
+    loadQueueData(); // Refresh queue to show new student
+  };
+
+  const handleViewDetails = (student) => {
+    setSelectedStudent(student);
   };
 
   const getStatusClass = (status) => {
@@ -117,11 +148,11 @@ const ReceptionistQueue = () => {
             </svg>
             Refresh
           </button>
-          <button className="btn btn-primary">
+          <button className="btn btn-primary" onClick={() => setShowScanner(true)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 5v14M5 12h14"></path>
+              <path d="M3,11H5V13H3V11M11,5H13V9H11V5M9,11H13V15H9V11M15,11H17V13H15V11M19,5H21V9H19V5M5,5H9V9H5V5"/>
             </svg>
-            Add Student
+            Scan QR Code
           </button>
         </div>
       </div>
@@ -133,10 +164,12 @@ const ReceptionistQueue = () => {
             <tr>
               <th>Queue No.</th>
               <th>Student Name</th>
+              <th>Student ID</th>
               <th>Status</th>
               <th>Priority</th>
               <th>Wait Time</th>
               <th>Action</th>
+              <th>Details</th>
             </tr>
           </thead>
           <tbody>
@@ -148,7 +181,13 @@ const ReceptionistQueue = () => {
                 <td>
                   <div className="student-info">
                     <div className="student-name">{entry.studentName}</div>
+                    <div className="student-details" style={{fontSize: '0.8rem', color: '#666'}}>
+                      {entry.email}
+                    </div>
                   </div>
+                </td>
+                <td>
+                  <div className="student-id">{entry.studentId || 'N/A'}</div>
                 </td>
                 <td>
                   <span className={`status-badge ${getStatusClass(entry.status)}`}>
@@ -172,7 +211,25 @@ const ReceptionistQueue = () => {
                     <option value="Call Now">Call Now</option>
                     <option value="Skip">Skip</option>
                     <option value="Hold">Hold</option>
+                    <option value="Send to Doctor">Send to Doctor</option>
                   </select>
+                </td>
+                <td>
+                  <button 
+                    className="btn btn-sm btn-info"
+                    onClick={() => handleViewDetails(entry)}
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      fontSize: '0.8rem',
+                      background: '#17a2b8',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    View
+                  </button>
                 </td>
               </tr>
             ))}
@@ -190,6 +247,100 @@ const ReceptionistQueue = () => {
           </div>
         )}
       </div>
+
+      {/* QR Scanner Modal */}
+      {showScanner && (
+        <QRScanner
+          onScanResult={handleScanResult}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+
+      {/* Student Details Modal */}
+      {selectedStudent && (
+        <div className="modal-overlay" onClick={() => setSelectedStudent(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Student Details - Queue #{selectedStudent.queueNo}</h3>
+              <button 
+                className="modal-close"
+                onClick={() => setSelectedStudent(null)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="detail-grid">
+                <div className="detail-item">
+                  <label>Name:</label>
+                  <span>{selectedStudent.studentName}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Student ID:</label>
+                  <span>{selectedStudent.studentId}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Email:</label>
+                  <span>{selectedStudent.email}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Phone:</label>
+                  <span>{selectedStudent.phone}</span>
+                </div>
+                <div className="detail-item">
+                  <label>NIC:</label>
+                  <span>{selectedStudent.nic}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Status:</label>
+                  <span>{selectedStudent.status}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Added Time:</label>
+                  <span>{new Date(selectedStudent.addedTime).toLocaleString()}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Wait Time:</label>
+                  <span>{selectedStudent.waitTime}</span>
+                </div>
+              </div>
+              
+              {selectedStudent.medicalData && (
+                <div className="medical-summary">
+                  <h4>Medical Summary</h4>
+                  <div className="detail-grid">
+                    <div className="detail-item">
+                      <label>Academic Division:</label>
+                      <span>{selectedStudent.medicalData.student.academicDivision}</span>
+                    </div>
+                    <div className="detail-item">
+                      <label>Emergency Contact:</label>
+                      <span>{selectedStudent.medicalData.student.emergencyContact.name} ({selectedStudent.medicalData.student.emergencyContact.telephone})</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn btn-secondary"
+                onClick={() => setSelectedStudent(null)}
+              >
+                Close
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={() => {
+                  handleActionChange(selectedStudent.queueNo, 'Send to Doctor');
+                  setSelectedStudent(null);
+                }}
+              >
+                Send to Doctor
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

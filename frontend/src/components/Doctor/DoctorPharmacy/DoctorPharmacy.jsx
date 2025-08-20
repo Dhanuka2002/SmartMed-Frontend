@@ -1,142 +1,120 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useMedicineInventory } from "../../../contexts/MedicineInventoryContext";
+import { usePrescription } from "../../../contexts/PrescriptionContext";
 import "./DoctorPharmacy.css";
 
 function DoctorPharmacy() {
+  // Context hooks for real-time data with error handling
+  const medicineContext = useMedicineInventory();
+  const prescriptionContext = usePrescription();
+  
+  // Safely extract data with fallbacks
+  const {
+    medicines = [],
+    searchMedicines = () => [],
+    getCategories = () => [],
+    getLowStockMedicines = () => [],
+    getExpiredMedicines = () => [],
+    getNearExpiryMedicines = () => []
+  } = medicineContext || {};
+  
+  const {
+    prescriptions = [],
+    dispensedPrescriptions = []
+  } = prescriptionContext || {};
+
   const [activeTab, setActiveTab] = useState("inventory");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [prescriptionSearch, setPrescriptionSearch] = useState("");
+  const [refreshInterval, setRefreshInterval] = useState(Date.now());
 
-  // Mock pharmacy data
-  const [medications] = useState([
-    {
-      id: 1,
-      name: "Paracetamol",
-      strength: "500mg",
-      category: "analgesic",
-      stockLevel: 150,
-      minStock: 50,
-      price: 2.50,
-      manufacturer: "PharmaCorp",
-      expiryDate: "2026-08-15",
-      batchNo: "PCM001",
-      status: "available"
-    },
-    {
-      id: 2,
-      name: "Amoxicillin",
-      strength: "250mg",
-      category: "antibiotic",
-      stockLevel: 25,
-      minStock: 30,
-      price: 8.75,
-      manufacturer: "MediLab",
-      expiryDate: "2025-12-10",
-      batchNo: "AMX002",
-      status: "low_stock"
-    },
-    {
-      id: 3,
-      name: "Ibuprofen",
-      strength: "400mg",
-      category: "analgesic",
-      stockLevel: 0,
-      minStock: 40,
-      price: 3.25,
-      manufacturer: "HealthCorp",
-      expiryDate: "2025-09-22",
-      batchNo: "IBU003",
-      status: "out_of_stock"
-    },
-    {
-      id: 4,
-      name: "Vitamin D3",
-      strength: "1000IU",
-      category: "vitamin",
-      stockLevel: 200,
-      minStock: 60,
-      price: 12.00,
-      manufacturer: "VitaHealth",
-      expiryDate: "2027-03-18",
-      batchNo: "VD3004",
-      status: "available"
-    },
-    {
-      id: 5,
-      name: "Aspirin",
-      strength: "75mg",
-      category: "analgesic",
-      stockLevel: 80,
-      minStock: 50,
-      price: 1.50,
-      manufacturer: "CardioMed",
-      expiryDate: "2026-01-30",
-      batchNo: "ASP005",
-      status: "available"
-    },
-    {
-      id: 6,
-      name: "Omeprazole",
-      strength: "20mg",
-      category: "antacid",
-      stockLevel: 15,
-      minStock: 25,
-      price: 15.50,
-      manufacturer: "GastroPharm",
-      expiryDate: "2025-11-05",
-      batchNo: "OME006",
-      status: "low_stock"
+  // Auto-refresh data every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRefreshInterval(Date.now());
+    }, 30000); // 30 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  // Transform medicine inventory data to match component format
+  const medications = useMemo(() => {
+    if (!medicines || !Array.isArray(medicines)) {
+      console.log('DoctorPharmacy: No medicines data available');
+      return [];
     }
-  ]);
+    
+    return medicines.map(medicine => ({
+      id: medicine.id,
+      name: medicine.name || 'Unknown Medicine',
+      strength: medicine.dosage || 'N/A',
+      category: (medicine.category || 'other').toLowerCase(),
+      stockLevel: medicine.quantity || 0,
+      minStock: medicine.minStock || 0,
+      price: Math.random() * 20 + 5, // Mock price - you can add this to inventory context
+      manufacturer: medicine.addedBy === 'System' ? 'PharmaCorp' : `Added by ${medicine.addedBy || 'Unknown'}`,
+      expiryDate: medicine.expiry || 'No expiry date',
+      batchNo: medicine.batchNumber || 'No batch',
+      status: medicine.quantity === 0 ? 'out_of_stock' : 
+               (medicine.quantity || 0) <= (medicine.minStock || 0) ? 'low_stock' : 'available'
+    }));
+  }, [medicines, refreshInterval]);
 
-  const [prescriptions] = useState([
-    {
-      id: "RX001",
-      patientName: "Franklin Jhon",
-      patientId: "22IT099",
-      doctorName: "Dr. Smith",
-      date: "2025-07-21",
-      status: "pending",
-      medications: [
-        { name: "Paracetamol 500mg", quantity: 30, instructions: "Take 1 tablet twice daily" },
-        { name: "Vitamin D3 1000IU", quantity: 60, instructions: "Take 1 tablet daily" }
-      ],
-      totalAmount: 87.00
-    },
-    {
-      id: "RX002",
-      patientName: "Sarah Wilson",
-      patientId: "22IT045",
-      doctorName: "Dr. Johnson",
-      date: "2025-07-21",
-      status: "completed",
-      medications: [
-        { name: "Amoxicillin 250mg", quantity: 21, instructions: "Take 1 capsule three times daily" }
-      ],
-      totalAmount: 183.75
-    },
-    {
-      id: "RX003",
-      patientName: "Michael Brown",
-      patientId: "22IT078",
-      doctorName: "Dr. Davis",
-      date: "2025-07-20",
-      status: "ready",
-      medications: [
-        { name: "Ibuprofen 400mg", quantity: 20, instructions: "Take as needed for pain" },
-        { name: "Omeprazole 20mg", quantity: 30, instructions: "Take once daily before meals" }
-      ],
-      totalAmount: 530.00
-    }
-  ]);
+  // Combine both active and dispensed prescriptions for complete view
+  const allPrescriptions = useMemo(() => {
+    const activePrescriptions = (prescriptions || []).map(prescription => ({
+      id: `RX${prescription.id}`,
+      patientName: prescription.patientName,
+      patientId: prescription.patientId,
+      doctorName: prescription.doctorName,
+      date: new Date(prescription.createdAt || Date.now()).toLocaleDateString(),
+      status: prescription.status === 'pending' ? 'pending' : 'ready',
+      medications: (prescription.medicines || []).map(med => ({
+        name: `${med.medicineName} ${med.dosage}`,
+        quantity: med.quantity,
+        instructions: med.instructions
+      })),
+      totalAmount: (prescription.medicines || []).reduce((total, med) => {
+        const medicine = medicines.find(m => m.id === med.medicineId);
+        const price = medicine ? (Math.random() * 20 + 5) : 10; // Mock pricing
+        return total + (price * med.quantity);
+      }, 0)
+    }));
+    
+    const dispensed = (dispensedPrescriptions || []).map(prescription => ({
+      id: `RX${prescription.id}`,
+      patientName: prescription.patientName,
+      patientId: prescription.patientId,
+      doctorName: prescription.doctorName,
+      date: new Date(prescription.dispensedDate || prescription.createdAt || Date.now()).toLocaleDateString(),
+      status: 'completed',
+      medications: (prescription.medicines || []).map(med => ({
+        name: `${med.medicineName} ${med.dosage}`,
+        quantity: med.quantity,
+        instructions: med.instructions
+      })),
+      totalAmount: (prescription.medicines || []).reduce((total, med) => {
+        const medicine = medicines.find(m => m.id === med.medicineId);
+        const price = medicine ? (Math.random() * 20 + 5) : 10;
+        return total + (price * med.quantity);
+      }, 0)
+    }));
+    
+    return [...activePrescriptions, ...dispensed];
+  }, [prescriptions, dispensedPrescriptions, medicines, refreshInterval]);
 
-  const categories = [
-    { value: "all", label: "All Categories" },
-    { value: "analgesic", label: "Analgesics" },
-    { value: "antibiotic", label: "Antibiotics" },
-    { value: "vitamin", label: "Vitamins" },
-    { value: "antacid", label: "Antacids" }
-  ];
+  // Dynamic categories from real inventory data
+  const categories = useMemo(() => {
+    const realCategories = getCategories().map(cat => ({
+      value: cat.toLowerCase(),
+      label: cat
+    }));
+    return [
+      { value: "all", label: "All Categories" },
+      ...realCategories
+    ];
+  }, [getCategories, refreshInterval]);
 
   // Filter medications
   const filteredMedications = medications.filter(med => {
@@ -147,25 +125,56 @@ function DoctorPharmacy() {
   });
 
   // Filter prescriptions
-  const filteredPrescriptions = prescriptions.filter(prescription =>
+  const filteredPrescriptions = allPrescriptions.filter(prescription =>
     prescription.patientName.toLowerCase().includes(prescriptionSearch.toLowerCase()) ||
     prescription.patientId.toLowerCase().includes(prescriptionSearch.toLowerCase()) ||
     prescription.id.toLowerCase().includes(prescriptionSearch.toLowerCase())
   );
 
-  // Get status stats
-  const stockStats = {
+  // Real-time analytics and statistics
+  const stockStats = useMemo(() => ({
     total: medications.length,
     available: medications.filter(m => m.status === "available").length,
     lowStock: medications.filter(m => m.status === "low_stock").length,
-    outOfStock: medications.filter(m => m.status === "out_of_stock").length
-  };
+    outOfStock: medications.filter(m => m.status === "out_of_stock").length,
+    nearExpiry: getNearExpiryMedicines().length,
+    expired: getExpiredMedicines().length,
+    totalValue: medications.reduce((total, med) => total + (med.price * med.stockLevel), 0)
+  }), [medications, getNearExpiryMedicines, getExpiredMedicines, refreshInterval]);
 
-  const prescriptionStats = {
-    pending: prescriptions.filter(p => p.status === "pending").length,
-    ready: prescriptions.filter(p => p.status === "ready").length,
-    completed: prescriptions.filter(p => p.status === "completed").length
-  };
+  const prescriptionStats = useMemo(() => ({
+    pending: allPrescriptions.filter(p => p.status === "pending").length,
+    ready: allPrescriptions.filter(p => p.status === "ready").length,
+    completed: allPrescriptions.filter(p => p.status === "completed").length,
+    totalRevenue: allPrescriptions
+      .filter(p => p.status === "completed")
+      .reduce((total, p) => total + p.totalAmount, 0),
+    todaysPrescriptions: allPrescriptions
+      .filter(p => p.date === new Date().toLocaleDateString()).length
+  }), [allPrescriptions, refreshInterval]);
+
+  // Additional analytics
+  const analyticsData = useMemo(() => {
+    const topMedicines = medications
+      .sort((a, b) => (b.stockLevel * b.price) - (a.stockLevel * a.price))
+      .slice(0, 5);
+    
+    const categoryDistribution = categories.slice(1).map(cat => ({
+      category: cat.label,
+      count: medications.filter(med => med.category === cat.value).length,
+      value: medications
+        .filter(med => med.category === cat.value)
+        .reduce((total, med) => total + (med.price * med.stockLevel), 0)
+    }));
+    
+    return {
+      topMedicines,
+      categoryDistribution,
+      lowStockMedicines: getLowStockMedicines(),
+      expiredMedicines: getExpiredMedicines(),
+      nearExpiryMedicines: getNearExpiryMedicines()
+    };
+  }, [medications, categories, getLowStockMedicines, getExpiredMedicines, getNearExpiryMedicines, refreshInterval]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -191,10 +200,28 @@ function DoctorPharmacy() {
     }
   };
 
-  return (
-    <div className="doctor-pharmacy-container">
-      {/* Header Section */}
-      <div className="pharmacy-header">
+  // Error handling for context availability
+  if (!medicineContext || !prescriptionContext) {
+    return (
+      <div className="doctor-pharmacy-container" style={{ padding: '2rem', textAlign: 'center' }}>
+        <h2>Loading Pharmacy Data...</h2>
+        <p>Please make sure the Medicine Inventory and Prescription contexts are properly configured.</p>
+        <div style={{ marginTop: '2rem', padding: '1rem', background: '#f3f4f6', borderRadius: '8px' }}>
+          <p><strong>Debug Info:</strong></p>
+          <p>Medicine Context: {medicineContext ? '✅ Available' : '❌ Not Available'}</p>
+          <p>Prescription Context: {prescriptionContext ? '✅ Available' : '❌ Not Available'}</p>
+          <p>Medicines Count: {medicines?.length || 0}</p>
+          <p>Prescriptions Count: {prescriptions?.length || 0}</p>
+        </div>
+      </div>
+    );
+  }
+
+  try {
+    return (
+      <div className="doctor-pharmacy-container">
+        {/* Header Section */}
+        <div className="pharmacy-header">
         <div className="header-content">
           <h1 className="page-title">
             <span className="title-icon">💊</span>
@@ -204,25 +231,42 @@ function DoctorPharmacy() {
         </div>
         
         <div className="stats-overview">
-          <div className="stat-card">
-            <div className="stat-icon">📦</div>
-            <div className="stat-content">
-              <span className="stat-value">{stockStats.total}</span>
-              <span className="stat-label">Total Medications</span>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">⚠️</div>
+          
+          <div className="stat-card warning">
+            
             <div className="stat-content">
               <span className="stat-value">{stockStats.lowStock}</span>
               <span className="stat-label">Low Stock</span>
+              <div className="stat-icon">⚠️</div>
+              <span className="stat-sublabel">{stockStats.outOfStock} out of stock</span>
             </div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon">📋</div>
+           
             <div className="stat-content">
               <span className="stat-value">{prescriptionStats.pending}</span>
               <span className="stat-label">Pending Scripts</span>
+               <div className="stat-icon">📋</div>
+              <span className="stat-sublabel">{prescriptionStats.todaysPrescriptions} today</span>
+            </div>
+            
+          </div>
+          <div className="stat-card success">
+            
+            <div className="stat-content">
+              <span className="stat-value">${prescriptionStats.totalRevenue.toFixed(0)}</span>
+              <span className="stat-label">Total Revenue</span>
+              <div className="stat-icon">💰</div>
+              <span className="stat-sublabel">{prescriptionStats.completed} completed</span>
+            </div>
+          </div>
+          <div className="stat-card info">
+           
+            <div className="stat-content">
+              <span className="stat-value">{stockStats.nearExpiry}</span>
+              <span className="stat-label">Near Expiry</span>
+               <div className="stat-icon">⏰</div>
+              <span className="stat-sublabel">{stockStats.expired} expired</span>
             </div>
           </div>
         </div>
@@ -262,7 +306,7 @@ function DoctorPharmacy() {
                       <span className="search-icon">🔍</span>
                       <input
                         type="text"
-                        placeholder="Search medications..."
+                        placeholder="Search"
                         className="search-input"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -328,16 +372,7 @@ function DoctorPharmacy() {
                       </div>
                     </div>
 
-                    <div className="medication-actions">
-                      <button className="action-btn-small secondary">
-                        <span className="btn-icon">✏️</span>
-                        Edit
-                      </button>
-                      <button className="action-btn-small primary">
-                        <span className="btn-icon">📈</span>
-                        Restock
-                      </button>
-                    </div>
+                    
                   </div>
                 ))}
               </div>
@@ -504,6 +539,19 @@ function DoctorPharmacy() {
       </div>
     </div>
   );
+  } catch (error) {
+    console.error('DoctorPharmacy Error:', error);
+    return (
+      <div className="doctor-pharmacy-container" style={{ padding: '2rem', textAlign: 'center' }}>
+        <h2>Error Loading Pharmacy Interface</h2>
+        <p>There was an error loading the pharmacy data. Please refresh the page or check the console for details.</p>
+        <div style={{ marginTop: '2rem', padding: '1rem', background: '#fee2e2', borderRadius: '8px', color: '#dc2626' }}>
+          <p><strong>Error Details:</strong></p>
+          <p>{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 }
 
 export default DoctorPharmacy;

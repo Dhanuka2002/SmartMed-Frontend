@@ -1,16 +1,21 @@
-body {
-  margin: 0;
-  background: #f6f8fb;
-  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
 .login-wrapper {
-  min-height: 100vh;
-  background: linear-gradient(180deg, #3245ff 50%, #ffffff 50%);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('src/assets/bg3.jpg');  
+  background-size: cover;
+  background-position: center;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 40px 0; /* Top & bottom only */
+  margin: 0;
+  padding: 0;
+  z-index: 9999;
+  overflow: auto;
 }
 
 .login-card {
