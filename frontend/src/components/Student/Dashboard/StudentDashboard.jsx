@@ -9,29 +9,126 @@ function Dashboard() {
   const [studentData, setStudentData] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [studentFormData, setStudentFormData] = useState(null);
+  const [profileImage, setProfileImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    loadUserData();
+  }, []);
+
+  // Listen for storage changes to refresh when user submits form
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key && (e.key.includes('studentFormData_') || e.key.includes('studentData_'))) {
+        // Refresh user data when form data is updated
+        loadUserData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events within the same window
+    const handleCustomRefresh = () => {
+      loadUserData();
+    };
+    
+    window.addEventListener('studentDataUpdated', handleCustomRefresh);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('studentDataUpdated', handleCustomRefresh);
+    };
+  }, []);
+
+  const loadUserData = () => {
     // Get current user data from localStorage
     const userData = localStorage.getItem('currentUser');
     if (userData) {
-      setCurrentUser(JSON.parse(userData));
-    }
-
-    // Get detailed student data if available
-    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    if (user.email) {
+      const user = JSON.parse(userData);
+      setCurrentUser(user);
+      
+      // Clear any cached data that might belong to other users
+      clearOtherUsersData(user.email);
+      
+      // Get detailed student data if available for this specific user
       const detailedData = localStorage.getItem(`studentData_${user.email}`);
       if (detailedData) {
         setStudentData(JSON.parse(detailedData));
       }
+      
+      // Get student form data for profile image (only for current user)
+      const formData = localStorage.getItem(`studentFormData_${user.email}`);
+      if (formData) {
+        setStudentFormData(JSON.parse(formData));
+      } else {
+        // Check for old general studentFormData and migrate if it belongs to current user
+        const oldFormData = localStorage.getItem('studentFormData');
+        if (oldFormData) {
+          const parsedFormData = JSON.parse(oldFormData);
+          if (parsedFormData.email === user.email) {
+            localStorage.setItem(`studentFormData_${user.email}`, oldFormData);
+            setStudentFormData(parsedFormData);
+          }
+          localStorage.removeItem('studentFormData'); // Clean up old general storage
+        }
+      }
+      
+      // Fetch profile image from backend
+      fetchProfileImageFromBackend(user);
     }
-    
-    // Get student form data for profile image
+  };
+
+  const clearOtherUsersData = (currentUserEmail) => {
+    // Clear any general cached form data that might not belong to current user
     const formData = localStorage.getItem('studentFormData');
     if (formData) {
-      setStudentFormData(JSON.parse(formData));
+      const parsedFormData = JSON.parse(formData);
+      if (parsedFormData.email !== currentUserEmail) {
+        localStorage.removeItem('studentFormData');
+        setStudentFormData(null);
+      }
     }
-  }, []);
+    
+    // Clear profile image if it was for a different user
+    setProfileImage(null);
+  };
+
+  const fetchProfileImageFromBackend = async (user) => {
+    setLoading(true);
+    try {
+      // Clear any cached profile image first
+      setProfileImage(null);
+      
+      // Strategy 1: Try to find by login email
+      let response = await fetch(`http://localhost:8081/api/student-details/profile-image/email/${encodeURIComponent(user.email)}`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.status === 'success' && result.profileImage) {
+          setProfileImage(result.profileImage);
+          return;
+        }
+      }
+      
+      // Strategy 2: Try to find by name matching
+      const nameResponse = await fetch(`http://localhost:8081/api/student-details/search/${encodeURIComponent(user.name)}`);
+      if (nameResponse.ok) {
+        const nameResult = await nameResponse.json();
+        if (nameResult && nameResult.length > 0) {
+          // Find student with profile image
+          const studentWithImage = nameResult.find(student => student.profileImage);
+          if (studentWithImage && studentWithImage.profileImage) {
+            setProfileImage(studentWithImage.profileImage);
+            return;
+          }
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error fetching profile image:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="dashboard-container">
       {/* Header Section */}
@@ -52,9 +149,17 @@ function Dashboard() {
               </div>
             </div>
             <div className="avatar-container">
-              {(studentFormData?.profileImage || studentData?.profileImage) ? (
+              {!currentUser ? (
+                <div className="avatar-na">
+                  <span className="na-text">NA</span>
+                </div>
+              ) : loading ? (
+                <div className="avatar-loading">
+                  <span>...</span>
+                </div>
+              ) : (profileImage || studentFormData?.profileImage || studentData?.profileImage) ? (
                 <img 
-                  src={studentFormData?.profileImage || studentData?.profileImage}
+                  src={profileImage || studentFormData?.profileImage || studentData?.profileImage}
                   alt={currentUser?.name || studentData?.fullName || 'Student'}
                   className="dashboard-avatar-image"
                 />
@@ -84,23 +189,21 @@ function Dashboard() {
             </div>
           </div>
           
-          {!studentData && currentUser && (
-            <div className="incomplete-profile-notice">
-              <p>Complete your medical profile to access all features.</p>
-              <a href="/student/entering-details" className="complete-profile-btn">
-                Complete Profile
-              </a>
-            </div>
-          )}
-          
-          {!currentUser && (
+          {!currentUser ? (
             <div className="no-user-notice">
               <p>Please log in to view your student information.</p>
               <a href="/login" className="login-btn">
                 Login
               </a>
             </div>
-          )}
+          ) : !studentData ? (
+            <div className="incomplete-profile-notice">
+              <p>Complete your medical profile to access all features.</p>
+              <a href="/student/entering-details" className="complete-profile-btn">
+                Complete Profile
+              </a>
+            </div>
+          ) : null}
           <div className="student-details">
             <div className="detail-row">
               <span className="detail-label">Full Name</span>
