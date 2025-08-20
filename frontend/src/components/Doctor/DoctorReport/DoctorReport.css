@@ -200,12 +200,16 @@
   display: inline-block;
 }
 
-/* Patient Overview */
+/* Patient Overview - Centered Info Cards */
 .patient-info-grid {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  display: flex !important;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
   gap: 1.5rem;
   visibility: visible !important;
+  margin: 0 auto;
+  max-width: 1200px;
 }
 
 .info-card {
@@ -217,6 +221,9 @@
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
+  flex: 1;
+  min-width: 280px;
+  max-width: 350px;
 }
 
 .info-card:hover {
@@ -229,6 +236,7 @@
   color: #3b82f6;
   font-size: 1.1rem;
   font-weight: 600;
+  text-align: center;
 }
 
 .info-rows {
@@ -715,7 +723,16 @@
     justify-content: center;
   }
   
-  .patient-info-grid,
+  .patient-info-grid {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .info-card {
+    max-width: 100%;
+    min-width: unset;
+  }
+  
   .measurements-grid,
   .systems-grid,
   .conditions-grid,
