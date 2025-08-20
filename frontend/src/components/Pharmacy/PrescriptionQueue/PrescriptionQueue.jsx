@@ -46,9 +46,14 @@ function PrescriptionQueue() {
     return () => clearInterval(interval);
   }, []);
 
-  const loadLegacyPrescriptions = () => {
-    const pharmacyQueue = getPharmacyQueue();
-    setLegacyPrescriptions(pharmacyQueue);
+  const loadLegacyPrescriptions = async () => {
+    try {
+      const pharmacyQueue = await getPharmacyQueue();
+      setLegacyPrescriptions(pharmacyQueue);
+    } catch (error) {
+      console.error('Error loading pharmacy queue:', error);
+      setLegacyPrescriptions([]);
+    }
   };
 
   // Combine all prescriptions (pending, dispensed, and legacy)
