@@ -16,13 +16,9 @@ const Register = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
+  // Only Student registration is allowed through public registration
   const userRoles = [
-    "Student",
-    "Pharmacy",
-    "Doctor",
-    "Hospital Staff",
-    "Receptionist",
-    "Driver",
+    "Student"
   ];
 
   const handleChange = (e) => {
@@ -86,7 +82,10 @@ const Register = () => {
         </div>
 
         <form className="register-form" onSubmit={handleSubmit}>
-          <h2>Sign Up</h2>
+          <h2>Student Registration</h2>
+          <p style={{color: '#666', fontSize: '14px', marginBottom: '20px', textAlign: 'center'}}>
+            Only students can register here. Other roles are managed by admin.
+          </p>
 
           <div className="input-group">
             <FaUserTag className="icon" />

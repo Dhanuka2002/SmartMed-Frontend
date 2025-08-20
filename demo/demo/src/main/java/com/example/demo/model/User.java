@@ -18,6 +18,12 @@ public class User {
     private String password;
 
     private String role;
+    
+    @Column(name = "is_approved")
+    private Boolean isApproved = false;
+    
+    @Column(name = "created_by_admin")
+    private Boolean createdByAdmin = false;
 
     // ----- Constructors -----
     public User() {}
@@ -28,6 +34,8 @@ public class User {
         this.email = email;
         this.password = password;
         this.role = role;
+        this.isApproved = role.equals("Student") ? true : false;
+        this.createdByAdmin = false;
     }
 
     // ----- Getters & Setters -----
@@ -70,5 +78,21 @@ public class User {
 
     public void setRole(String role) {
         this.role = role;
+    }
+    
+    public Boolean getIsApproved() {
+        return isApproved;
+    }
+    
+    public void setIsApproved(Boolean isApproved) {
+        this.isApproved = isApproved;
+    }
+    
+    public Boolean getCreatedByAdmin() {
+        return createdByAdmin;
+    }
+    
+    public void setCreatedByAdmin(Boolean createdByAdmin) {
+        this.createdByAdmin = createdByAdmin;
     }
 }

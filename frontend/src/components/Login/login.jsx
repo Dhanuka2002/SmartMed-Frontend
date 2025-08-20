@@ -29,52 +29,49 @@ const Login = () => {
         body: JSON.stringify(formData),
       });
 
-      // ✅ Use text() not json()
-      const result = await response.text();
-      alert(result);
-
-      if (result.includes("Login successful")) {
+      // ✅ Use json() to parse the response
+      const result = await response.json();
+      
+      if (result.status === "success") {
+        alert("Login successful!");
+        
         // Store user session data
-        const userRole = result.includes("Student") ? "Student" :
-                        result.includes("Doctor") ? "Doctor" :
-                        result.includes("Pharmacy") ? "Pharmacy" :
-                        result.includes("Hospital Staff") ? "Hospital Staff" :
-                        result.includes("Receptionist") ? "Receptionist" : "";
+        const userData = {
+          role: result.role,
+          name: result.name,
+          email: result.email,
+          userId: result.userId
+        };
+        
+        localStorage.setItem('currentUser', JSON.stringify(userData));
 
-        if (userRole) {
-          // Get user name from result or use email as fallback
-          const userName = result.match(/Welcome,?\s+([^!]+)/i)?.[1] || formData.email.split('@')[0];
+        // Store role-specific data and navigate based on role
+        if (result.role === "Student") {
+          localStorage.setItem('studentName', result.name);
+          localStorage.setItem('studentEmail', result.email);
           
-          localStorage.setItem('currentUser', JSON.stringify({
-            role: userRole,
-            name: userName,
-            email: formData.email
-          }));
-
-          // Store role-specific data
-          if (userRole === "Student") {
-            localStorage.setItem('studentName', userName);
-            localStorage.setItem('studentEmail', formData.email);
-            
-            // Check if user has existing data to show QR or redirect to dashboard
-            const existingData = localStorage.getItem(`studentData_${formData.email}`);
-            if (existingData) {
-              navigate("/student/qrcode");
-            } else {
-              navigate("/student/dashboard");
-            }
-          } else if (userRole === "Doctor") {
-            navigate("/doctor/dashboard");
-          } else if (userRole === "Pharmacy") {
-            navigate("/inventory");
-          } else if (userRole === "Hospital Staff") {
-            navigate("/hospital-staff");
-          } else if (userRole === "Receptionist") {
-            navigate("/receptionist/dashboard");
+          // Check if user has existing data to show QR or redirect to dashboard
+          const existingData = localStorage.getItem(`studentData_${result.email}`);
+          if (existingData) {
+            navigate("/student/qrcode");
+          } else {
+            navigate("/student/dashboard");
           }
+        } else if (result.role === "Doctor") {
+          navigate("/doctor/dashboard");
+        } else if (result.role === "Pharmacy") {
+          navigate("/inventory");
+        } else if (result.role === "Hospital Staff") {
+          navigate("/hospital-staff");
+        } else if (result.role === "Receptionist") {
+          navigate("/receptionist/dashboard");
+        } else if (result.role === "Admin") {
+          navigate("/admin/dashboard");
         } else {
           alert("Unknown role!");
         }
+      } else {
+        alert(result.message || "Login failed!");
       }
     } catch (error) {
       console.error(error);

@@ -92,6 +92,9 @@ const ReceptionistQueue = () => {
   );
 
   const totalWaiting = queueList.filter(item => item.status === 'Waiting').length;
+  const averageWaitTime = Math.round(
+    queueList.reduce((acc, item) => acc + parseInt(item.waitTime), 0) / queueList.length
+  );
 
   return (
     <div className="queue-container">
@@ -106,6 +109,10 @@ const ReceptionistQueue = () => {
           <div className="stat-card">
             <div className="stat-number">{totalWaiting}</div>
             <div className="stat-label">Waiting</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number">{averageWaitTime}</div>
+            <div className="stat-label">Avg Wait (min)</div>
           </div>
           <div className="stat-card">
             <div className="stat-number">{queueList.length}</div>
@@ -160,6 +167,7 @@ const ReceptionistQueue = () => {
               <th>Student ID</th>
               <th>Status</th>
               <th>Priority</th>
+              <th>Wait Time</th>
               <th>Action</th>
               <th>Details</th>
             </tr>
@@ -190,6 +198,9 @@ const ReceptionistQueue = () => {
                   <span className={`priority-badge ${getPriorityClass(entry.priority)}`}>
                     {entry.priority}
                   </span>
+                </td>
+                <td>
+                  <div className="wait-time">{entry.waitTime}</div>
                 </td>
                 <td>
                   <select
