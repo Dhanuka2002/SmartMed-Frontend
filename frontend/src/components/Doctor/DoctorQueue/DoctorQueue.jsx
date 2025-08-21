@@ -6,6 +6,8 @@ function DoctorQueue() {
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
   const [queueData, setQueueData] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [loading, setLoading] = useState(true);   // NEW
+  const [error, setError] = useState(null);       // NEW
 
   // Load doctor queue data
   useEffect(() => {
@@ -22,44 +24,57 @@ function DoctorQueue() {
     return () => clearInterval(timeInterval);
   }, []);
 
-  const loadQueueData = () => {
-    const doctorQueue = getDoctorQueue();
-    setQueueData(doctorQueue);
+  const loadQueueData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const doctorQueue = await getDoctorQueue();  // ✅ now awaits API
+      setQueueData(doctorQueue || []);
+    } catch (err) {
+      console.error("Error fetching doctor queue:", err);
+      setError("Unable to load queue. Please try again.");
+      setQueueData([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSelectPatient = (patient) => {
     setSelectedPatient(patient);
-    // Store selected patient for DoctorPatient component
-    localStorage.setItem('selectedPatient', JSON.stringify(patient));
-    alert(`Selected patient: ${patient.studentName} (Queue #${patient.queueNo}). Navigate to Patients page to view details.`);
+    localStorage.setItem("selectedPatient", JSON.stringify(patient));
+    alert(
+      `Selected patient: ${patient.studentName} (Queue #${patient.queueNo}). Navigate to Patients page to view details.`
+    );
   };
 
   const handlePatientStatus = async (queueNo, status) => {
     try {
-      await updateQueueEntryStatus('doctor', queueNo, { status });
+      await updateQueueEntryStatus("doctor", queueNo, { status });
       loadQueueData();
     } catch (error) {
-      console.error('Error updating patient status:', error);
-      alert('Error updating patient status');
+      console.error("Error updating patient status:", error);
+      alert("Error updating patient status");
     }
   };
 
   // Helper function to get status badge info
   const getStatusBadge = (status) => {
-    switch(status) {
-      case 'In Progress':
-        return { label: 'In Progress', class: 'status-current' };
-      case 'Waiting for Doctor':
-        return { label: 'Waiting', class: 'status-waiting' };
-      case 'Completed':
-        return { label: 'Completed', class: 'status-completed' };
+    switch (status) {
+      case "In Progress":
+        return { label: "In Progress", class: "status-current" };
+      case "Waiting for Doctor":
+        return { label: "Waiting", class: "status-waiting" };
+      case "Completed":
+        return { label: "Completed", class: "status-completed" };
       default:
-        return { label: 'Waiting', class: 'status-waiting' };
+        return { label: "Waiting", class: "status-waiting" };
     }
   };
 
   const getTotalPatients = () => queueData.length;
-  const getWaitingPatients = () => queueData.filter(p => p.status === "Waiting for Doctor").length;
+  const getWaitingPatients = () =>
+    queueData.filter((p) => p.status === "Waiting for Doctor").length;
 
   return (
     <div className="doctor-queue-container">
@@ -86,7 +101,11 @@ function DoctorQueue() {
 
       {/* Queue List */}
       <div className="queue-content">
-        {queueData.length === 0 ? (
+        {loading ? (
+          <div className="loading-state">⏳ Loading queue...</div>
+        ) : error ? (
+          <div className="error-state">⚠️ {error}</div>
+        ) : queueData.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">👥</div>
             <h3>No patients in queue</h3>
@@ -96,18 +115,27 @@ function DoctorQueue() {
           <div className="queue-list">
             {queueData.map((patient, index) => {
               const statusInfo = getStatusBadge(patient.status);
-              const addedTime = new Date(patient.movedToDoctorTime || patient.addedTime);
+              const addedTime = new Date(
+                patient.movedToDoctorTime || patient.addedTime
+              );
               return (
-                <div className={`queue-item ${patient.status === 'In Progress' ? 'current' : 'waiting'}`} key={patient.queueNo}>
+                <div
+                  className={`queue-item ${
+                    patient.status === "In Progress" ? "current" : "waiting"
+                  }`}
+                  key={patient.queueNo}
+                >
                   <div className="queue-position">
                     <span className="position-number">{index + 1}</span>
                   </div>
-                  
+
                   <div className="patient-info">
                     <div className="patient-main">
                       <h3 className="patient-name">{patient.studentName}</h3>
                       <span className="patient-id">Queue #: {patient.queueNo}</span>
-                      <span className="student-id">Student ID: {patient.studentId}</span>
+                      <span className="student-id">
+                        Student ID: {patient.studentId}
+                      </span>
                     </div>
                     <div className="appointment-details">
                       <div className="detail-item">
@@ -124,22 +152,24 @@ function DoctorQueue() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="queue-status">
                     <div className={`status-badge ${statusInfo.class}`}>
                       {statusInfo.label}
                     </div>
                     <div className="patient-actions">
-                      <button 
+                      <button
                         className="action-btn select-btn"
                         onClick={() => handleSelectPatient(patient)}
                       >
                         View Patient
                       </button>
-                      {patient.status === 'Waiting for Doctor' && (
-                        <button 
+                      {patient.status === "Waiting for Doctor" && (
+                        <button
                           className="action-btn start-btn"
-                          onClick={() => handlePatientStatus(patient.queueNo, 'In Progress')}
+                          onClick={() =>
+                            handlePatientStatus(patient.queueNo, "In Progress")
+                          }
                         >
                           Start Consultation
                         </button>
@@ -169,7 +199,7 @@ function DoctorQueue() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Patient Details - Queue #{selectedPatient.queueNo}</h3>
-              <button 
+              <button
                 className="modal-close"
                 onClick={() => setSelectedPatient(null)}
               >
@@ -203,35 +233,48 @@ function DoctorQueue() {
                   <span>{selectedPatient.status}</span>
                 </div>
               </div>
-              
+
               {selectedPatient.medicalData && (
                 <div className="medical-summary">
                   <h4>Medical Summary</h4>
                   <div className="detail-grid">
                     <div className="detail-item">
                       <label>Academic Division:</label>
-                      <span>{selectedPatient.medicalData.student.academicDivision}</span>
+                      <span>
+                        {selectedPatient.medicalData.student.academicDivision}
+                      </span>
                     </div>
                     <div className="detail-item">
                       <label>Emergency Contact:</label>
-                      <span>{selectedPatient.medicalData.student.emergencyContact.name} ({selectedPatient.medicalData.student.emergencyContact.telephone})</span>
+                      <span>
+                        {selectedPatient.medicalData.student.emergencyContact.name}{" "}
+                        (
+                        {
+                          selectedPatient.medicalData.student.emergencyContact
+                            .telephone
+                        }
+                        )
+                      </span>
                     </div>
                     <div className="detail-item">
                       <label>Blood Group:</label>
-                      <span>{selectedPatient.medicalData.examination?.examination?.clinicalTests?.bloodGroup || 'Not Available'}</span>
+                      <span>
+                        {selectedPatient.medicalData.examination?.examination
+                          ?.clinicalTests?.bloodGroup || "Not Available"}
+                      </span>
                     </div>
                   </div>
                 </div>
               )}
             </div>
             <div className="modal-footer">
-              <button 
+              <button
                 className="btn btn-secondary"
                 onClick={() => setSelectedPatient(null)}
               >
                 Close
               </button>
-              <button 
+              <button
                 className="btn btn-primary"
                 onClick={() => {
                   handleSelectPatient(selectedPatient);
