@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Scan to Queue Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+        }
+        .success { 
+            background-color: #d4edda; 
+            border-color: #c3e6cb; 
+        }
+        .warning { 
+            background-color: #fff3cd; 
+            border-color: #ffeaa7; 
+        }
+        .error { 
+            background-color: #f8d7da; 
+            border-color: #f5c6cb; 
+        }
+        .info { 
+            background-color: #d1ecf1; 
+            border-color: #bee5eb; 
+        }
+        button { 
+            padding: 10px 15px; 
+            margin: 5px; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 4px; 
+            background: #007bff; 
+            color: white; 
+        }
+        button:hover { background: #0056b3; }
+        button.secondary { background: #6c757d; }
+        button.danger { background: #dc3545; }
+        button.success { background: #28a745; }
+        .status { margin: 10px 0; padding: 15px; border-radius: 4px; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { padding: 8px; border: 1px solid #ddd; text-align: left; }
+        th { background: #f8f9fa; font-weight: bold; }
+        .queue-entry { background: #e9ecef; margin: 5px 0; padding: 10px; border-radius: 4px; }
+        .flow-diagram { display: flex; align-items: center; justify-content: space-around; margin: 20px 0; }
+        .flow-step { text-align: center; padding: 10px; border: 2px solid #ddd; border-radius: 8px; min-width: 150px; }
+        .flow-arrow { font-size: 24px; color: #007bff; }
+        .active-step { border-color: #28a745; background: #d4edda; }
+        .completed-step { border-color: #17a2b8; background: #d1ecf1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 QR Scan to Reception Queue Test</h1>
+        <p>This test verifies that scanning a student's QR code correctly adds them to the receptionist queue.</p>
+
+        <!-- Flow Diagram -->
+        <div class="test-section info">
+            <h2>📋 Expected Flow</h2>
+            <div class="flow-diagram">
+                <div class="flow-step" id="step1">
+                    <div><strong>1. Generate QR</strong></div>
+                    <div>Student + Hospital forms complete → QR generated</div>
+                </div>
+                <div class="flow-arrow">➡️</div>
+                <div class="flow-step" id="step2">
+                    <div><strong>2. Scan QR</strong></div>
+                    <div>Receptionist scans QR code</div>
+                </div>
+                <div class="flow-arrow">➡️</div>
+                <div class="flow-step" id="step3">
+                    <div><strong>3. Add to Queue</strong></div>
+                    <div>Student automatically added to reception queue</div>
+                </div>
+                <div class="flow-arrow">➡️</div>
+                <div class="flow-step" id="step4">
+                    <div><strong>4. Queue Management</strong></div>
+                    <div>Receptionist can manage student in queue</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Setup -->
+        <div class="test-section">
+            <h2>🔧 Test Setup</h2>
+            <p>First, let's create test data and simulate the complete QR scanning flow:</p>
+            
+            <div>
+                <label><strong>Test Student Email:</strong> </label>
+                <input type="email" id="testEmail" value="testuser@student.edu" style="padding: 8px; width: 250px; margin: 5px;">
+            </div>
+            <br>
+            
+            <button onclick="setupCompleteTestData()" class="success">🏗️ Setup Complete Test Data</button>
+            <button onclick="generateTestQRCode()" class="secondary">🔗 Generate Test QR Code</button>
+            <button onclick="clearAllTestData()" class="danger">🗑️ Clear All Data</button>
+            
+            <div id="setup-status"></div>
+        </div>
+
+        <!-- QR Simulation Test -->
+        <div class="test-section">
+            <h2>📱 QR Scan Simulation</h2>
+            <p>Simulate scanning the QR code and check if student is added to queue:</p>
+            
+            <button onclick="simulateQRScan()" class="success">📱 Simulate QR Scan</button>
+            <button onclick="checkReceptionQueue()">📋 Check Reception Queue</button>
+            <button onclick="viewQueueDetails()">👁️ View Queue Details</button>
+            
+            <div id="scan-result"></div>
+        </div>
+
+        <!-- Queue Verification -->
+        <div class="test-section">
+            <h2>📊 Reception Queue Status</h2>
+            <div id="queue-display">
+                <p><em>Click "Check Reception Queue" to view current queue status</em></p>
+            </div>
+        </div>
+
+        <!-- Queue Management Test -->
+        <div class="test-section">
+            <h2>⚡ Queue Management Actions</h2>
+            <p>Test moving students through the queue system:</p>
+            
+            <div>
+                <label>Queue Number: </label>
+                <input type="text" id="queueNumber" placeholder="e.g., 100" style="padding: 8px; width: 100px;">
+            </div>
+            <br>
+            
+            <button onclick="moveToDoctor()">👨‍⚕️ Move to Doctor Queue</button>
+            <button onclick="updateStatus('Called')">📞 Mark as Called</button>
+            <button onclick="updateStatus('Hold')">⏸️ Put on Hold</button>
+            
+            <div id="management-result"></div>
+        </div>
+
+        <!-- System Integration Test -->
+        <div class="test-section">
+            <h2>🔬 Integration Test Results</h2>
+            <div id="integration-results">
+                <p><em>Run tests above to see integration results</em></p>
+            </div>
+        </div>
+
+        <!-- Debug Console -->
+        <div class="test-section">
+            <h2>🐛 Debug Console</h2>
+            <button onclick="debugLocalStorage()">🔍 Debug localStorage</button>
+            <button onclick="debugQueueServices()">⚙️ Debug Queue Services</button>
+            <div id="debug-output"></div>
+        </div>
+    </div>
+
+    <script>
+        let testData = {
+            student: null,
+            hospital: null,
+            qrCode: null,
+            queueEntry: null
+        };
+
+        // Setup complete test data (student + hospital forms)
+        function setupCompleteTestData() {
+            const email = document.getElementById('testEmail').value;
+            updateFlowStep(1, 'active-step');
+            
+            // Student data
+            const studentData = {
+                fullName: "John Doe Test",
+                nic: "199512345678",
+                studentRegistrationNumber: "MED/2024/TEST001",
+                academicDivision: "faculty-of-medicine",
+                email: email,
+                dateOfBirth: "1995-01-15",
+                age: "29",
+                gender: "male",
+                nationality: "sri-lankan",
+                homeAddress: "123 Test Street, Colombo",
+                telephoneNumber: "0771234567",
+                emergencyContact: {
+                    name: "Jane Doe",
+                    telephone: "0777654321",
+                    address: "456 Emergency St, Colombo",
+                    relationship: "parent"
+                },
+                medicalHistory: {
+                    infectiousDiseases: { status: "no", details: "" },
+                    respiratory: { status: "yes", details: "Mild asthma - well controlled" }
+                },
+                vaccinations: {
+                    bcg: "2023-01-01",
+                    hepatitisB: "2023-06-01"
+                },
+                certificationDate: "2024-01-01",
+                signature: "John Doe Test"
+            };
+
+            // Hospital examination data
+            const hospitalData = {
+                studentEmail: email,
+                studentName: "John Doe Test",
+                vaccinated: "yes",
+                weight: "70",
+                height: "175",
+                chestInspiration: "95",
+                chestExpiration: "90",
+                bloodPressure: "120/80",
+                pulse: "72",
+                bloodGroup: "O+",
+                hemoglobin: "14.5",
+                fitForStudies: "fit",
+                medicalOfficerSignature: "data:image/png;base64,testSignature1",
+                itumMedicalOfficerSignature: "data:image/png;base64,testSignature2"
+            };
+
+            // Store in localStorage
+            localStorage.setItem(`studentData_${email}`, JSON.stringify(studentData));
+            localStorage.setItem(`hospitalData_${email}`, JSON.stringify(hospitalData));
+            
+            testData.student = studentData;
+            testData.hospital = hospitalData;
+            
+            updateStatus('setup-status', '✅ Complete test data created successfully!<br/>✅ Student form data saved<br/>✅ Hospital examination data saved<br/>📧 Email: ' + email, 'success');
+            updateFlowStep(1, 'completed-step');
+        }
+
+        // Generate test QR code
+        function generateTestQRCode() {
+            const email = document.getElementById('testEmail').value;
+            
+            if (!localStorage.getItem(`studentData_${email}`) || !localStorage.getItem(`hospitalData_${email}`)) {
+                updateStatus('setup-status', '❌ Error: Test data not found. Please setup complete test data first.', 'error');
+                return;
+            }
+
+            // Simulate QR code generation
+            const recordId = `MED-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            const qrData = {
+                id: recordId,
+                name: "John Doe Test",
+                nic: "199512345678",
+                regNumber: "MED/2024/TEST001",
+                timestamp: new Date().toISOString(),
+                dataUrl: `${window.location.origin}/api/medical-records/${recordId}`
+            };
+
+            // Create merged medical data for QR
+            const mergedData = createMergedMedicalData(testData.student, testData.hospital, recordId);
+            
+            // Store QR data and medical record
+            localStorage.setItem(`qrCodeData_${email}`, "data:image/png;base64,testQRCodeImage");
+            localStorage.setItem(`medicalRecordId_${email}`, recordId);
+            localStorage.setItem(`medicalRecord_${recordId}`, JSON.stringify(mergedData));
+            
+            testData.qrCode = qrData;
+            testData.medicalData = mergedData;
+            
+            updateStatus('setup-status', '🔗 QR Code generated successfully!<br/>📋 Record ID: ' + recordId + '<br/>✅ Ready for scanning', 'success');
+        }
+
+        // Create merged medical data structure
+        function createMergedMedicalData(studentData, hospitalData, recordId) {
+            return {
+                id: recordId,
+                timestamp: new Date().toISOString(),
+                student: {
+                    fullName: studentData.fullName,
+                    nic: studentData.nic,
+                    studentRegistrationNumber: studentData.studentRegistrationNumber,
+                    academicDivision: studentData.academicDivision,
+                    dateOfBirth: studentData.dateOfBirth,
+                    age: studentData.age,
+                    gender: studentData.gender,
+                    nationality: studentData.nationality,
+                    homeAddress: studentData.homeAddress,
+                    telephoneNumber: studentData.telephoneNumber,
+                    email: studentData.email,
+                    emergencyContact: studentData.emergencyContact
+                },
+                examination: {
+                    physicalMeasurements: {
+                        weight: hospitalData.weight,
+                        height: hospitalData.height,
+                        chestInspiration: hospitalData.chestInspiration,
+                        chestExpiration: hospitalData.chestExpiration
+                    },
+                    vaccinationStatus: hospitalData.vaccinated,
+                    examination: {
+                        circulation: {
+                            bloodPressure: hospitalData.bloodPressure,
+                            pulse: hospitalData.pulse
+                        },
+                        clinicalTests: {
+                            bloodGroup: hospitalData.bloodGroup,
+                            hemoglobin: hospitalData.hemoglobin
+                        }
+                    },
+                    assessment: {
+                        fitForStudies: hospitalData.fitForStudies,
+                        specialistReferral: "no"
+                    }
+                }
+            };
+        }
+
+        // Simulate QR code scanning
+        function simulateQRScan() {
+            const email = document.getElementById('testEmail').value;
+            const recordId = localStorage.getItem(`medicalRecordId_${email}`);
+            
+            if (!recordId) {
+                updateStatus('scan-result', '❌ Error: No QR code found. Please generate test QR code first.', 'error');
+                return;
+            }
+
+            updateFlowStep(2, 'active-step');
+            
+            try {
+                // Simulate the QR scanner process
+                const medicalDataString = localStorage.getItem(`medicalRecord_${recordId}`);
+                if (!medicalDataString) {
+                    throw new Error('Medical record not found');
+                }
+                
+                const medicalData = JSON.parse(medicalDataString);
+                
+                // Simulate addStudentToReceptionQueue function
+                const queueEntry = simulateAddToQueue(medicalData);
+                testData.queueEntry = queueEntry;
+                
+                let result = '🎉 QR Code Scan Simulation SUCCESS!<br/><br/>';
+                result += `📱 Scanned QR Code: ${recordId}<br/>`;
+                result += `👤 Student: ${medicalData.student.fullName}<br/>`;
+                result += `📋 Queue Number: ${queueEntry.queueNo}<br/>`;
+                result += `⏰ Added Time: ${new Date(queueEntry.addedTime).toLocaleString()}<br/>`;
+                result += `🎫 Status: ${queueEntry.status}<br/>`;
+                result += `🏥 Stage: ${queueEntry.stage}<br/><br/>`;
+                result += '✅ Student successfully added to reception queue!';
+                
+                updateStatus('scan-result', result, 'success');
+                updateFlowStep(2, 'completed-step');
+                updateFlowStep(3, 'completed-step');
+                
+                // Auto-check queue
+                setTimeout(checkReceptionQueue, 500);
+                
+            } catch (error) {
+                updateStatus('scan-result', `❌ QR Scan Simulation Failed: ${error.message}`, 'error');
+                console.error('QR scan simulation error:', error);
+            }
+        }
+
+        // Simulate adding student to reception queue
+        function simulateAddToQueue(medicalData) {
+            let queueCounter = parseInt(localStorage.getItem('queueCounter') || '100');
+            const queueNumber = String(queueCounter++).padStart(3, '0');
+            localStorage.setItem('queueCounter', queueCounter.toString());
+            
+            const currentTime = new Date().toISOString();
+            
+            const queueEntry = {
+                queueNo: queueNumber,
+                studentName: medicalData.student.fullName,
+                studentId: medicalData.student.studentRegistrationNumber,
+                email: medicalData.student.email,
+                nic: medicalData.student.nic,
+                phone: medicalData.student.telephoneNumber,
+                medicalRecordId: medicalData.id,
+                medicalData: medicalData,
+                status: 'Waiting',
+                priority: 'Normal',
+                addedTime: currentTime,
+                waitTime: '0 min',
+                action: 'Call Now',
+                stage: 'reception'
+            };
+            
+            // Get existing queue and add new entry
+            const existingQueue = JSON.parse(localStorage.getItem('receptionQueue') || '[]');
+            existingQueue.push(queueEntry);
+            localStorage.setItem('receptionQueue', JSON.stringify(existingQueue));
+            
+            return queueEntry;
+        }
+
+        // Check reception queue
+        function checkReceptionQueue() {
+            const receptionQueue = JSON.parse(localStorage.getItem('receptionQueue') || '[]');
+            
+            let display = '<h3>📋 Reception Queue Status</h3>';
+            
+            if (receptionQueue.length === 0) {
+                display += '<div class="warning" style="padding: 15px; border-radius: 4px; background: #fff3cd; border: 1px solid #ffeaa7;">';
+                display += '⚠️ No students in reception queue<br/>Try running the QR scan simulation first.';
+                display += '</div>';
+            } else {
+                display += `<div class="success" style="padding: 10px; border-radius: 4px; background: #d4edda; margin-bottom: 10px;">`;
+                display += `✅ ${receptionQueue.length} student(s) in reception queue`;
+                display += '</div>';
+                
+                display += '<table>';
+                display += '<tr><th>Queue #</th><th>Student Name</th><th>Student ID</th><th>Status</th><th>Wait Time</th><th>Stage</th></tr>';
+                
+                const currentTime = new Date();
+                receptionQueue.forEach(entry => {
+                    const addedTime = new Date(entry.addedTime);
+                    const waitMinutes = Math.floor((currentTime - addedTime) / (1000 * 60));
+                    const waitTime = waitMinutes > 0 ? `${waitMinutes} min` : '0 min';
+                    
+                    display += `<tr>`;
+                    display += `<td>#${entry.queueNo}</td>`;
+                    display += `<td>${entry.studentName}</td>`;
+                    display += `<td>${entry.studentId}</td>`;
+                    display += `<td><span style="padding: 2px 6px; border-radius: 3px; background: #28a745; color: white; font-size: 0.8em;">${entry.status}</span></td>`;
+                    display += `<td>${waitTime}</td>`;
+                    display += `<td>${entry.stage}</td>`;
+                    display += `</tr>`;
+                });
+                
+                display += '</table>';
+                updateFlowStep(4, 'active-step');
+            }
+            
+            document.getElementById('queue-display').innerHTML = display;
+        }
+
+        // View detailed queue information
+        function viewQueueDetails() {
+            const receptionQueue = JSON.parse(localStorage.getItem('receptionQueue') || '[]');
+            
+            if (receptionQueue.length === 0) {
+                updateStatus('integration-results', '⚠️ No queue data to display', 'warning');
+                return;
+            }
+
+            let details = '<h3>🔍 Detailed Queue Analysis</h3>';
+            
+            receptionQueue.forEach((entry, index) => {
+                details += `<div class="queue-entry">`;
+                details += `<h4>Queue Entry #${index + 1}: ${entry.studentName}</h4>`;
+                details += `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">`;
+                details += `<div><strong>Queue Number:</strong> #${entry.queueNo}</div>`;
+                details += `<div><strong>Student ID:</strong> ${entry.studentId}</div>`;
+                details += `<div><strong>Email:</strong> ${entry.email}</div>`;
+                details += `<div><strong>Phone:</strong> ${entry.phone}</div>`;
+                details += `<div><strong>NIC:</strong> ${entry.nic}</div>`;
+                details += `<div><strong>Status:</strong> ${entry.status}</div>`;
+                details += `<div><strong>Priority:</strong> ${entry.priority}</div>`;
+                details += `<div><strong>Stage:</strong> ${entry.stage}</div>`;
+                details += `<div><strong>Added Time:</strong> ${new Date(entry.addedTime).toLocaleString()}</div>`;
+                details += `<div><strong>Medical Record ID:</strong> ${entry.medicalRecordId}</div>`;
+                details += `</div>`;
+                
+                if (entry.medicalData) {
+                    details += `<div style="margin-top: 10px; padding: 8px; background: #f8f9fa; border-radius: 4px;">`;
+                    details += `<strong>Medical Data Available:</strong> ✅<br/>`;
+                    details += `<small>Blood Group: ${entry.medicalData.examination?.examination?.clinicalTests?.bloodGroup || 'N/A'} | `;
+                    details += `BP: ${entry.medicalData.examination?.examination?.circulation?.bloodPressure || 'N/A'} | `;
+                    details += `Fit for Studies: ${entry.medicalData.examination?.assessment?.fitForStudies || 'N/A'}</small>`;
+                    details += `</div>`;
+                }
+                
+                details += `</div>`;
+            });
+            
+            document.getElementById('integration-results').innerHTML = details;
+        }
+
+        // Move student to doctor queue
+        function moveToDoctor() {
+            const queueNo = document.getElementById('queueNumber').value;
+            if (!queueNo) {
+                updateStatus('management-result', '❌ Please enter a queue number', 'error');
+                return;
+            }
+
+            try {
+                const receptionQueue = JSON.parse(localStorage.getItem('receptionQueue') || '[]');
+                const doctorQueue = JSON.parse(localStorage.getItem('doctorQueue') || '[]');
+                
+                const studentIndex = receptionQueue.findIndex(entry => entry.queueNo === queueNo);
+                if (studentIndex === -1) {
+                    throw new Error('Student not found in reception queue');
+                }
+                
+                const student = receptionQueue[studentIndex];
+                const doctorEntry = {
+                    ...student,
+                    status: 'Waiting for Doctor',
+                    stage: 'doctor',
+                    movedToDoctorTime: new Date().toISOString()
+                };
+                
+                doctorQueue.push(doctorEntry);
+                receptionQueue.splice(studentIndex, 1);
+                
+                localStorage.setItem('receptionQueue', JSON.stringify(receptionQueue));
+                localStorage.setItem('doctorQueue', JSON.stringify(doctorQueue));
+                
+                updateStatus('management-result', `✅ Student #${queueNo} moved to doctor queue successfully!`, 'success');
+                checkReceptionQueue(); // Refresh display
+                
+            } catch (error) {
+                updateStatus('management-result', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Update student status
+        function updateStatus(elementId, message, type) {
+            if (elementId === 'management-result') {
+                // This is for queue management
+                const queueNo = document.getElementById('queueNumber').value;
+                const statusValue = arguments[1]; // The actual status value
+                
+                if (!queueNo) {
+                    document.getElementById(elementId).innerHTML = '<div class="error">❌ Please enter a queue number</div>';
+                    return;
+                }
+
+                try {
+                    const receptionQueue = JSON.parse(localStorage.getItem('receptionQueue') || '[]');
+                    const entryIndex = receptionQueue.findIndex(entry => entry.queueNo === queueNo);
+                    
+                    if (entryIndex === -1) {
+                        throw new Error('Student not found in reception queue');
+                    }
+                    
+                    receptionQueue[entryIndex].status = statusValue;
+                    receptionQueue[entryIndex].action = statusValue;
+                    localStorage.setItem('receptionQueue', JSON.stringify(receptionQueue));
+                    
+                    document.getElementById(elementId).innerHTML = `<div class="success">✅ Student #${queueNo} status updated to: ${statusValue}</div>`;
+                    checkReceptionQueue(); // Refresh display
+                    
+                } catch (error) {
+                    document.getElementById(elementId).innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+                }
+            } else {
+                // Regular status update
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.innerHTML = `<div class="${type}">${message}</div>`;
+                }
+            }
+        }
+
+        // Debug localStorage
+        function debugLocalStorage() {
+            const keys = Object.keys(localStorage).filter(key => 
+                key.includes('student') || key.includes('hospital') || key.includes('queue') || key.includes('medical')
+            );
+            
+            let debug = '<h4>🔍 localStorage Debug Info</h4>';
+            debug += '<pre>';
+            
+            keys.forEach(key => {
+                debug += `${key}:\n`;
+                try {
+                    const value = localStorage.getItem(key);
+                    if (value.length > 200) {
+                        debug += `  ${value.substring(0, 200)}... (truncated)\n`;
+                    } else {
+                        debug += `  ${value}\n`;
+                    }
+                } catch (e) {
+                    debug += `  Error reading value\n`;
+                }
+                debug += '\n';
+            });
+            
+            debug += '</pre>';
+            document.getElementById('debug-output').innerHTML = debug;
+        }
+
+        // Debug queue services
+        function debugQueueServices() {
+            const receptionQueue = JSON.parse(localStorage.getItem('receptionQueue') || '[]');
+            const doctorQueue = JSON.parse(localStorage.getItem('doctorQueue') || '[]');
+            const pharmacyQueue = JSON.parse(localStorage.getItem('pharmacyQueue') || '[]');
+            
+            let debug = '<h4>⚙️ Queue Services Debug</h4>';
+            debug += '<pre>';
+            debug += `Reception Queue: ${receptionQueue.length} entries\n`;
+            debug += `Doctor Queue: ${doctorQueue.length} entries\n`;
+            debug += `Pharmacy Queue: ${pharmacyQueue.length} entries\n\n`;
+            
+            debug += 'Reception Queue Details:\n';
+            receptionQueue.forEach(entry => {
+                debug += `  Queue #${entry.queueNo}: ${entry.studentName} (${entry.status})\n`;
+            });
+            
+            debug += '</pre>';
+            document.getElementById('debug-output').innerHTML = debug;
+        }
+
+        // Update flow step visual
+        function updateFlowStep(stepNumber, className) {
+            const step = document.getElementById(`step${stepNumber}`);
+            if (step) {
+                step.className = `flow-step ${className}`;
+            }
+        }
+
+        // Clear all test data
+        function clearAllTestData() {
+            const email = document.getElementById('testEmail').value;
+            
+            // Clear test-specific data
+            localStorage.removeItem(`studentData_${email}`);
+            localStorage.removeItem(`hospitalData_${email}`);
+            localStorage.removeItem(`qrCodeData_${email}`);
+            localStorage.removeItem(`medicalRecordId_${email}`);
+            
+            // Clear queues
+            localStorage.removeItem('receptionQueue');
+            localStorage.removeItem('doctorQueue');
+            localStorage.removeItem('pharmacyQueue');
+            localStorage.removeItem('completedQueue');
+            localStorage.removeItem('queueCounter');
+            
+            // Clear medical records
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('medicalRecord_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            
+            // Reset display
+            document.getElementById('setup-status').innerHTML = '';
+            document.getElementById('scan-result').innerHTML = '';
+            document.getElementById('queue-display').innerHTML = '<p><em>All test data cleared</em></p>';
+            document.getElementById('integration-results').innerHTML = '<p><em>All test data cleared</em></p>';
+            document.getElementById('management-result').innerHTML = '';
+            document.getElementById('debug-output').innerHTML = '';
+            
+            // Reset flow steps
+            for (let i = 1; i <= 4; i++) {
+                updateFlowStep(i, '');
+            }
+            
+            testData = { student: null, hospital: null, qrCode: null, queueEntry: null };
+            
+            updateStatus('setup-status', '🗑️ All test data cleared successfully!', 'success');
+        }
+
+        // Initialize page
+        window.onload = function() {
+            document.getElementById('setup-status').innerHTML = '<div class="info">🚀 Ready to test QR scan to queue functionality!</div>';
+        };
+    </script>
+</body>
+</html>

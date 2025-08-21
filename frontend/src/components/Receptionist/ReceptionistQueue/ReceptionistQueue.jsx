@@ -16,9 +16,14 @@ const ReceptionistQueue = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const loadQueueData = () => {
-    const receptionQueue = getReceptionQueue();
-    setQueueList(receptionQueue);
+  const loadQueueData = async () => {
+    try {
+      const receptionQueue = await getReceptionQueue();
+      setQueueList(receptionQueue);
+    } catch (error) {
+      console.error('Error loading reception queue:', error);
+      setQueueList([]);
+    }
   };
 
   const handleSearchChange = (e) => {

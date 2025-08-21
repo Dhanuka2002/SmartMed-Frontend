@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getDoctorQueue, updateQueueEntryStatus } from "../../../services/queueService";
+import { getFullMedicalRecordById } from "../../../services/medicalRecordService";
 import "./DoctorQueue.css";
 
 function DoctorQueue() {
+  const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
   const [queueData, setQueueData] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [loadingPatient, setLoadingPatient] = useState(false);
 
   // Load doctor queue data
   useEffect(() => {
@@ -22,16 +26,53 @@ function DoctorQueue() {
     return () => clearInterval(timeInterval);
   }, []);
 
-  const loadQueueData = () => {
-    const doctorQueue = getDoctorQueue();
-    setQueueData(doctorQueue);
+  const loadQueueData = async () => {
+    try {
+      console.log('🔄 [DoctorQueue] Loading doctor queue data...');
+      const doctorQueue = await getDoctorQueue();
+      console.log('✅ [DoctorQueue] Doctor queue loaded:', doctorQueue);
+      setQueueData(doctorQueue);
+    } catch (error) {
+      console.error('❌ [DoctorQueue] Error loading doctor queue:', error);
+      setQueueData([]);
+    }
   };
 
-  const handleSelectPatient = (patient) => {
-    setSelectedPatient(patient);
-    // Store selected patient for DoctorPatient component
-    localStorage.setItem('selectedPatient', JSON.stringify(patient));
-    alert(`Selected patient: ${patient.studentName} (Queue #${patient.queueNo}). Navigate to Patients page to view details.`);
+  const handleSelectPatient = async (patient) => {
+    try {
+      setLoadingPatient(true);
+      console.log('🔄 Selecting patient:', patient);
+      
+      // Fetch full medical record details
+      const result = await getFullMedicalRecordById(patient.medicalRecordId);
+      
+      if (result.success) {
+        // Combine queue data with full medical record
+        const fullPatientData = {
+          ...patient, // Queue info (queueNo, status, etc.)
+          fullMedicalRecord: result.medicalRecord // Complete medical record
+        };
+        
+        // Store for DoctorPatient component
+        localStorage.setItem('selectedPatient', JSON.stringify(fullPatientData));
+        
+        console.log('✅ Full patient data prepared:', fullPatientData);
+        
+        // Navigate to Patients tab
+        navigate('/doctor/patients');
+        
+        // Show success message
+        alert(`✅ Patient ${patient.studentName} (Queue #${patient.queueNo}) loaded successfully! Navigating to Patients tab...`);
+        
+      } else {
+        throw new Error(result.error || 'Failed to fetch medical record');
+      }
+    } catch (error) {
+      console.error('❌ Error selecting patient:', error);
+      alert(`❌ Failed to load patient details: ${error.message}`);
+    } finally {
+      setLoadingPatient(false);
+    }
   };
 
   const handlePatientStatus = async (queueNo, status) => {
@@ -133,17 +174,10 @@ function DoctorQueue() {
                       <button 
                         className="action-btn select-btn"
                         onClick={() => handleSelectPatient(patient)}
+                        disabled={loadingPatient}
                       >
-                        View Patient
+                        {loadingPatient ? '⏳ Loading...' : 'View Patient'}
                       </button>
-                      {patient.status === 'Waiting for Doctor' && (
-                        <button 
-                          className="action-btn start-btn"
-                          onClick={() => handlePatientStatus(patient.queueNo, 'In Progress')}
-                        >
-                          Start Consultation
-                        </button>
-                      )}
                     </div>
                   </div>
                 </div>

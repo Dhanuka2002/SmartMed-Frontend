@@ -14,14 +14,16 @@ function PrescriptionQueue() {
     clearAllPrescriptions: clearContextPrescriptions
   } = usePrescription();
   const [legacyPrescriptions, setLegacyPrescriptions] = useState([]);
+  const [databasePrescriptions, setDatabasePrescriptions] = useState([]);
   const [selectedPrescription, setSelectedPrescription] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [loading, setLoading] = useState(false);
 
   // Update last updated timestamp when prescriptions change
   useEffect(() => {
     setLastUpdated(new Date());
-  }, [contextPrescriptions, contextDispensedPrescriptions, legacyPrescriptions]);
+  }, [contextPrescriptions, contextDispensedPrescriptions, legacyPrescriptions, databasePrescriptions]);
 
   // Load legacy pharmacy queue data (for compatibility)
   useEffect(() => {
@@ -42,17 +44,91 @@ function PrescriptionQueue() {
     }
     
     loadLegacyPrescriptions();
-    const interval = setInterval(loadLegacyPrescriptions, 30000); // Refresh every 30 seconds
-    return () => clearInterval(interval);
+    loadDatabasePrescriptions();
+    
+    const legacyInterval = setInterval(loadLegacyPrescriptions, 30000); // Refresh every 30 seconds
+    const databaseInterval = setInterval(loadDatabasePrescriptions, 15000); // Refresh every 15 seconds for database
+    
+    return () => {
+      clearInterval(legacyInterval);
+      clearInterval(databaseInterval);
+    };
   }, []);
 
-  const loadLegacyPrescriptions = () => {
-    const pharmacyQueue = getPharmacyQueue();
-    setLegacyPrescriptions(pharmacyQueue);
+  const loadLegacyPrescriptions = async () => {
+    try {
+      const pharmacyQueue = await getPharmacyQueue();
+      setLegacyPrescriptions(pharmacyQueue);
+    } catch (error) {
+      console.error('Error loading pharmacy queue:', error);
+      setLegacyPrescriptions([]);
+    }
   };
 
-  // Combine all prescriptions (pending, dispensed, and legacy)
+  const loadDatabasePrescriptions = async () => {
+    try {
+      setLoading(true);
+      console.log('🔄 Loading prescriptions from database...');
+      
+      const response = await fetch('http://localhost:8081/api/prescriptions/pending');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const prescriptions = await response.json();
+      console.log('✅ Database prescriptions loaded:', prescriptions);
+      
+      // Transform database prescriptions to match the expected format
+      const transformedPrescriptions = prescriptions.map(prescription => ({
+        queueNo: prescription.queueNo || prescription.id,
+        internalId: prescription.id,
+        studentName: prescription.patientName,
+        studentId: prescription.patientId || prescription.studentId,
+        email: `${prescription.patientId}@student.university.edu`,
+        phone: "+1234567890",
+        prescriptionTime: prescription.createdDate || new Date().toISOString(),
+        pharmacyStatus: mapDatabaseStatusToPharmacyStatus(prescription.status),
+        isDatabasePrescription: true, // Mark as database prescription
+        prescription: {
+          doctorName: prescription.doctorName,
+          prescriptionDate: prescription.createdDate,
+          prescriptionText: prescription.prescriptionText || "",
+          medications: (prescription.medicines || []).map(med => ({
+            name: med.medicineName,
+            dosage: med.dosage,
+            frequency: med.frequency,
+            duration: med.duration,
+            quantity: med.quantity,
+            instructions: med.instructions
+          }))
+        }
+      }));
+      
+      setDatabasePrescriptions(transformedPrescriptions);
+      
+    } catch (error) {
+      console.error('❌ Error loading database prescriptions:', error);
+      // Don't clear existing prescriptions on error - keep what we have
+      // setDatabasePrescriptions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const mapDatabaseStatusToPharmacyStatus = (dbStatus) => {
+    switch (dbStatus) {
+      case 'Pending': return 'Pending';
+      case 'In Progress': return 'Preparing';
+      case 'Completed': return 'Dispensed';
+      default: return 'Pending';
+    }
+  };
+
+  // Combine all prescriptions (database, context, dispensed, and legacy)
   const allPrescriptions = [
+    // Database prescriptions (from doctor submissions)
+    ...(databasePrescriptions || []),
     // Active context prescriptions (pending/preparing/ready)
     ...(contextPrescriptions || []).map((prescription, index) => {
       console.log(`Mapping prescription ${index}:`, {
@@ -127,10 +203,40 @@ function PrescriptionQueue() {
 
   const handleDispense = async (queueNo) => {
     try {
-      // Find the prescription to check if it's a context prescription
+      // Find the prescription to check what type it is
       const prescription = allPrescriptions.find(p => p.queueNo === queueNo);
       
-      if (prescription && prescription.isContextPrescription) {
+      if (prescription && prescription.isDatabasePrescription) {
+        // Handle database prescription dispensing
+        const dispensingData = {
+          dispensedBy: "Pharmacist", // You can get this from user context
+          medicines: prescription.prescription.medications.map(med => ({
+            medicineId: null, // Will be matched by name if needed
+            medicineName: med.name,
+            dispensedQuantity: med.quantity || 1
+          }))
+        };
+
+        const response = await fetch(`http://localhost:8081/api/prescriptions/${prescription.internalId}/dispense`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(dispensingData),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            alert('Prescription dispensed successfully!');
+            loadDatabasePrescriptions(); // Reload to get updated status
+          } else {
+            throw new Error(result.message);
+          }
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+      } else if (prescription && prescription.isContextPrescription) {
         // Use context dispensing for dynamic prescriptions (use internal ID)
         const success = dispensePrescription(prescription.internalId || prescription.queueNo);
         if (success) {
@@ -146,16 +252,42 @@ function PrescriptionQueue() {
       }
     } catch (error) {
       console.error('Error dispensing prescription:', error);
-      alert('Error dispensing prescription');
+      alert(`Error dispensing prescription: ${error.message}`);
     }
   };
 
   const handleStatusUpdate = async (queueNo, status) => {
     try {
-      // Find the prescription to check if it's a context prescription
+      // Find the prescription to check what type it is
       const prescription = allPrescriptions.find(p => p.queueNo === queueNo);
       
-      if (prescription && prescription.isContextPrescription) {
+      if (prescription && prescription.isDatabasePrescription) {
+        // Handle database prescription status update
+        const statusData = {
+          status: mapPharmacyStatusToDatabaseStatus(status),
+          dispensedBy: status === 'Dispensed' ? "Pharmacist" : null
+        };
+
+        const response = await fetch(`http://localhost:8081/api/prescriptions/${prescription.internalId}/status`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(statusData),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            console.log(`Updated database prescription ${queueNo} status to ${status}`);
+            loadDatabasePrescriptions(); // Reload to get updated status
+          } else {
+            throw new Error(result.message);
+          }
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+      } else if (prescription && prescription.isContextPrescription) {
         // Use context status update for dynamic prescriptions (use internal ID)
         updatePrescriptionStatus(prescription.internalId || prescription.queueNo, status);
         console.log(`Updated prescription ${queueNo} status to ${status}`);
@@ -167,7 +299,17 @@ function PrescriptionQueue() {
       }
     } catch (error) {
       console.error('Error updating status:', error);
-      alert('Error updating prescription status');
+      alert(`Error updating prescription status: ${error.message}`);
+    }
+  };
+
+  const mapPharmacyStatusToDatabaseStatus = (pharmacyStatus) => {
+    switch (pharmacyStatus) {
+      case 'Pending': return 'Pending';
+      case 'Preparing': return 'In Progress';
+      case 'Ready': return 'In Progress';
+      case 'Dispensed': return 'Completed';
+      default: return 'Pending';
     }
   };
 
@@ -317,8 +459,15 @@ function PrescriptionQueue() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="search-input"
         />
-        <button onClick={loadLegacyPrescriptions} className="refresh-btn">
-          🔄 Refresh
+        <button 
+          onClick={() => {
+            loadLegacyPrescriptions();
+            loadDatabasePrescriptions();
+          }} 
+          className="refresh-btn"
+          disabled={loading}
+        >
+          🔄 {loading ? 'Refreshing...' : 'Refresh'}
         </button>
         <button onClick={addSamplePrescription} className="refresh-btn" style={{ marginLeft: '10px', backgroundColor: '#28a745' }}>
           + Add Demo Student

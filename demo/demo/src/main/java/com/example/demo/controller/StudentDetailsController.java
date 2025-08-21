@@ -33,6 +33,7 @@ public class StudentDetailsController {
             studentDetails.setNic((String) requestData.get("nic"));
             studentDetails.setStudentRegistrationNumber((String) requestData.get("studentRegistrationNumber"));
             studentDetails.setAcademicDivision((String) requestData.get("academicDivision"));
+            studentDetails.setEmail((String) requestData.get("email"));
 
             // Validate required fields
             if (studentDetails.getFullName() == null || studentDetails.getFullName().trim().isEmpty()) {
@@ -105,6 +106,9 @@ public class StudentDetailsController {
             if (requestData.get("vaccinations") != null) {
                 studentDetails.setVaccinations(objectMapper.writeValueAsString(requestData.get("vaccinations")));
             }
+
+            // Profile Image
+            studentDetails.setProfileImage((String) requestData.get("profileImage"));
 
             // Save the student details
             StudentDetails savedDetails = studentDetailsRepository.save(studentDetails);
@@ -206,6 +210,11 @@ public class StudentDetailsController {
             studentDetails.setNic((String) requestData.get("nic"));
             studentDetails.setAcademicDivision((String) requestData.get("academicDivision"));
             
+            // Profile Image
+            if (requestData.containsKey("profileImage")) {
+                studentDetails.setProfileImage((String) requestData.get("profileImage"));
+            }
+            
             // Continue with other fields...
             
             StudentDetails updatedDetails = studentDetailsRepository.save(studentDetails);
@@ -218,6 +227,54 @@ public class StudentDetailsController {
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", "Failed to update student details: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/profile-image/registration/{registrationNumber}")
+    public ResponseEntity<Map<String, Object>> getStudentProfileImage(@PathVariable String registrationNumber) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            Optional<StudentDetails> student = studentDetailsRepository.findByStudentRegistrationNumber(registrationNumber);
+            if (student.isPresent()) {
+                StudentDetails studentDetails = student.get();
+                response.put("status", "success");
+                response.put("profileImage", studentDetails.getProfileImage());
+                response.put("fullName", studentDetails.getFullName());
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("status", "error");
+                response.put("message", "Student not found");
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to fetch profile image: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/profile-image/email/{email}")
+    public ResponseEntity<Map<String, Object>> getStudentProfileImageByEmail(@PathVariable String email) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            Optional<StudentDetails> student = studentDetailsRepository.findByEmail(email);
+            if (student.isPresent()) {
+                StudentDetails studentDetails = student.get();
+                response.put("status", "success");
+                response.put("profileImage", studentDetails.getProfileImage());
+                response.put("fullName", studentDetails.getFullName());
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("status", "error");
+                response.put("message", "Student not found");
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to fetch profile image: " + e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
     }

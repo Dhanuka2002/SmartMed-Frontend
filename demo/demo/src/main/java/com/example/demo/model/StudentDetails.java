@@ -24,6 +24,9 @@ public class StudentDetails {
     
     @Column(nullable = false)
     private String academicDivision;
+    
+    @Column
+    private String email;
 
     // Personal Details
     private LocalDate dateOfBirth;
@@ -65,6 +68,10 @@ public class StudentDetails {
     // Vaccinations - JSON format
     @Column(columnDefinition = "JSON")
     private String vaccinations;
+
+    // Profile Image
+    @Column(columnDefinition = "LONGTEXT")
+    private String profileImage;
 
     // Certification
     private LocalDate certificationDate;
@@ -124,6 +131,14 @@ public class StudentDetails {
 
     public void setAcademicDivision(String academicDivision) {
         this.academicDivision = academicDivision;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public LocalDate getDateOfBirth() {
@@ -284,6 +299,14 @@ public class StudentDetails {
 
     public void setVaccinations(String vaccinations) {
         this.vaccinations = vaccinations;
+    }
+
+    public String getProfileImage() {
+        return profileImage;
+    }
+
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
     }
 
     public LocalDate getCertificationDate() {

@@ -18,5 +18,7 @@ public interface StudentDetailsRepository extends JpaRepository<StudentDetails, 
     
     List<StudentDetails> findByFullNameContainingIgnoreCase(String name);
     
+    Optional<StudentDetails> findByEmail(String email);
+    
     List<StudentDetails> findByAcademicDivision(String academicDivision);
 }
