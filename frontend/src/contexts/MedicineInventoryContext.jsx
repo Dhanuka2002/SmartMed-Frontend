@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const MedicineInventoryContext = createContext();
 
+const BASE_URL = 'http://localhost:8081/api/medicines';
+
 export const useMedicineInventory = () => {
   const context = useContext(MedicineInventoryContext);
   if (!context) {
@@ -11,7 +13,11 @@ export const useMedicineInventory = () => {
 };
 
 export const MedicineInventoryProvider = ({ children }) => {
-  // Default medicines that come with the system
+  const [medicines, setMedicines] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Default medicines that come with the system (fallback only)
   const defaultMedicines = [
     {
       id: 1,
@@ -135,70 +141,324 @@ export const MedicineInventoryProvider = ({ children }) => {
     }
   ];
 
-  // Load medicines from localStorage or use defaults
-  const [medicines, setMedicines] = useState(() => {
-    const savedMedicines = localStorage.getItem('medicineInventory');
-    if (savedMedicines) {
-      try {
-        return JSON.parse(savedMedicines);
-      } catch (error) {
-        console.error('Error parsing saved medicines:', error);
-        return defaultMedicines;
-      }
-    }
-    return defaultMedicines;
-  });
-
-  // Save medicines to localStorage whenever medicines change
+  // Load medicines from backend on component mount
   useEffect(() => {
-    localStorage.setItem('medicineInventory', JSON.stringify(medicines));
-  }, [medicines]);
+    loadMedicinesFromBackend();
+  }, []);
+
+  const loadMedicinesFromBackend = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(BASE_URL);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const medicinesData = await response.json();
+      console.log('✅ Medicines loaded from backend:', medicinesData);
+      
+      if (medicinesData.length === 0) {
+        // Initialize default medicines if none exist
+        await initializeDefaultMedicines();
+      } else {
+        setMedicines(medicinesData);
+        // Also save to localStorage as fallback
+        localStorage.setItem('medicineInventory', JSON.stringify(medicinesData));
+      }
+    } catch (error) {
+      console.error('❌ Error loading medicines from backend:', error);
+      setError('Failed to load medicines from server');
+      
+      // Fallback to localStorage
+      const savedMedicines = localStorage.getItem('medicineInventory');
+      if (savedMedicines) {
+        try {
+          const localMedicines = JSON.parse(savedMedicines);
+          setMedicines(localMedicines);
+          console.log('✅ Loaded medicines from localStorage as fallback');
+        } catch (parseError) {
+          console.error('Error parsing saved medicines:', parseError);
+          setMedicines(defaultMedicines);
+        }
+      } else {
+        setMedicines(defaultMedicines);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const initializeDefaultMedicines = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/initialize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Default medicines initialized:', result);
+        // Reload medicines after initialization
+        await loadMedicinesFromBackend();
+      }
+    } catch (error) {
+      console.error('❌ Error initializing default medicines:', error);
+      setMedicines(defaultMedicines);
+    }
+  };
 
   // Add new medicine
-  const addMedicine = (medicineData) => {
-    const newMedicine = {
-      ...medicineData,
-      id: Date.now(), // Simple ID generation
-      addedBy: "Pharmacist", // You can get this from user context
-      addedDate: new Date().toISOString()
-    };
-    setMedicines(prevMedicines => [...prevMedicines, newMedicine]);
-    return newMedicine.id;
+  const addMedicine = async (medicineData) => {
+    try {
+      const response = await fetch(BASE_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...medicineData,
+          addedBy: "Pharmacist", // You can get this from user context
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Add to local state
+        setMedicines(prevMedicines => [...prevMedicines, result.medicine]);
+        
+        // Update localStorage fallback
+        const updatedMedicines = [...medicines, result.medicine];
+        localStorage.setItem('medicineInventory', JSON.stringify(updatedMedicines));
+        
+        console.log('✅ Medicine added successfully:', result.medicine);
+        return result.medicine.id;
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      console.error('❌ Error adding medicine:', error);
+      
+      // Fallback to localStorage
+      const newMedicine = {
+        ...medicineData,
+        id: Date.now(),
+        addedBy: "Pharmacist",
+        addedDate: new Date().toISOString()
+      };
+      setMedicines(prevMedicines => [...prevMedicines, newMedicine]);
+      localStorage.setItem('medicineInventory', JSON.stringify([...medicines, newMedicine]));
+      
+      return newMedicine.id;
+    }
   };
 
   // Update existing medicine
-  const updateMedicine = (id, updates) => {
-    setMedicines(prevMedicines => 
-      prevMedicines.map(medicine => 
+  const updateMedicine = async (id, updates) => {
+    try {
+      const response = await fetch(`${BASE_URL}/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Update local state
+        setMedicines(prevMedicines => 
+          prevMedicines.map(medicine => 
+            medicine.id === id ? result.medicine : medicine
+          )
+        );
+        
+        // Update localStorage fallback
+        const updatedMedicines = medicines.map(medicine => 
+          medicine.id === id ? result.medicine : medicine
+        );
+        localStorage.setItem('medicineInventory', JSON.stringify(updatedMedicines));
+        
+        console.log('✅ Medicine updated successfully:', result.medicine);
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      console.error('❌ Error updating medicine:', error);
+      
+      // Fallback to localStorage
+      setMedicines(prevMedicines => 
+        prevMedicines.map(medicine => 
+          medicine.id === id 
+            ? { ...medicine, ...updates, lastUpdated: new Date().toISOString() }
+            : medicine
+        )
+      );
+      
+      const updatedMedicines = medicines.map(medicine => 
         medicine.id === id 
           ? { ...medicine, ...updates, lastUpdated: new Date().toISOString() }
           : medicine
-      )
-    );
+      );
+      localStorage.setItem('medicineInventory', JSON.stringify(updatedMedicines));
+    }
   };
 
   // Delete medicine
-  const deleteMedicine = (id) => {
-    setMedicines(prevMedicines => 
-      prevMedicines.filter(medicine => medicine.id !== id)
-    );
+  const deleteMedicine = async (id) => {
+    try {
+      const response = await fetch(`${BASE_URL}/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Remove from local state
+        setMedicines(prevMedicines => 
+          prevMedicines.filter(medicine => medicine.id !== id)
+        );
+        
+        // Update localStorage fallback
+        const updatedMedicines = medicines.filter(medicine => medicine.id !== id);
+        localStorage.setItem('medicineInventory', JSON.stringify(updatedMedicines));
+        
+        console.log('✅ Medicine deleted successfully');
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      console.error('❌ Error deleting medicine:', error);
+      
+      // Fallback to localStorage
+      setMedicines(prevMedicines => 
+        prevMedicines.filter(medicine => medicine.id !== id)
+      );
+      
+      const updatedMedicines = medicines.filter(medicine => medicine.id !== id);
+      localStorage.setItem('medicineInventory', JSON.stringify(updatedMedicines));
+    }
   };
 
   // Update medicine quantity (used when dispensing)
-  const updateMedicineQuantity = (id, newQuantity) => {
-    setMedicines(prevMedicines => 
-      prevMedicines.map(medicine => 
+  const updateMedicineQuantity = async (id, newQuantity) => {
+    try {
+      const response = await fetch(`${BASE_URL}/${id}/quantity`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ quantity: newQuantity }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Update local state
+        setMedicines(prevMedicines => 
+          prevMedicines.map(medicine => 
+            medicine.id === id ? result.medicine : medicine
+          )
+        );
+        
+        // Update localStorage fallback
+        const updatedMedicines = medicines.map(medicine => 
+          medicine.id === id ? result.medicine : medicine
+        );
+        localStorage.setItem('medicineInventory', JSON.stringify(updatedMedicines));
+        
+        console.log('✅ Medicine quantity updated successfully:', result.medicine);
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      console.error('❌ Error updating medicine quantity:', error);
+      
+      // Fallback to localStorage
+      setMedicines(prevMedicines => 
+        prevMedicines.map(medicine => 
+          medicine.id === id 
+            ? { ...medicine, quantity: newQuantity, lastUpdated: new Date().toISOString() }
+            : medicine
+        )
+      );
+      
+      const updatedMedicines = medicines.map(medicine => 
         medicine.id === id 
           ? { ...medicine, quantity: newQuantity, lastUpdated: new Date().toISOString() }
           : medicine
-      )
-    );
+      );
+      localStorage.setItem('medicineInventory', JSON.stringify(updatedMedicines));
+    }
   };
 
   // Reduce medicine quantities when dispensing prescriptions
-  const dispenseMedicines = (prescribedMedicines) => {
-    setMedicines(prevMedicines => 
-      prevMedicines.map(medicine => {
+  const dispenseMedicines = async (prescribedMedicines) => {
+    try {
+      const response = await fetch(`${BASE_URL}/dispense`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(prescribedMedicines),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Reload medicines to get updated quantities
+        await loadMedicinesFromBackend();
+        console.log('✅ Medicines dispensed successfully');
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      console.error('❌ Error dispensing medicines:', error);
+      
+      // Fallback to localStorage
+      setMedicines(prevMedicines => 
+        prevMedicines.map(medicine => {
+          const prescribedMed = prescribedMedicines.find(pm => pm.medicineId === medicine.id);
+          if (prescribedMed) {
+            const newQuantity = Math.max(0, medicine.quantity - prescribedMed.quantity);
+            return { 
+              ...medicine, 
+              quantity: newQuantity,
+              lastUpdated: new Date().toISOString()
+            };
+          }
+          return medicine;
+        })
+      );
+      
+      // Update localStorage
+      const updatedMedicines = medicines.map(medicine => {
         const prescribedMed = prescribedMedicines.find(pm => pm.medicineId === medicine.id);
         if (prescribedMed) {
           const newQuantity = Math.max(0, medicine.quantity - prescribedMed.quantity);
@@ -209,8 +469,9 @@ export const MedicineInventoryProvider = ({ children }) => {
           };
         }
         return medicine;
-      })
-    );
+      });
+      localStorage.setItem('medicineInventory', JSON.stringify(updatedMedicines));
+    }
   };
 
   // Get medicine by ID
@@ -274,6 +535,8 @@ export const MedicineInventoryProvider = ({ children }) => {
 
   const value = {
     medicines,
+    loading,
+    error,
     addMedicine,
     updateMedicine,
     deleteMedicine,
@@ -287,7 +550,9 @@ export const MedicineInventoryProvider = ({ children }) => {
     getNearExpiryMedicines,
     getCategories,
     clearAllMedicines,
-    resetToDefaults
+    resetToDefaults,
+    loadMedicinesFromBackend,
+    initializeDefaultMedicines
   };
 
   return (

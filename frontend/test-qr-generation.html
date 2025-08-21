@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Generation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .status { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>SmartMed QR Code Generation Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Current Implementation</h2>
+        <p>This test will simulate the QR code generation process by setting up sample data in localStorage.</p>
+        
+        <button onclick="setupTestData()">Setup Test Data</button>
+        <button onclick="testQRGeneration()">Test QR Generation</button>
+        <button onclick="clearTestData()">Clear Test Data</button>
+        
+        <div id="status"></div>
+        <div id="qr-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Manual Form Completion Test</h2>
+        <p>Use these buttons to simulate form completion:</p>
+        
+        <div>
+            <label>Test Email: </label>
+            <input type="email" id="testEmail" value="test@student.edu" style="padding: 5px; width: 200px;">
+        </div>
+        <br>
+        
+        <button onclick="simulateStudentFormSubmission()">Simulate Student Form Submission</button>
+        <button onclick="simulateHospitalFormSubmission()">Simulate Hospital Form Submission</button>
+        
+        <div id="form-status"></div>
+    </div>
+
+    <script>
+        // Test data setup
+        function setupTestData() {
+            const testEmail = document.getElementById('testEmail').value;
+            
+            // Sample student data
+            const studentData = {
+                fullName: "John Doe",
+                nic: "199512345678",
+                studentRegistrationNumber: "MED/2024/001",
+                academicDivision: "faculty-of-medicine",
+                email: testEmail,
+                dateOfBirth: "1995-01-15",
+                age: "29",
+                gender: "male",
+                nationality: "sri-lankan",
+                homeAddress: "123 Main St, Colombo",
+                telephoneNumber: "0771234567",
+                emergencyName: "Jane Doe",
+                emergencyTelephone: "0777654321",
+                emergencyAddress: "456 Side St, Colombo",
+                emergencyRelationship: "parent",
+                medicalHistory: {
+                    infectiousDiseases: { status: "no", details: "" },
+                    respiratory: { status: "yes", details: "Mild asthma" }
+                },
+                vaccinations: {
+                    bcg: "2023-01-01",
+                    hepatitisB: "2023-06-01"
+                },
+                certificationDate: "2024-01-01",
+                signature: "John Doe"
+            };
+
+            // Sample hospital data
+            const hospitalData = {
+                studentEmail: testEmail,
+                studentName: "John Doe",
+                vaccinated: "yes",
+                weight: "70",
+                height: "175",
+                chestInspiration: "95",
+                chestExpiration: "90",
+                bloodPressure: "120/80",
+                pulse: "72",
+                bloodGroup: "O+",
+                hemoglobin: "14.5",
+                fitForStudies: "fit",
+                medicalOfficerSignature: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+                itumMedicalOfficerSignature: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+            };
+
+            // Store in localStorage
+            localStorage.setItem(`studentData_${testEmail}`, JSON.stringify(studentData));
+            localStorage.setItem(`hospitalData_${testEmail}`, JSON.stringify(hospitalData));
+            
+            updateStatus("Test data setup complete for " + testEmail, "success");
+        }
+
+        function testQRGeneration() {
+            const testEmail = document.getElementById('testEmail').value;
+            
+            // Check if data exists
+            const studentData = localStorage.getItem(`studentData_${testEmail}`);
+            const hospitalData = localStorage.getItem(`hospitalData_${testEmail}`);
+            
+            if (!studentData || !hospitalData) {
+                updateStatus("Error: Test data not found. Please setup test data first.", "error");
+                return;
+            }
+            
+            // Simulate QR generation check
+            const hasStudentData = !!JSON.parse(studentData).fullName;
+            const hasHospitalData = !!JSON.parse(hospitalData).weight;
+            const bothComplete = hasStudentData && hasHospitalData;
+            
+            let result = "QR Generation Test Results:\n\n";
+            result += `Student Form Complete: ${hasStudentData ? '✓' : '✗'}\n`;
+            result += `Hospital Form Complete: ${hasHospitalData ? '✓' : '✗'}\n`;
+            result += `Both Forms Complete: ${bothComplete ? '✓' : '✗'}\n\n`;
+            
+            if (bothComplete) {
+                // Generate mock QR data
+                const mockQRData = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==`;
+                const mockRecordId = `MED-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                
+                // Store mock QR data
+                localStorage.setItem(`qrCodeData_${testEmail}`, mockQRData);
+                localStorage.setItem(`medicalRecordId_${testEmail}`, mockRecordId);
+                
+                result += `✅ QR Code Generation: SUCCESS\n`;
+                result += `Record ID: ${mockRecordId}\n`;
+                result += `QR Data Length: ${mockQRData.length} characters`;
+                
+                document.getElementById('qr-result').innerHTML = `
+                    <h3>Generated QR Code Info:</h3>
+                    <p><strong>Record ID:</strong> ${mockRecordId}</p>
+                    <p><strong>Email:</strong> ${testEmail}</p>
+                    <p><strong>Status:</strong> ✅ Ready for use</p>
+                `;
+            } else {
+                result += `❌ QR Code Generation: FAILED - Forms incomplete`;
+            }
+            
+            updateStatus(result, bothComplete ? "success" : "error");
+        }
+
+        function simulateStudentFormSubmission() {
+            const testEmail = document.getElementById('testEmail').value;
+            setupTestData(); // Ensure data exists
+            
+            // Check completion status
+            const studentData = localStorage.getItem(`studentData_${testEmail}`);
+            const hospitalData = localStorage.getItem(`hospitalData_${testEmail}`);
+            
+            const hasStudentData = !!studentData;
+            const hasHospitalData = !!hospitalData;
+            
+            let message = "✅ Student form submitted successfully!\n\n";
+            message += `Student Form: ${hasStudentData ? '✓' : '✗'}\n`;
+            message += `Hospital Form: ${hasHospitalData ? '✓' : '✗'}\n`;
+            
+            if (hasStudentData && hasHospitalData) {
+                message += `\n🎉 Both forms complete! QR code would be auto-generated now.`;
+                testQRGeneration();
+            } else {
+                message += `\n⏳ Waiting for hospital examination to complete...`;
+            }
+            
+            document.getElementById('form-status').innerHTML = `<pre>${message}</pre>`;
+        }
+
+        function simulateHospitalFormSubmission() {
+            const testEmail = document.getElementById('testEmail').value;
+            setupTestData(); // Ensure data exists
+            
+            // Check completion status
+            const studentData = localStorage.getItem(`studentData_${testEmail}`);
+            const hospitalData = localStorage.getItem(`hospitalData_${testEmail}`);
+            
+            const hasStudentData = !!studentData;
+            const hasHospitalData = !!hospitalData;
+            
+            let message = "✅ Hospital examination form submitted successfully!\n\n";
+            message += `Student Form: ${hasStudentData ? '✓' : '✗'}\n`;
+            message += `Hospital Form: ${hasHospitalData ? '✓' : '✗'}\n`;
+            
+            if (hasStudentData && hasHospitalData) {
+                message += `\n🎉 Both forms complete! QR code would be auto-generated now.`;
+                testQRGeneration();
+            } else {
+                message += `\n⏳ Waiting for student details to be completed...`;
+            }
+            
+            document.getElementById('form-status').innerHTML = `<pre>${message}</pre>`;
+        }
+
+        function clearTestData() {
+            const testEmail = document.getElementById('testEmail').value;
+            localStorage.removeItem(`studentData_${testEmail}`);
+            localStorage.removeItem(`hospitalData_${testEmail}`);
+            localStorage.removeItem(`qrCodeData_${testEmail}`);
+            localStorage.removeItem(`medicalRecordId_${testEmail}`);
+            
+            updateStatus("Test data cleared for " + testEmail, "success");
+            document.getElementById('qr-result').innerHTML = "";
+            document.getElementById('form-status').innerHTML = "";
+        }
+
+        function updateStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = `<pre>${message}</pre>`;
+        }
+
+        // Initialize
+        window.onload = function() {
+            updateStatus("Ready to test QR code generation functionality", "success");
+        };
+    </script>
+</body>
+</html>

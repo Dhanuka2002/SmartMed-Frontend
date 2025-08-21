@@ -70,10 +70,17 @@ function DoctorDashboard() {
     return () => clearInterval(interval);
   }, [previousNotificationCount, soundEnabled]);
 
-  const loadQueueData = () => {
-    const doctorQueue = getDoctorQueue();
-    setQueueData(doctorQueue);
-    setLastUpdated(new Date());
+  const loadQueueData = async () => {
+    try {
+      console.log('🔄 Loading doctor queue data...');
+      const doctorQueue = await getDoctorQueue();
+      console.log('✅ Doctor queue loaded:', doctorQueue);
+      setQueueData(doctorQueue);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('❌ Error loading doctor queue:', error);
+      setQueueData([]);
+    }
   };
 
   const currentPatient = queueData[selectedPatient] || {};
@@ -469,14 +476,6 @@ function DoctorDashboard() {
 
                       </div>
                       <div className="profile-actions">
-                        {currentPatient.status === 'Waiting for Doctor' && (
-                          <button 
-                            className="action-btn primary"
-                            onClick={() => updatePatientStatus(currentPatient.queueNo, 'In Progress')}
-                          >
-                            Start Consultation
-                          </button>
-                        )}
                         {currentPatient.status === 'In Progress' && (
                           <button 
                             className="action-btn success"

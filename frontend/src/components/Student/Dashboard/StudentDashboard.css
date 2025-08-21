@@ -148,7 +148,7 @@
 .avatar-loading span {
   color: #718096;
   font-size: 24px;
-  font-weight: 600;
+  font-weight: 500;
   animation: pulse 1.5s infinite;
 }
 

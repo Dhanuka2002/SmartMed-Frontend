@@ -121,6 +121,86 @@ public class MedicalRecordController {
         }
     }
 
+    @GetMapping("/by-record-id/{recordId}")
+    public ResponseEntity<Map<String, Object>> getMedicalRecordByStringId(@PathVariable String recordId) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // For now, we'll simulate getting medical record data from localStorage-style storage
+            // This would normally query a database table that stores the merged medical records
+            
+            // Create a mock response with the structure the frontend expects
+            Map<String, Object> medicalRecord = new HashMap<>();
+            medicalRecord.put("id", recordId);
+            medicalRecord.put("timestamp", new Date().toString());
+            
+            // Create student object
+            Map<String, Object> student = new HashMap<>();
+            student.put("fullName", "John Doe Student"); // This would come from database
+            student.put("nic", "199601234568V");
+            student.put("studentRegistrationNumber", "MED/2024/002");
+            student.put("email", "john@student.com");
+            student.put("telephoneNumber", "0771234568");
+            student.put("academicDivision", "Medical Faculty");
+            student.put("dateOfBirth", "1996-01-23");
+            student.put("age", "28");
+            student.put("gender", "Male");
+            student.put("homeAddress", "123 Main Street, Colombo");
+            
+            // Emergency contact
+            Map<String, Object> emergencyContact = new HashMap<>();
+            emergencyContact.put("name", "Jane Doe");
+            emergencyContact.put("telephone", "0777654321");
+            emergencyContact.put("relationship", "Mother");
+            student.put("emergencyContact", emergencyContact);
+            
+            medicalRecord.put("student", student);
+            
+            // Create examination object
+            Map<String, Object> examination = new HashMap<>();
+            
+            // Physical measurements
+            Map<String, Object> physicalMeasurements = new HashMap<>();
+            physicalMeasurements.put("weight", "70");
+            physicalMeasurements.put("height", "175");
+            examination.put("physicalMeasurements", physicalMeasurements);
+            
+            examination.put("vaccinationStatus", "yes");
+            
+            // Detailed examination
+            Map<String, Object> examinationDetails = new HashMap<>();
+            
+            Map<String, Object> circulation = new HashMap<>();
+            circulation.put("bloodPressure", "120/80");
+            examinationDetails.put("circulation", circulation);
+            
+            Map<String, Object> clinicalTests = new HashMap<>();
+            clinicalTests.put("bloodGroup", "O+");
+            clinicalTests.put("hemoglobin", "14.5");
+            examinationDetails.put("clinicalTests", clinicalTests);
+            
+            examination.put("examination", examinationDetails);
+            
+            // Assessment
+            Map<String, Object> assessment = new HashMap<>();
+            assessment.put("fitForStudies", "fit");
+            assessment.put("specialistReferral", "no");
+            examination.put("assessment", assessment);
+            
+            medicalRecord.put("examination", examination);
+            
+            response.put("status", "success");
+            response.put("medicalRecord", medicalRecord);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve medical record: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> deleteMedicalRecord(@PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();

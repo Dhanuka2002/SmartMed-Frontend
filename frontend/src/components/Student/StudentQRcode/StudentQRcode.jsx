@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
 import QRScanner from '../../QRScanner/QRScanner';
-import { processCompleteMedicalRecordByEmail } from '../../../services/medicalRecordService';
+import { processCompleteMedicalRecordByEmail, checkFormsCompletion } from '../../../services/medicalRecordService';
 import './StudentQRcode.css';
 
 function StudentQRCode() {
@@ -15,6 +15,7 @@ function StudentQRCode() {
   const [error, setError] = useState("");
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [inputEmail, setInputEmail] = useState("");
+  const [formsStatus, setFormsStatus] = useState({ hasStudentData: false, hasHospitalData: false, bothComplete: false });
 
   useEffect(() => {
     // Load current user data
@@ -33,6 +34,10 @@ function StudentQRCode() {
         setQrCodeData(userQRData);
         setMedicalRecordId(userRecordId);
       }
+      
+      // Check forms completion status
+      const status = checkFormsCompletion(currentUser.email);
+      setFormsStatus(status);
     } else {
       // Fallback to old system
       setStudentName(localStorage.getItem("studentName") || "Student");
@@ -41,7 +46,37 @@ function StudentQRCode() {
       setInputEmail(email !== "No Email" ? email : "");
       setQrCodeData(localStorage.getItem("qrCodeData") || "");
       setMedicalRecordId(localStorage.getItem("medicalRecordId") || "");
+      
+      // Check forms completion status for fallback email
+      if (email !== "No Email") {
+        const status = checkFormsCompletion(email);
+        setFormsStatus(status);
+      }
     }
+
+    // Listen for QR code generation events
+    const handleQRGenerated = (event) => {
+      const { email, recordId } = event.detail;
+      if (email === currentUser.email || email === studentEmail) {
+        // Reload QR code data
+        const qrData = localStorage.getItem(`qrCodeData_${email}`);
+        const recordIdData = localStorage.getItem(`medicalRecordId_${email}`);
+        if (qrData && recordIdData) {
+          setQrCodeData(qrData);
+          setMedicalRecordId(recordIdData);
+          
+          // Update forms status
+          const status = checkFormsCompletion(email);
+          setFormsStatus(status);
+        }
+      }
+    };
+
+    window.addEventListener('qrCodeGenerated', handleQRGenerated);
+    
+    return () => {
+      window.removeEventListener('qrCodeGenerated', handleQRGenerated);
+    };
   }, []);
 
   // Generate QR code from medical data using email
@@ -155,23 +190,30 @@ function StudentQRCode() {
           {/* Show form completion status */}
           {studentEmail && (
             <div className="form-status" style={{
-              background: '#f8f9fa',
-              border: '1px solid #dee2e6',
+              background: formsStatus.bothComplete ? '#d4edda' : '#fff3cd',
+              border: `1px solid ${formsStatus.bothComplete ? '#c3e6cb' : '#ffeaa7'}`,
               borderRadius: '8px',
               padding: '1rem',
               marginBottom: '1rem'
             }}>
-              <h4 style={{margin: '0 0 0.5rem 0', color: '#495057'}}>Form Completion Status:</h4>
+              <h4 style={{margin: '0 0 0.5rem 0', color: '#495057'}}>
+                Form Completion Status: 
+                {formsStatus.bothComplete ? (
+                  <span style={{color: '#155724', marginLeft: '0.5rem'}}>✅ Complete</span>
+                ) : (
+                  <span style={{color: '#856404', marginLeft: '0.5rem'}}>⏳ Incomplete</span>
+                )}
+              </h4>
               <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
                 <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
                   <span style={{
                     width: '12px',
                     height: '12px',
                     borderRadius: '50%',
-                    background: localStorage.getItem(`studentData_${studentEmail}`) ? '#28a745' : '#dc3545'
+                    background: formsStatus.hasStudentData ? '#28a745' : '#dc3545'
                   }}></span>
                   <span style={{fontSize: '0.9rem'}}>
-                    Student Details Form {localStorage.getItem(`studentData_${studentEmail}`) ? '✓' : '✗'}
+                    Student Details Form {formsStatus.hasStudentData ? '✓' : '✗'}
                   </span>
                 </div>
                 <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
@@ -179,12 +221,36 @@ function StudentQRCode() {
                     width: '12px',
                     height: '12px',
                     borderRadius: '50%',
-                    background: localStorage.getItem(`hospitalData_${studentEmail}`) ? '#28a745' : '#dc3545'
+                    background: formsStatus.hasHospitalData ? '#28a745' : '#dc3545'
                   }}></span>
                   <span style={{fontSize: '0.9rem'}}>
-                    Hospital Examination Form {localStorage.getItem(`hospitalData_${studentEmail}`) ? '✓' : '✗'}
+                    Hospital Examination Form {formsStatus.hasHospitalData ? '✓' : '✗'}
                   </span>
                 </div>
+                {formsStatus.bothComplete && !qrCodeData && (
+                  <div style={{
+                    marginTop: '0.5rem',
+                    padding: '0.5rem',
+                    background: '#b3d4fc',
+                    borderRadius: '4px',
+                    color: '#0c5460',
+                    fontSize: '0.85rem'
+                  }}>
+                    🔄 Both forms are complete! QR code should generate automatically. If not visible, try clicking "Generate Medical QR Code" below.
+                  </div>
+                )}
+                {!formsStatus.bothComplete && (
+                  <div style={{
+                    marginTop: '0.5rem',
+                    padding: '0.5rem',
+                    background: '#f8d7da',
+                    borderRadius: '4px',
+                    color: '#721c24',
+                    fontSize: '0.85rem'
+                  }}>
+                    📝 Complete both forms to generate your QR code automatically.
+                  </div>
+                )}
               </div>
             </div>
           )}
