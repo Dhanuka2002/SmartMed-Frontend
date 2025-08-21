@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import "./StudentEnteringDetails.css";
 import Avatar from "../../common/Avatar/Avatar";
+import { autoGenerateQRIfReady } from '../../../services/medicalRecordService';
 
 function StudentEnteringDetails() {
   // Get current user data and auto-populate
@@ -154,14 +155,49 @@ function StudentEnteringDetails() {
       const result = await response.json();
       
       if (result.status === 'success') {
-        // Save student data to localStorage for QR code generation
-        localStorage.setItem('studentFormData', JSON.stringify(formData));
-        localStorage.setItem(`studentData_${formData.email}`, JSON.stringify(formData));
-        localStorage.setItem('studentName', formData.fullName);
-        localStorage.setItem('studentEmail', formData.email || 'No Email');
+        // Get current user to ensure data is saved under correct user
+        const currentUserData = localStorage.getItem('currentUser');
+        const currentUser = currentUserData ? JSON.parse(currentUserData) : null;
+        
+        if (currentUser && currentUser.email) {
+          // Save student data to localStorage with user-specific keys
+          localStorage.setItem(`studentFormData_${currentUser.email}`, JSON.stringify(formData));
+          localStorage.setItem(`studentData_${currentUser.email}`, JSON.stringify(formData));
+          
+          // Also save with form email for backward compatibility
+          if (formData.email !== currentUser.email) {
+            localStorage.setItem(`studentData_${formData.email}`, JSON.stringify(formData));
+          }
+          
+          localStorage.setItem('studentName', formData.fullName);
+          localStorage.setItem('studentEmail', formData.email || currentUser.email || 'No Email');
+          
+          // Clear any old general storage
+          localStorage.removeItem('studentFormData');
+        } else {
+          // Fallback for older system
+          localStorage.setItem('studentFormData', JSON.stringify(formData));
+          localStorage.setItem(`studentData_${formData.email}`, JSON.stringify(formData));
+        }
         
         alert('Student details saved successfully!');
         console.log('Saved with ID:', result.studentId);
+        
+        // Auto-generate QR code if both forms are complete
+        const emailToCheck = currentUser?.email || formData.email;
+        if (emailToCheck) {
+          try {
+            const qrResult = await autoGenerateQRIfReady(emailToCheck);
+            if (qrResult.success && !qrResult.alreadyExists) {
+              alert('🎉 Both forms completed! Your medical QR code has been automatically generated. You can view it in the QR Code section.');
+            }
+          } catch (error) {
+            console.error('Error auto-generating QR code:', error);
+          }
+        }
+        
+        // Trigger refresh event for dashboard
+        window.dispatchEvent(new CustomEvent('studentDataUpdated'));
       } else {
         alert('Error: ' + result.message);
       }

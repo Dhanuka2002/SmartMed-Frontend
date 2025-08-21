@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getDoctorQueue, updateQueueEntryStatus } from "../../../services/queueService";
+import { getFullMedicalRecordById } from "../../../services/medicalRecordService";
 import "./DoctorQueue.css";
 
 function DoctorQueue() {
+  const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
   const [queueData, setQueueData] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
+<<<<<<< HEAD
   const [loading, setLoading] = useState(true);   // NEW
   const [error, setError] = useState(null);       // NEW
+=======
+  const [loadingPatient, setLoadingPatient] = useState(false);
+>>>>>>> 832ca99b090aed1644be80b0b11e9eac22cde254
 
   // Load doctor queue data
   useEffect(() => {
@@ -26,6 +33,7 @@ function DoctorQueue() {
 
   const loadQueueData = async () => {
     try {
+<<<<<<< HEAD
       setLoading(true);
       setError(null);
 
@@ -46,6 +54,53 @@ function DoctorQueue() {
     alert(
       `Selected patient: ${patient.studentName} (Queue #${patient.queueNo}). Navigate to Patients page to view details.`
     );
+=======
+      console.log('🔄 [DoctorQueue] Loading doctor queue data...');
+      const doctorQueue = await getDoctorQueue();
+      console.log('✅ [DoctorQueue] Doctor queue loaded:', doctorQueue);
+      setQueueData(doctorQueue);
+    } catch (error) {
+      console.error('❌ [DoctorQueue] Error loading doctor queue:', error);
+      setQueueData([]);
+    }
+  };
+
+  const handleSelectPatient = async (patient) => {
+    try {
+      setLoadingPatient(true);
+      console.log('🔄 Selecting patient:', patient);
+      
+      // Fetch full medical record details
+      const result = await getFullMedicalRecordById(patient.medicalRecordId);
+      
+      if (result.success) {
+        // Combine queue data with full medical record
+        const fullPatientData = {
+          ...patient, // Queue info (queueNo, status, etc.)
+          fullMedicalRecord: result.medicalRecord // Complete medical record
+        };
+        
+        // Store for DoctorPatient component
+        localStorage.setItem('selectedPatient', JSON.stringify(fullPatientData));
+        
+        console.log('✅ Full patient data prepared:', fullPatientData);
+        
+        // Navigate to Patients tab
+        navigate('/doctor/patients');
+        
+        // Show success message
+        alert(`✅ Patient ${patient.studentName} (Queue #${patient.queueNo}) loaded successfully! Navigating to Patients tab...`);
+        
+      } else {
+        throw new Error(result.error || 'Failed to fetch medical record');
+      }
+    } catch (error) {
+      console.error('❌ Error selecting patient:', error);
+      alert(`❌ Failed to load patient details: ${error.message}`);
+    } finally {
+      setLoadingPatient(false);
+    }
+>>>>>>> 832ca99b090aed1644be80b0b11e9eac22cde254
   };
 
   const handlePatientStatus = async (queueNo, status) => {
@@ -161,9 +216,11 @@ function DoctorQueue() {
                       <button
                         className="action-btn select-btn"
                         onClick={() => handleSelectPatient(patient)}
+                        disabled={loadingPatient}
                       >
-                        View Patient
+                        {loadingPatient ? '⏳ Loading...' : 'View Patient'}
                       </button>
+<<<<<<< HEAD
                       {patient.status === "Waiting for Doctor" && (
                         <button
                           className="action-btn start-btn"
@@ -174,6 +231,8 @@ function DoctorQueue() {
                           Start Consultation
                         </button>
                       )}
+=======
+>>>>>>> 832ca99b090aed1644be80b0b11e9eac22cde254
                     </div>
                   </div>
                 </div>

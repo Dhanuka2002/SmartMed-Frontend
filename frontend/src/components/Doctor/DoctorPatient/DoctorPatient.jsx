@@ -149,18 +149,18 @@ function DoctorPatient() {
     name: selectedPatient.studentName,
     id: selectedPatient.studentId,
     queueNo: selectedPatient.queueNo,
-    age: selectedPatient.medicalData?.student?.age || "N/A",
-    gender: selectedPatient.medicalData?.student?.gender || "N/A",
-    division: selectedPatient.medicalData?.student?.academicDivision || "N/A",
-    phone: selectedPatient.phone,
-    email: selectedPatient.email,
-    allergies: extractAllergies(selectedPatient.medicalData),
-    medicalConditions: extractMedicalConditions(selectedPatient.medicalData),
-    bloodType: selectedPatient.medicalData?.examination?.examination?.clinicalTests?.bloodGroup || "N/A",
+    age: selectedPatient.fullMedicalRecord?.student?.age || selectedPatient.medicalData?.student?.age || "N/A",
+    gender: selectedPatient.fullMedicalRecord?.student?.gender || selectedPatient.medicalData?.student?.gender || "N/A",
+    division: selectedPatient.fullMedicalRecord?.student?.academicDivision || selectedPatient.medicalData?.student?.academicDivision || "N/A",
+    phone: selectedPatient.fullMedicalRecord?.student?.telephoneNumber || selectedPatient.phone,
+    email: selectedPatient.fullMedicalRecord?.student?.email || selectedPatient.email,
+    allergies: extractAllergies(selectedPatient.fullMedicalRecord) || extractAllergies(selectedPatient.medicalData),
+    medicalConditions: extractMedicalConditions(selectedPatient.fullMedicalRecord) || extractMedicalConditions(selectedPatient.medicalData),
+    bloodType: selectedPatient.fullMedicalRecord?.examination?.examination?.clinicalTests?.bloodGroup || selectedPatient.medicalData?.examination?.examination?.clinicalTests?.bloodGroup || "N/A",
     lastVisit: new Date(selectedPatient.addedTime).toLocaleDateString(),
-    emergencyContact: selectedPatient.medicalData?.student?.emergencyContact?.telephone || "N/A",
-    emergencyContactName: selectedPatient.medicalData?.student?.emergencyContact?.name || "N/A",
-    emergencyContactRelation: selectedPatient.medicalData?.student?.emergencyContact?.relationship || "N/A"
+    emergencyContact: selectedPatient.fullMedicalRecord?.student?.emergencyContact?.telephone || selectedPatient.medicalData?.student?.emergencyContact?.telephone || "N/A",
+    emergencyContactName: selectedPatient.fullMedicalRecord?.student?.emergencyContact?.name || selectedPatient.medicalData?.student?.emergencyContact?.name || "N/A",
+    emergencyContactRelation: selectedPatient.fullMedicalRecord?.student?.emergencyContact?.relationship || selectedPatient.medicalData?.student?.emergencyContact?.relationship || "N/A"
   } : {
     name: "No Patient Selected",
     id: "N/A",
@@ -495,87 +495,191 @@ function DoctorPatient() {
       const prescriptionMedicines = [
         // From structured prescription items
         ...prescriptionItems.map(item => ({
-          medicineId: item.medicineId || Date.now(),
+          medicineId: item.medicineId || null,
           medicineName: item.medicineName,
           quantity: parseInt(item.quantity) || 1,
           dosage: item.dosage,
-          instructions: `${item.frequency} for ${item.duration} - ${item.instructions}`.trim()
+          frequency: item.frequency,
+          duration: item.duration,
+          instructions: item.instructions || `${item.frequency} for ${item.duration}`.trim()
         })),
         // From legacy medication entries
-        ...medications.map((med, index) => ({
-          medicineId: Date.now() + index,
+        ...medications.map(med => ({
+          medicineId: null,
           medicineName: med.name,
           quantity: parseInt(med.duration) || 10,
           dosage: med.dosage,
-          instructions: `${med.frequency} - ${med.instructions}`.trim()
+          frequency: med.frequency,
+          duration: med.duration,
+          instructions: med.instructions || `${med.frequency}`.trim()
         }))
       ];
 
       // Add text-based prescriptions as additional medicines
       if (prescriptionText.trim()) {
         const textPrescriptions = prescriptionText.split('\n').filter(line => line.trim());
-        textPrescriptions.forEach((prescription, index) => {
+        textPrescriptions.forEach((prescription) => {
           if (prescription.trim()) {
             prescriptionMedicines.push({
-              medicineId: Date.now() + prescriptionMedicines.length + index,
+              medicineId: null,
               medicineName: prescription.trim(),
               quantity: 1,
               dosage: "As prescribed",
+              frequency: "As directed",
+              duration: "As needed",
               instructions: "Take as directed by doctor"
             });
           }
         });
       }
 
-      // Create prescription object for pharmacy context
+      // Save prescription to database
       const prescriptionData = {
         patientName: patientInfo.name,
         patientId: patientInfo.id,
+        studentId: selectedPatient.studentId,
+        queueNo: selectedPatient.queueNo,
         doctorName: "Dr. Smith", // You can get this from user context
+        prescriptionText: prescriptionText.trim(),
+        instructions: "Take as directed by doctor",
         medicines: prescriptionMedicines
       };
 
-      // Add prescription to context (this will make it appear in pharmacy queue)
-      const prescriptionId = addPrescription(prescriptionData);
-      
-      // Update inventory quantities when prescription is sent
-      dispenseMedicines(prescriptionMedicines);
+      console.log('🔄 Saving prescription to database:', prescriptionData);
 
-      // Also maintain the existing queue service for compatibility
-      const legacyPrescription = {
-        prescriptionText,
-        medications: [...medications, ...prescriptionItems.map(item => ({
-          name: item.medicineName,
-          dosage: item.dosage,
-          frequency: item.frequency,
-          duration: item.duration,
-          instructions: item.instructions
-        }))],
-        doctorName: "Dr. Smith",
-        prescriptionDate: new Date().toISOString(),
-        patientName: patientInfo.name,
-        patientId: patientInfo.id,
-        queueNo: patientInfo.queueNo,
-        status: "Prescribed",
-        instructions: "Take as directed"
-      };
+      const response = await fetch('http://localhost:8081/api/prescriptions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(prescriptionData),
+      });
 
-      await addPrescriptionAndMoveToPharmacy(selectedPatient.queueNo, legacyPrescription);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
       
-      alert(`Prescription #${prescriptionId} sent to pharmacy successfully! Patient ${patientInfo.name} moved to pharmacy queue.`);
-      
-      // Clear the form
-      setPrescriptionText("");
-      setMedications([]);
-      setPrescriptionItems([]);
-      
-      // Clear selected patient
-      localStorage.removeItem('selectedPatient');
-      setSelectedPatient(null);
+      if (result.success) {
+        console.log('✅ Prescription saved to database:', result.prescription);
+        
+        // Add prescription to context (this will make it appear in pharmacy queue)
+        const contextPrescriptionData = {
+          patientName: patientInfo.name,
+          patientId: patientInfo.id,
+          doctorName: "Dr. Smith",
+          medicines: prescriptionMedicines.map(med => ({
+            medicineId: med.medicineId,
+            medicineName: med.medicineName,
+            quantity: med.quantity,
+            dosage: med.dosage,
+            instructions: med.instructions
+          }))
+        };
+        const prescriptionId = addPrescription(contextPrescriptionData);
+        
+        // DON'T automatically dispense medicines - pharmacy will handle this
+        // dispenseMedicines(prescriptionMedicines);
+
+        // Also maintain the existing queue service for compatibility
+        const legacyPrescription = {
+          prescriptionText,
+          medications: [...medications, ...prescriptionItems.map(item => ({
+            name: item.medicineName,
+            dosage: item.dosage,
+            frequency: item.frequency,
+            duration: item.duration,
+            instructions: item.instructions
+          }))],
+          doctorName: "Dr. Smith",
+          prescriptionDate: new Date().toISOString(),
+          patientName: patientInfo.name,
+          patientId: patientInfo.id,
+          queueNo: patientInfo.queueNo,
+          status: "Prescribed",
+          instructions: "Take as directed"
+        };
+
+        await addPrescriptionAndMoveToPharmacy(selectedPatient.queueNo, legacyPrescription);
+        
+        alert(`Prescription #${result.prescriptionId} sent to pharmacy successfully! Patient ${patientInfo.name} moved to pharmacy queue.`);
+        
+        // Clear the form
+        setPrescriptionText("");
+        setMedications([]);
+        setPrescriptionItems([]);
+        
+        // Clear selected patient
+        localStorage.removeItem('selectedPatient');
+        setSelectedPatient(null);
+        
+      } else {
+        throw new Error(result.message || 'Failed to save prescription to database');
+      }
       
     } catch (error) {
       console.error('Error sending prescription:', error);
-      alert('Error sending prescription to pharmacy. Please try again.');
+      
+      // If database save fails, still try to use legacy system
+      if (error.message.includes('HTTP') || error.message.includes('database')) {
+        try {
+          console.log('⚠️ Database save failed, using legacy system only');
+          
+          // Create prescription object for pharmacy context
+          const contextPrescriptionData = {
+            patientName: patientInfo.name,
+            patientId: patientInfo.id,
+            doctorName: "Dr. Smith",
+            medicines: prescriptionMedicines.map(med => ({
+              medicineId: med.medicineId,
+              medicineName: med.medicineName,
+              quantity: med.quantity,
+              dosage: med.dosage,
+              instructions: med.instructions
+            }))
+          };
+          const prescriptionId = addPrescription(contextPrescriptionData);
+          
+          // Legacy prescription
+          const legacyPrescription = {
+            prescriptionText,
+            medications: [...medications, ...prescriptionItems.map(item => ({
+              name: item.medicineName,
+              dosage: item.dosage,
+              frequency: item.frequency,
+              duration: item.duration,
+              instructions: item.instructions
+            }))],
+            doctorName: "Dr. Smith",
+            prescriptionDate: new Date().toISOString(),
+            patientName: patientInfo.name,
+            patientId: patientInfo.id,
+            queueNo: patientInfo.queueNo,
+            status: "Prescribed",
+            instructions: "Take as directed"
+          };
+
+          await addPrescriptionAndMoveToPharmacy(selectedPatient.queueNo, legacyPrescription);
+          
+          alert(`⚠️ Prescription #${prescriptionId} sent to pharmacy (using legacy system - database unavailable). Patient ${patientInfo.name} moved to pharmacy queue.`);
+          
+          // Clear the form
+          setPrescriptionText("");
+          setMedications([]);
+          setPrescriptionItems([]);
+          
+          // Clear selected patient
+          localStorage.removeItem('selectedPatient');
+          setSelectedPatient(null);
+          
+        } catch (legacyError) {
+          console.error('Legacy system also failed:', legacyError);
+          alert('❌ Error sending prescription to pharmacy. Both database and legacy systems failed. Please try again.');
+        }
+      } else {
+        alert('❌ Error sending prescription to pharmacy. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }

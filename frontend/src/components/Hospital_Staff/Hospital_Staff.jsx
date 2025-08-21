@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Hospital_Staff.css';
+import { autoGenerateQRIfReady } from '../../services/medicalRecordService';
 
 const SignaturePad = ({ onSignatureChange, label, clearSignal, width = 300, height = 120 }) => {
   const canvasRef = useRef(null);
@@ -265,6 +266,21 @@ const Hospital_Staff = () => {
         
         alert('Medical record saved successfully to database!');
         console.log('Record ID:', result.recordId);
+        
+        // Auto-generate QR code if both forms are complete
+        const emailToCheck = formData.studentEmail;
+        if (emailToCheck) {
+          try {
+            const qrResult = await autoGenerateQRIfReady(emailToCheck);
+            if (qrResult.success && !qrResult.alreadyExists) {
+              alert('🎉 Both forms completed! The student\'s medical QR code has been automatically generated. The student can now view their QR code in the Student QR Code section.');
+            } else if (qrResult.success && qrResult.alreadyExists) {
+              alert('✅ Medical record updated. The student\'s QR code was already generated and remains valid.');
+            }
+          } catch (error) {
+            console.error('Error auto-generating QR code:', error);
+          }
+        }
         
         // Optionally reset the form
         // resetForm();

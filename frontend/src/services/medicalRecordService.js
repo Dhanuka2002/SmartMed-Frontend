@@ -340,6 +340,107 @@ export const getDataByEmail = async (email) => {
   }
 };
 
+// Check if both forms are completed for auto QR generation
+export const checkFormsCompletion = (email) => {
+  try {
+    const studentData = JSON.parse(localStorage.getItem(`studentData_${email}`) || '{}');
+    const hospitalData = JSON.parse(localStorage.getItem(`hospitalData_${email}`) || '{}');
+    
+    const hasStudentData = studentData.email === email && studentData.fullName;
+    const hasHospitalData = hospitalData.studentEmail === email && hospitalData.weight;
+    
+    return {
+      hasStudentData,
+      hasHospitalData,
+      bothComplete: hasStudentData && hasHospitalData
+    };
+  } catch (error) {
+    console.error('Error checking forms completion:', error);
+    return { hasStudentData: false, hasHospitalData: false, bothComplete: false };
+  }
+};
+
+// Auto-generate QR code when both forms are complete
+export const autoGenerateQRIfReady = async (email) => {
+  try {
+    const { bothComplete } = checkFormsCompletion(email);
+    
+    if (bothComplete) {
+      // Check if QR code already exists
+      const existingQR = localStorage.getItem(`qrCodeData_${email}`);
+      if (existingQR) {
+        console.log('QR code already exists for:', email);
+        return { success: true, alreadyExists: true };
+      }
+      
+      console.log('Auto-generating QR code for:', email);
+      const result = await processCompleteMedicalRecordByEmail(email);
+      
+      if (result.success) {
+        console.log('QR code auto-generated successfully for:', email);
+        
+        // Dispatch event to notify other components
+        window.dispatchEvent(new CustomEvent('qrCodeGenerated', { 
+          detail: { email, recordId: result.recordId } 
+        }));
+      }
+      
+      return result;
+    }
+    
+    return { success: false, error: 'Both forms not complete yet' };
+  } catch (error) {
+    console.error('Error in auto QR generation:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Get full medical record details by medical record ID (for doctor interface)
+export const getFullMedicalRecordById = async (medicalRecordId) => {
+  try {
+    console.log('🔍 Fetching full medical record for ID:', medicalRecordId);
+    
+    const response = await fetch(`http://localhost:8081/api/medical-records/by-record-id/${medicalRecordId}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log('✅ Full medical record fetched:', result.medicalRecord);
+    
+    return {
+      success: true,
+      medicalRecord: result.medicalRecord
+    };
+  } catch (error) {
+    console.error('❌ Error fetching full medical record:', error);
+    
+    // Fallback to localStorage
+    try {
+      const recordKey = `medicalRecord_${medicalRecordId}`;
+      const localData = localStorage.getItem(recordKey);
+      
+      if (localData) {
+        const medicalRecord = JSON.parse(localData);
+        console.log('✅ Found medical record in localStorage:', medicalRecord);
+        return {
+          success: true,
+          medicalRecord: medicalRecord
+        };
+      }
+      
+      throw new Error('Medical record not found');
+    } catch (localError) {
+      console.error('❌ Error fetching from localStorage:', localError);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+};
+
 // Process complete medical record by email
 export const processCompleteMedicalRecordByEmail = async (email) => {
   try {
