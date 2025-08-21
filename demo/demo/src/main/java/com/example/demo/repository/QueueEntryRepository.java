@@ -27,9 +27,13 @@ public interface QueueEntryRepository extends JpaRepository<QueueEntry, Long> {
     // Find by medical record ID
     Optional<QueueEntry> findByMedicalRecordId(String medicalRecordId);
 
-    // Check for duplicates by email, NIC, or medical record ID
-    @Query("SELECT q FROM QueueEntry q WHERE q.email = :email OR q.nic = :nic OR q.medicalRecordId = :medicalRecordId")
+    // Check for duplicates by email, NIC, or medical record ID (only in reception queue)
+    @Query("SELECT q FROM QueueEntry q WHERE q.stage = 'reception' AND (q.email = :email OR q.nic = :nic OR q.medicalRecordId = :medicalRecordId)")
     List<QueueEntry> findDuplicates(@Param("email") String email, @Param("nic") String nic, @Param("medicalRecordId") String medicalRecordId);
+    
+    // Check for any existing entry (across all stages) - for reference
+    @Query("SELECT q FROM QueueEntry q WHERE q.email = :email OR q.nic = :nic OR q.medicalRecordId = :medicalRecordId")
+    List<QueueEntry> findAnyExistingEntry(@Param("email") String email, @Param("nic") String nic, @Param("medicalRecordId") String medicalRecordId);
 
     // Find all entries ordered by added time
     List<QueueEntry> findAllByOrderByAddedTimeDesc();

@@ -40,15 +40,25 @@ public class QueueController {
             String nic = (String) student.get("nic");
             String medicalRecordId = (String) medicalData.get("id");
 
-            // Check for duplicates
+            // Check for duplicates in reception queue only
             List<QueueEntry> duplicates = queueEntryRepository.findDuplicates(email, nic, medicalRecordId);
             
             if (!duplicates.isEmpty()) {
                 QueueEntry existingEntry = duplicates.get(0);
                 response.put("isDuplicate", true);
-                response.put("message", "Student " + student.get("fullName") + " is already in the queue (Queue #" + existingEntry.getQueueNo() + ")");
+                response.put("message", "Student " + student.get("fullName") + " is already in the reception queue (Queue #" + existingEntry.getQueueNo() + ")");
                 response.put("queueEntry", convertToMap(existingEntry));
                 return ResponseEntity.ok(response);
+            }
+            
+            // Check if student exists in other stages for informational purposes
+            List<QueueEntry> anyExisting = queueEntryRepository.findAnyExistingEntry(email, nic, medicalRecordId);
+            String existingStageInfo = "";
+            if (!anyExisting.isEmpty()) {
+                QueueEntry existingInOtherStage = anyExisting.get(0);
+                if (!existingInOtherStage.getStage().equals("reception")) {
+                    existingStageInfo = " (Note: Student was previously in " + existingInOtherStage.getStage() + " queue)";
+                }
             }
 
             // Create new queue entry
@@ -69,7 +79,7 @@ public class QueueController {
 
             response.put("isDuplicate", false);
             response.put("success", true);
-            response.put("message", "Student added to reception queue successfully");
+            response.put("message", "Student added to reception queue successfully" + existingStageInfo);
             response.put("queueEntry", convertToMap(savedEntry));
             
             return ResponseEntity.ok(response);

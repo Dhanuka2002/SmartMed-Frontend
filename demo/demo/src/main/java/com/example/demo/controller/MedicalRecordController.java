@@ -126,79 +126,197 @@ public class MedicalRecordController {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            // For now, we'll simulate getting medical record data from localStorage-style storage
-            // This would normally query a database table that stores the merged medical records
+            // Create comprehensive mock medical record data that matches frontend expectations
+            Map<String, Object> medicalRecord = createComprehensiveMockRecord(recordId);
             
-            // Create a mock response with the structure the frontend expects
-            Map<String, Object> medicalRecord = new HashMap<>();
-            medicalRecord.put("id", recordId);
-            medicalRecord.put("timestamp", new Date().toString());
-            
-            // Create student object
-            Map<String, Object> student = new HashMap<>();
-            student.put("fullName", "John Doe Student"); // This would come from database
-            student.put("nic", "199601234568V");
-            student.put("studentRegistrationNumber", "MED/2024/002");
-            student.put("email", "john@student.com");
-            student.put("telephoneNumber", "0771234568");
-            student.put("academicDivision", "Medical Faculty");
-            student.put("dateOfBirth", "1996-01-23");
-            student.put("age", "28");
-            student.put("gender", "Male");
-            student.put("homeAddress", "123 Main Street, Colombo");
-            
-            // Emergency contact
-            Map<String, Object> emergencyContact = new HashMap<>();
-            emergencyContact.put("name", "Jane Doe");
-            emergencyContact.put("telephone", "0777654321");
-            emergencyContact.put("relationship", "Mother");
-            student.put("emergencyContact", emergencyContact);
-            
-            medicalRecord.put("student", student);
-            
-            // Create examination object
-            Map<String, Object> examination = new HashMap<>();
-            
-            // Physical measurements
-            Map<String, Object> physicalMeasurements = new HashMap<>();
-            physicalMeasurements.put("weight", "70");
-            physicalMeasurements.put("height", "175");
-            examination.put("physicalMeasurements", physicalMeasurements);
-            
-            examination.put("vaccinationStatus", "yes");
-            
-            // Detailed examination
-            Map<String, Object> examinationDetails = new HashMap<>();
-            
-            Map<String, Object> circulation = new HashMap<>();
-            circulation.put("bloodPressure", "120/80");
-            examinationDetails.put("circulation", circulation);
-            
-            Map<String, Object> clinicalTests = new HashMap<>();
-            clinicalTests.put("bloodGroup", "O+");
-            clinicalTests.put("hemoglobin", "14.5");
-            examinationDetails.put("clinicalTests", clinicalTests);
-            
-            examination.put("examination", examinationDetails);
-            
-            // Assessment
-            Map<String, Object> assessment = new HashMap<>();
-            assessment.put("fitForStudies", "fit");
-            assessment.put("specialistReferral", "no");
-            examination.put("assessment", assessment);
-            
-            medicalRecord.put("examination", examination);
-            
-            response.put("status", "success");
+            response.put("success", true);
             response.put("medicalRecord", medicalRecord);
             
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            response.put("status", "error");
-            response.put("message", "Failed to retrieve medical record: " + e.getMessage());
+            response.put("success", false);
+            response.put("error", "Failed to retrieve medical record: " + e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
+    }
+
+    // Helper method to create comprehensive mock medical record
+    private Map<String, Object> createComprehensiveMockRecord(String recordId) {
+        Map<String, Object> medicalRecord = new HashMap<>();
+        
+        // Generate unique student data based on record ID
+        String idSuffix = recordId.substring(Math.max(0, recordId.length() - 3));
+        
+        medicalRecord.put("id", recordId);
+        medicalRecord.put("timestamp", new Date().toString());
+        
+        // Comprehensive student information
+        Map<String, Object> student = new HashMap<>();
+        student.put("fullName", "Alex Johnson Student " + idSuffix);
+        student.put("nic", "1996012345" + idSuffix + "V");
+        student.put("studentRegistrationNumber", "MED/2024/" + idSuffix);
+        student.put("email", "alex.johnson" + idSuffix + "@university.edu");
+        student.put("telephoneNumber", "0771234" + String.format("%03d", Integer.parseInt(idSuffix)));
+        student.put("academicDivision", "Faculty of Medicine");
+        student.put("dateOfBirth", "1996-03-15");
+        student.put("age", "28");
+        student.put("gender", Integer.parseInt(idSuffix) % 2 == 0 ? "Male" : "Female");
+        student.put("nationality", "Sri Lankan");
+        student.put("homeAddress", "456 University Avenue, Colombo 07, Sri Lanka");
+        student.put("religion", "Buddhism");
+        
+        // Emergency contact
+        Map<String, Object> emergencyContact = new HashMap<>();
+        emergencyContact.put("name", "Sarah Johnson");
+        emergencyContact.put("telephone", "0777654" + String.format("%03d", Integer.parseInt(idSuffix)));
+        emergencyContact.put("relationship", "Mother");
+        emergencyContact.put("address", "456 University Avenue, Colombo 07");
+        student.put("emergencyContact", emergencyContact);
+        
+        // Student medical history
+        Map<String, Object> studentMedicalHistory = new HashMap<>();
+        
+        Map<String, Object> allergicHistory = new HashMap<>();
+        allergicHistory.put("status", Integer.parseInt(idSuffix) % 3 == 0 ? "yes" : "no");
+        allergicHistory.put("details", Integer.parseInt(idSuffix) % 3 == 0 ? "Penicillin allergy" : "");
+        studentMedicalHistory.put("allergicHistory", allergicHistory);
+        
+        Map<String, Object> significantMedicalHistory = new HashMap<>();
+        significantMedicalHistory.put("status", "no");
+        significantMedicalHistory.put("details", "");
+        studentMedicalHistory.put("significantMedicalHistory", significantMedicalHistory);
+        
+        Map<String, Object> chronicIllness = new HashMap<>();
+        chronicIllness.put("status", Integer.parseInt(idSuffix) % 5 == 0 ? "yes" : "no");
+        chronicIllness.put("details", Integer.parseInt(idSuffix) % 5 == 0 ? "Mild asthma" : "");
+        studentMedicalHistory.put("chronicIllness", chronicIllness);
+        
+        Map<String, Object> surgicalHistory = new HashMap<>();
+        surgicalHistory.put("status", "no");
+        surgicalHistory.put("details", "");
+        studentMedicalHistory.put("surgicalHistory", surgicalHistory);
+        
+        student.put("studentMedicalHistory", studentMedicalHistory);
+        medicalRecord.put("student", student);
+        
+        // Comprehensive examination data
+        Map<String, Object> examination = new HashMap<>();
+        
+        // Physical measurements
+        Map<String, Object> physicalMeasurements = new HashMap<>();
+        physicalMeasurements.put("weight", String.valueOf(65 + Integer.parseInt(idSuffix) % 20));
+        physicalMeasurements.put("height", String.valueOf(160 + Integer.parseInt(idSuffix) % 25));
+        physicalMeasurements.put("chestInspiration", "85");
+        physicalMeasurements.put("chestExpiration", "82");
+        examination.put("physicalMeasurements", physicalMeasurements);
+        
+        examination.put("vaccinationStatus", "yes");
+        
+        // Detailed examination results
+        Map<String, Object> examinationDetails = new HashMap<>();
+        
+        // Circulation
+        Map<String, Object> circulation = new HashMap<>();
+        circulation.put("bloodPressure", "118/75");
+        circulation.put("pulse", String.valueOf(68 + Integer.parseInt(idSuffix) % 15));
+        circulation.put("heartDisease", "no");
+        circulation.put("heartSound", "normal");
+        circulation.put("murmurs", "no");
+        examinationDetails.put("circulation", circulation);
+        
+        // Clinical tests
+        Map<String, Object> clinicalTests = new HashMap<>();
+        String[] bloodGroups = {"A+", "B+", "AB+", "O+", "A-", "B-", "AB-", "O-"};
+        clinicalTests.put("bloodGroup", bloodGroups[Integer.parseInt(idSuffix) % bloodGroups.length]);
+        clinicalTests.put("hemoglobin", String.valueOf(12.5 + (Integer.parseInt(idSuffix) % 30) / 10.0));
+        examinationDetails.put("clinicalTests", clinicalTests);
+        
+        // Vision
+        Map<String, Object> vision = new HashMap<>();
+        vision.put("rightWithoutGlasses", "6/6");
+        vision.put("leftWithoutGlasses", "6/6");
+        vision.put("rightWithGlasses", "6/6");
+        vision.put("leftWithGlasses", "6/6");
+        
+        Map<String, Object> colorVision = new HashMap<>();
+        colorVision.put("normal", "yes");
+        colorVision.put("red", "no");
+        colorVision.put("green", "no");
+        vision.put("colorVision", colorVision);
+        examinationDetails.put("vision", vision);
+        
+        // Hearing
+        Map<String, Object> hearing = new HashMap<>();
+        hearing.put("rightEar", "normal");
+        hearing.put("leftEar", "normal");
+        hearing.put("speech", "normal");
+        examinationDetails.put("hearing", hearing);
+        
+        // Teeth
+        Map<String, Object> teeth = new HashMap<>();
+        teeth.put("decayed", String.valueOf(Integer.parseInt(idSuffix) % 3));
+        teeth.put("missing", "0");
+        teeth.put("dentures", "no");
+        teeth.put("gingivitis", Integer.parseInt(idSuffix) % 4 == 0 ? "mild" : "no");
+        examinationDetails.put("teeth", teeth);
+        
+        // Nervous system
+        Map<String, Object> nervous = new HashMap<>();
+        nervous.put("convulsion", "no");
+        nervous.put("kneeJerks", "normal");
+        examinationDetails.put("nervous", nervous);
+        
+        // Abdomen
+        Map<String, Object> abdomen = new HashMap<>();
+        abdomen.put("liverSpleen", "normal");
+        abdomen.put("hemorrhoids", "no");
+        abdomen.put("hernialOrifices", "no");
+        examinationDetails.put("abdomen", abdomen);
+        
+        // Extremities
+        Map<String, Object> extremities = new HashMap<>();
+        extremities.put("scarsOperations", "no");
+        extremities.put("varicoseVeins", "no");
+        extremities.put("boneJoint", "normal");
+        examinationDetails.put("extremities", extremities);
+        
+        // Respiration
+        Map<String, Object> respiration = new HashMap<>();
+        respiration.put("tuberculosis", "no");
+        respiration.put("tuberculosisTest", "negative");
+        
+        Map<String, Object> xray = new HashMap<>();
+        xray.put("chest", "normal");
+        xray.put("number", "XR" + idSuffix);
+        xray.put("findings", "Normal chest X-ray, clear lung fields");
+        xray.put("date", new Date().toString());
+        respiration.put("xray", xray);
+        examinationDetails.put("respiration", respiration);
+        
+        examination.put("examination", examinationDetails);
+        
+        // Assessment
+        Map<String, Object> assessment = new HashMap<>();
+        assessment.put("specialistReferral", Integer.parseInt(idSuffix) % 7 == 0 ? "yes" : "no");
+        assessment.put("medicalCondition", "healthy");
+        assessment.put("fitForStudies", "fit");
+        assessment.put("reason", Integer.parseInt(idSuffix) % 7 == 0 ? 
+            "Recommend follow-up for chronic condition monitoring" : 
+            "Student is medically fit for academic studies");
+        examination.put("assessment", assessment);
+        
+        // Certification
+        Map<String, Object> certification = new HashMap<>();
+        certification.put("date1", new Date().toString());
+        certification.put("date2", new Date().toString());
+        certification.put("medicalOfficerSignature", "Dr. Sarah Williams");
+        certification.put("itumMedicalOfficerSignature", "Dr. Michael Brown");
+        examination.put("certification", certification);
+        
+        medicalRecord.put("examination", examination);
+        
+        return medicalRecord;
     }
 
     @DeleteMapping("/{id}")

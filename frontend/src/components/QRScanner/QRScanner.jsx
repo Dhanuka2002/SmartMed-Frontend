@@ -137,14 +137,23 @@ const QRScanner = ({ onScanResult, onClose }) => {
       return;
     }
     
+    // Check if we're already processing a scan
+    if (loading) {
+      console.log('⚠️ Already processing a scan, ignoring new scan');
+      return;
+    }
+    
     // Set cooldown and remember last scanned data
     setScanCooldown(true);
     setLastScannedData(result.data);
     setLoading(true);
     stopScanner();
+    
+    console.log('🔒 Scan processing started - cooldown and loading active');
 
     try {
       let qrData;
+      let queueProcessed = false; // Flag to prevent duplicate processing
       
       // Try to parse as JSON first
       try {
@@ -159,8 +168,8 @@ const QRScanner = ({ onScanResult, onClose }) => {
         };
       }
       
-      // Check if it's a medical QR code
-      if (qrData.id && qrData.id.startsWith('MED-')) {
+      // Check if it's a medical QR code (but not a test QR code)
+      if (qrData.id && qrData.id.startsWith('MED-') && !qrData.id.startsWith('MED-TEST-') && !queueProcessed) {
         console.log('🏥 Processing medical QR code:', qrData.id);
         
         try {
@@ -172,17 +181,22 @@ const QRScanner = ({ onScanResult, onClose }) => {
             
             // Add student to reception queue
             try {
+              console.log('🔄 Adding student to reception queue...');
               const queueEntry = await addStudentToReceptionQueue(medicalData);
               console.log('✅ Queue operation result:', queueEntry);
+              queueProcessed = true; // Mark as processed
               
               if (queueEntry.isDuplicate) {
-                alert(`ℹ️ ${queueEntry.message}`);
+                alert(`⚠️ DUPLICATE DETECTED\n\n${queueEntry.message}\n\nThe student is already in the reception queue and does not need to be added again.`);
+                console.log('🔄 Duplicate detected, not adding to queue');
               } else {
-                alert(`✅ Student ${medicalData.student.fullName} added to reception queue! Queue Number: ${queueEntry.queueNo}`);
+                alert(`✅ SUCCESS!\n\nStudent: ${medicalData.student.fullName}\nQueue Number: ${queueEntry.queueNo}\nStatus: Added to reception queue\n\n${queueEntry.message || 'Student is now waiting in reception queue.'}`);
+                console.log('✅ Student successfully added to reception queue');
               }
             } catch (queueError) {
               console.error('❌ Error adding to queue:', queueError);
-              alert('⚠️ Medical data loaded, but failed to add to queue. Please add manually.');
+              alert('❌ ERROR\n\nMedical data was loaded successfully, but failed to add student to reception queue.\n\nPlease add the student manually or try scanning again.');
+              queueProcessed = true; // Mark as processed even on error
             }
             
             if (onScanResult) {
@@ -200,10 +214,10 @@ const QRScanner = ({ onScanResult, onClose }) => {
         console.log('ℹ️ Non-medical QR code detected');
         
         // For demonstration, let's create a mock medical record for testing
-        if (qrData.data && qrData.data.includes('test')) {
-          console.log('🧪 Test QR code detected, creating mock data');
+        if (qrData.data && (qrData.data.includes('test') || qrData.data.includes('demo')) && !queueProcessed) {
+          console.log('🧪 Test/Demo QR code detected, creating mock data');
           const mockMedicalData = {
-            id: 'MED-TEST-' + Date.now(),
+            id: 'TEST-DEMO-' + Date.now(), // Changed prefix to avoid conflict
             timestamp: new Date().toISOString(),
             student: {
               fullName: 'Test Student (QR Demo)',
@@ -240,11 +254,24 @@ const QRScanner = ({ onScanResult, onClose }) => {
           
           setScannedData(mockMedicalData);
           
-          const queueEntry = await addStudentToReceptionQueue(mockMedicalData);
-          if (queueEntry.isDuplicate) {
-            alert(`ℹ️ ${queueEntry.message}`);
-          } else {
-            alert(`✅ Test Student added to reception queue! Queue Number: ${queueEntry.queueNo}`);
+          // Add test student to reception queue (same logic as medical QR codes)
+          try {
+            console.log('🔄 Adding test student to reception queue...');
+            const queueEntry = await addStudentToReceptionQueue(mockMedicalData);
+            console.log('✅ Test queue operation result:', queueEntry);
+            queueProcessed = true; // Mark as processed
+            
+            if (queueEntry.isDuplicate) {
+              alert(`⚠️ DUPLICATE DETECTED\n\n${queueEntry.message}\n\nThe test student is already in the reception queue.`);
+              console.log('🔄 Test duplicate detected, not adding to queue');
+            } else {
+              alert(`✅ TEST SUCCESS!\n\nStudent: ${mockMedicalData.student.fullName}\nQueue Number: ${queueEntry.queueNo}\nStatus: Added to reception queue\n\nThis was a test QR code scan.`);
+              console.log('✅ Test student successfully added to reception queue');
+            }
+          } catch (queueError) {
+            console.error('❌ Error adding test student to queue:', queueError);
+            alert('❌ TEST ERROR\n\nTest medical data was created, but failed to add to reception queue.\n\nPlease try scanning again.');
+            queueProcessed = true; // Mark as processed even on error
           }
           
           if (onScanResult) {
@@ -266,13 +293,16 @@ const QRScanner = ({ onScanResult, onClose }) => {
       }, 3000);
     }
     
-    // Reset cooldown after processing
+    // Reset cooldown after processing (extended for better duplicate prevention)
     setTimeout(() => {
       setScanCooldown(false);
-      console.log('🔓 Scan cooldown reset');
-    }, 3000);
+      setLastScannedData(null); // Also clear last scanned data after cooldown
+      console.log('🔓 Scan cooldown reset - ready for next scan');
+    }, 5000); // Increased to 5 seconds to prevent rapid duplicate scans
     
     setLoading(false);
+    console.log('✅ Scan processing completed - loading disabled');
+    console.log('📊 Queue processing summary: queueProcessed =', queueProcessed || false);
   };
 
   const handleRetry = () => {
