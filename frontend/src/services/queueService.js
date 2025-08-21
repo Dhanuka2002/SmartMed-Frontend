@@ -49,26 +49,48 @@ const addStudentToReceptionQueueLocalStorage = (medicalData) => {
     // Get existing reception queue
     const existingQueue = JSON.parse(localStorage.getItem('receptionQueue') || '[]');
     
-    // Check for duplicates by email, NIC, or medical record ID
+    // Check for duplicates by email, NIC, or medical record ID (only in reception queue)
     const isDuplicate = existingQueue.some(entry => 
-      entry.email === medicalData.student.email ||
-      entry.nic === medicalData.student.nic ||
-      entry.medicalRecordId === medicalData.id
+      (entry.email === medicalData.student.email ||
+       entry.nic === medicalData.student.nic ||
+       entry.medicalRecordId === medicalData.id) &&
+      entry.stage === 'reception'  // Only check reception stage
     );
     
     if (isDuplicate) {
       const existingEntry = existingQueue.find(entry => 
-        entry.email === medicalData.student.email ||
-        entry.nic === medicalData.student.nic ||
-        entry.medicalRecordId === medicalData.id
+        (entry.email === medicalData.student.email ||
+         entry.nic === medicalData.student.nic ||
+         entry.medicalRecordId === medicalData.id) &&
+        entry.stage === 'reception'
       );
       
-      console.log('Student already in queue:', existingEntry);
+      console.log('Student already in reception queue:', existingEntry);
       return {
         ...existingEntry,
         isDuplicate: true,
-        message: `Student ${medicalData.student.fullName} is already in the queue (Queue #${existingEntry.queueNo})`
+        message: `Student ${medicalData.student.fullName} is already in the reception queue (Queue #${existingEntry.queueNo})`
       };
+    }
+    
+    // Check if student exists in other queues for informational purposes
+    const allQueues = [
+      ...JSON.parse(localStorage.getItem('receptionQueue') || '[]'),
+      ...JSON.parse(localStorage.getItem('doctorQueue') || '[]'),
+      ...JSON.parse(localStorage.getItem('pharmacyQueue') || '[]'),
+      ...JSON.parse(localStorage.getItem('completedQueue') || '[]')
+    ];
+    
+    const existingInOtherStage = allQueues.find(entry => 
+      (entry.email === medicalData.student.email ||
+       entry.nic === medicalData.student.nic ||
+       entry.medicalRecordId === medicalData.id) &&
+      entry.stage !== 'reception'
+    );
+    
+    let existingStageInfo = '';
+    if (existingInOtherStage) {
+      existingStageInfo = ` (Note: Student was previously in ${existingInOtherStage.stage} queue)`;
     }
     
     // Generate simple queue number for fallback

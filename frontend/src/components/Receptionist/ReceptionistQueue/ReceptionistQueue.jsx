@@ -33,18 +33,37 @@ const ReceptionistQueue = () => {
   const handleActionChange = async (queueNo, action) => {
     try {
       if (action === 'Send to Doctor') {
+        const confirmation = confirm('Are you sure you want to send this student to the doctor queue?');
+        if (!confirmation) return;
+        
         // Move student to doctor queue
-        await moveStudentToDoctor(queueNo);
-        alert('Student sent to doctor queue successfully!');
-        loadQueueData(); // Refresh the queue
+        const result = await moveStudentToDoctor(queueNo);
+        console.log('✅ Student moved to doctor queue:', result);
+        
+        // Show success message with student details
+        alert(`✅ Student sent to doctor queue successfully!\n\nQueue Number: ${queueNo}\nStudent: ${result.studentName || 'Unknown'}\nStatus: ${result.status || 'Waiting for Doctor'}`);
+        
+        // Refresh the queue to remove the student from reception
+        loadQueueData();
+        
+        // Optional: Show notification to inform that student is now in doctor queue
+        setTimeout(() => {
+          const doctorNotification = confirm('Student has been successfully moved to doctor queue. Would you like to refresh the doctor queue view?');
+          if (doctorNotification) {
+            // You can add navigation logic here if needed
+            console.log('Doctor queue should be refreshed');
+          }
+        }, 1000);
+        
       } else {
-        // Update status
+        // Update status for other actions
         await updateQueueEntryStatus('reception', queueNo, { action, status: action });
+        console.log(`Status updated for queue ${queueNo}: ${action}`);
         loadQueueData(); // Refresh the queue
       }
     } catch (error) {
-      console.error('Error updating action:', error);
-      alert('Error updating student status');
+      console.error('❌ Error updating action:', error);
+      alert(`❌ Error updating student status: ${error.message}`);
     }
   };
 
