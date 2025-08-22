@@ -1,19 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { getPharmacyQueue, completePharmacyProcess, updateQueueEntryStatus } from "../../../services/queueService";
-import { usePrescription } from "../../../contexts/PrescriptionContext";
+// Removed unused imports - only using database prescriptions now
 import { FiCalendar, FiUser, FiClock, FiCheck, FiEye } from "react-icons/fi";
 import "./PrescriptionQueue.css";
 
 function PrescriptionQueue() {
-  const { 
-    prescriptions: contextPrescriptions, 
-    dispensedPrescriptions: contextDispensedPrescriptions,
-    dispensePrescription, 
-    addPrescription,
-    updatePrescriptionStatus,
-    clearAllPrescriptions: clearContextPrescriptions
-  } = usePrescription();
-  const [legacyPrescriptions, setLegacyPrescriptions] = useState([]);
   const [databasePrescriptions, setDatabasePrescriptions] = useState([]);
   const [selectedPrescription, setSelectedPrescription] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,47 +13,18 @@ function PrescriptionQueue() {
   // Update last updated timestamp when prescriptions change
   useEffect(() => {
     setLastUpdated(new Date());
-  }, [contextPrescriptions, contextDispensedPrescriptions, legacyPrescriptions, databasePrescriptions]);
+  }, [databasePrescriptions]);
 
-  // Load legacy pharmacy queue data (for compatibility)
+  // Load prescription data from database only
   useEffect(() => {
-    // Auto-clear old Kane data on component load
-    const pharmacyQueue = JSON.parse(localStorage.getItem('pharmacyQueue') || '[]');
-    const hasKaneData = pharmacyQueue.some(p => 
-      p.studentName === "Kane" || p.studentName === "Test Student"
-    );
-    
-    if (hasKaneData) {
-      console.log('Clearing old Kane/test data...');
-      const filteredQueue = pharmacyQueue.filter(prescription => 
-        prescription.studentName !== "Kane" && 
-        prescription.studentName !== "Test Student" &&
-        prescription.studentId !== "TEST001"
-      );
-      localStorage.setItem('pharmacyQueue', JSON.stringify(filteredQueue));
-    }
-    
-    loadLegacyPrescriptions();
     loadDatabasePrescriptions();
     
-    const legacyInterval = setInterval(loadLegacyPrescriptions, 30000); // Refresh every 30 seconds
     const databaseInterval = setInterval(loadDatabasePrescriptions, 15000); // Refresh every 15 seconds for database
     
     return () => {
-      clearInterval(legacyInterval);
       clearInterval(databaseInterval);
     };
   }, []);
-
-  const loadLegacyPrescriptions = async () => {
-    try {
-      const pharmacyQueue = await getPharmacyQueue();
-      setLegacyPrescriptions(pharmacyQueue);
-    } catch (error) {
-      console.error('Error loading pharmacy queue:', error);
-      setLegacyPrescriptions([]);
-    }
-  };
 
   const loadDatabasePrescriptions = async () => {
     try {
@@ -80,30 +41,40 @@ function PrescriptionQueue() {
       console.log('✅ Database prescriptions loaded:', prescriptions);
       
       // Transform database prescriptions to match the expected format
-      const transformedPrescriptions = prescriptions.map(prescription => ({
-        queueNo: prescription.queueNo || prescription.id,
-        internalId: prescription.id,
-        studentName: prescription.patientName,
-        studentId: prescription.patientId || prescription.studentId,
-        email: `${prescription.patientId}@student.university.edu`,
-        phone: "+1234567890",
-        prescriptionTime: prescription.createdDate || new Date().toISOString(),
-        pharmacyStatus: mapDatabaseStatusToPharmacyStatus(prescription.status),
-        isDatabasePrescription: true, // Mark as database prescription
-        prescription: {
-          doctorName: prescription.doctorName,
-          prescriptionDate: prescription.createdDate,
-          prescriptionText: prescription.prescriptionText || "",
-          medications: (prescription.medicines || []).map(med => ({
-            name: med.medicineName,
-            dosage: med.dosage,
-            frequency: med.frequency,
-            duration: med.duration,
-            quantity: med.quantity,
-            instructions: med.instructions
-          }))
-        }
-      }));
+      const transformedPrescriptions = prescriptions.map(prescription => {
+        // Extract medicines safely, handling potential nested structure
+        const medicines = prescription.medicines || [];
+        const medications = medicines.map(med => {
+          // Handle both direct medicine object or nested structure
+          const medicineData = med.prescription ? med : med;
+          return {
+            name: medicineData.medicineName || medicineData.name || 'Unknown Medicine',
+            dosage: medicineData.dosage || 'N/A',
+            frequency: medicineData.frequency || 'As directed',
+            duration: medicineData.duration || 'N/A',
+            quantity: medicineData.quantity || 1,
+            instructions: medicineData.instructions || 'Take as directed'
+          };
+        });
+
+        return {
+          queueNo: prescription.queueNo || prescription.id || Math.random().toString(),
+          internalId: prescription.id || Math.random(),
+          studentName: prescription.patientName || 'Unknown Patient',
+          studentId: prescription.patientId || prescription.studentId || 'N/A',
+          email: prescription.email || '',
+          phone: prescription.phone || '',
+          prescriptionTime: prescription.createdDate || new Date().toISOString(),
+          pharmacyStatus: mapDatabaseStatusToPharmacyStatus(prescription.status || 'Pending'),
+          isDatabasePrescription: true, // Mark as database prescription
+          prescription: {
+            doctorName: prescription.doctorName || 'Unknown Doctor',
+            prescriptionDate: prescription.createdDate || new Date().toISOString(),
+            prescriptionText: prescription.prescriptionText || "",
+            medications: medications
+          }
+        };
+      });
       
       setDatabasePrescriptions(transformedPrescriptions);
       
@@ -125,76 +96,10 @@ function PrescriptionQueue() {
     }
   };
 
-  // Combine all prescriptions (database, context, dispensed, and legacy)
+  // Only show database prescriptions (from doctor submissions via backend)
   const allPrescriptions = [
     // Database prescriptions (from doctor submissions)
-    ...(databasePrescriptions || []),
-    // Active context prescriptions (pending/preparing/ready)
-    ...(contextPrescriptions || []).map((prescription, index) => {
-      console.log(`Mapping prescription ${index}:`, {
-        id: prescription.id,
-        patientName: prescription.patientName,
-        patientId: prescription.patientId,
-        doctorName: prescription.doctorName
-      });
-      
-      return {
-        queueNo: prescription.queueNumber || prescription.id, // Use queueNumber if available, fallback to id
-        internalId: prescription.id, // Keep internal ID for operations
-        studentName: prescription.patientName,
-        studentId: prescription.patientId,
-        email: `${prescription.patientId}@student.university.edu`,
-        phone: "+1234567890",
-        prescriptionTime: prescription.createdAt || new Date().toISOString(),
-        pharmacyStatus: prescription.pharmacyStatus || (prescription.status === 'pending' ? 'Pending' : 'Dispensed'),
-        isContextPrescription: true, // Mark as context prescription
-        prescription: {
-          doctorName: prescription.doctorName,
-          prescriptionDate: prescription.prescriptionDate,
-          prescriptionText: "",
-          medications: (prescription.medicines || []).map(med => ({
-            name: med.medicineName,
-            dosage: med.dosage,
-            frequency: med.instructions,
-            duration: `${med.quantity} units`,
-            instructions: med.instructions
-          }))
-        }
-      };
-    }),
-    // Dispensed context prescriptions
-    ...(contextDispensedPrescriptions || []).map(prescription => ({
-      queueNo: prescription.queueNumber || prescription.id, // Use queueNumber if available, fallback to id
-      internalId: prescription.id, // Keep internal ID for operations
-      studentName: prescription.patientName,
-      studentId: prescription.patientId,
-      email: `${prescription.patientId}@student.university.edu`,
-      phone: "+1234567890",
-      prescriptionTime: prescription.createdAt || new Date().toISOString(),
-      pharmacyStatus: 'Dispensed',
-      isContextPrescription: true,
-      prescription: {
-        doctorName: prescription.doctorName,
-        prescriptionDate: prescription.prescriptionDate,
-        prescriptionText: "",
-        medications: (prescription.medicines || []).map(med => ({
-          name: med.medicineName,
-          dosage: med.dosage,
-          frequency: med.instructions,
-          duration: `${med.quantity} units`,
-          instructions: med.instructions
-        }))
-      }
-    })),
-    // Legacy prescriptions (filter out test data)
-    ...(legacyPrescriptions || []).filter(prescription => 
-      prescription && 
-      prescription.studentName && 
-      prescription.studentName !== "Kane" && 
-      prescription.studentName !== "Test Student" &&
-      prescription.studentId &&
-      prescription.studentId !== "TEST001"
-    )
+    ...(databasePrescriptions || [])
   ];
 
   const handleViewDetails = (prescription) => {
@@ -203,13 +108,13 @@ function PrescriptionQueue() {
 
   const handleDispense = async (queueNo) => {
     try {
-      // Find the prescription to check what type it is
+      // Find the prescription (all prescriptions are now database prescriptions)
       const prescription = allPrescriptions.find(p => p.queueNo === queueNo);
       
-      if (prescription && prescription.isDatabasePrescription) {
+      if (prescription) {
         // Handle database prescription dispensing
         const dispensingData = {
-          dispensedBy: "Pharmacist", // You can get this from user context
+          dispensedBy: "Pharmacist", // TODO: Get from user context/authentication
           medicines: prescription.prescription.medications.map(med => ({
             medicineId: null, // Will be matched by name if needed
             medicineName: med.name,
@@ -236,19 +141,8 @@ function PrescriptionQueue() {
         } else {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-      } else if (prescription && prescription.isContextPrescription) {
-        // Use context dispensing for dynamic prescriptions (use internal ID)
-        const success = dispensePrescription(prescription.internalId || prescription.queueNo);
-        if (success) {
-          alert('Prescription dispensed successfully!');
-        } else {
-          alert('Error dispensing prescription');
-        }
       } else {
-        // Use legacy dispensing for old queue system
-        await completePharmacyProcess(queueNo);
-        alert('Prescription dispensed successfully!');
-        loadLegacyPrescriptions();
+        throw new Error('Prescription not found');
       }
     } catch (error) {
       console.error('Error dispensing prescription:', error);
@@ -258,14 +152,14 @@ function PrescriptionQueue() {
 
   const handleStatusUpdate = async (queueNo, status) => {
     try {
-      // Find the prescription to check what type it is
+      // Find the prescription (all prescriptions are now database prescriptions)
       const prescription = allPrescriptions.find(p => p.queueNo === queueNo);
       
-      if (prescription && prescription.isDatabasePrescription) {
+      if (prescription) {
         // Handle database prescription status update
         const statusData = {
           status: mapPharmacyStatusToDatabaseStatus(status),
-          dispensedBy: status === 'Dispensed' ? "Pharmacist" : null
+          dispensedBy: status === 'Dispensed' ? "Pharmacist" : null // TODO: Get from user context/authentication
         };
 
         const response = await fetch(`http://localhost:8081/api/prescriptions/${prescription.internalId}/status`, {
@@ -287,15 +181,8 @@ function PrescriptionQueue() {
         } else {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-      } else if (prescription && prescription.isContextPrescription) {
-        // Use context status update for dynamic prescriptions (use internal ID)
-        updatePrescriptionStatus(prescription.internalId || prescription.queueNo, status);
-        console.log(`Updated prescription ${queueNo} status to ${status}`);
       } else {
-        // Use legacy status update for old queue system
-        await updateQueueEntryStatus('pharmacy', queueNo, { pharmacyStatus: status });
-        loadLegacyPrescriptions();
-        console.log(`Updated legacy prescription ${queueNo} status to ${status}`);
+        throw new Error('Prescription not found');
       }
     } catch (error) {
       console.error('Error updating status:', error);
@@ -336,77 +223,7 @@ function PrescriptionQueue() {
     )
   );
 
-  // Function to clear old test data
-  const clearOldTestData = () => {
-    const pharmacyQueue = JSON.parse(localStorage.getItem('pharmacyQueue') || '[]');
-    const filteredQueue = pharmacyQueue.filter(prescription => 
-      prescription.studentName !== "Kane" && 
-      prescription.studentName !== "Test Student" &&
-      prescription.studentId !== "TEST001"
-    );
-    localStorage.setItem('pharmacyQueue', JSON.stringify(filteredQueue));
-    loadLegacyPrescriptions();
-    alert('Old test data cleared!');
-  };
 
-  // Function to clear all prescriptions (for testing)
-  const clearAllPrescriptions = () => {
-    if (window.confirm('This will clear ALL prescriptions. Continue?')) {
-      clearContextPrescriptions();
-      localStorage.removeItem('pharmacyQueue');
-      setLegacyPrescriptions([]);
-      alert('All prescriptions cleared!');
-    }
-  };
-
-  // Demo function to add sample prescription
-  const addSamplePrescription = () => {
-    const samplePatients = [
-      { name: "Franklin John", id: "22IT099" },
-      { name: "Sarah Wilson", id: "22CS045" },
-      { name: "Mike Johnson", id: "22ME078" },
-      { name: "Emma Davis", id: "22EE032" },
-      { name: "Alex Brown", id: "22CE021" },
-      { name: "Lisa Garcia", id: "22BM067" },
-      { name: "David Lee", id: "22CS088" },
-      { name: "Sophie Chen", id: "22IT055" },
-      { name: "Ryan Thompson", id: "22ME033" },
-      { name: "Maria Rodriguez", id: "22EE044" }
-    ];
-    const sampleDoctors = ["Dr. Smith", "Dr. Johnson", "Dr. Brown", "Dr. Davis", "Dr. Wilson"];
-    
-    // Ensure unique selection by adding timestamp
-    const timestamp = Date.now();
-    const randomIndex = Math.floor(Math.random() * samplePatients.length);
-    const selectedPatient = samplePatients[randomIndex];
-    const randomDoctor = sampleDoctors[Math.floor(Math.random() * sampleDoctors.length)];
-    
-    const samplePrescription = {
-      patientName: selectedPatient.name,
-      patientId: selectedPatient.id,
-      doctorName: randomDoctor,
-      uniqueId: `DEMO_${timestamp}_${randomIndex}`, // Add unique identifier
-      medicines: [
-        { 
-          medicineId: 1, 
-          medicineName: "Paracetamol", 
-          quantity: Math.floor(Math.random() * 15) + 5, 
-          dosage: "500mg", 
-          instructions: "Take 1 tablet twice daily after meals" 
-        },
-        { 
-          medicineId: 2, 
-          medicineName: "Amoxicillin", 
-          quantity: Math.floor(Math.random() * 10) + 5, 
-          dosage: "250mg", 
-          instructions: "Take 1 tablet three times daily" 
-        }
-      ]
-    };
-    
-    console.log('Adding demo prescription for:', selectedPatient.name, selectedPatient.id);
-    addPrescription(samplePrescription);
-  };
 
   return (
     <div className="queue-container">
@@ -460,23 +277,11 @@ function PrescriptionQueue() {
           className="search-input"
         />
         <button 
-          onClick={() => {
-            loadLegacyPrescriptions();
-            loadDatabasePrescriptions();
-          }} 
+          onClick={loadDatabasePrescriptions} 
           className="refresh-btn"
           disabled={loading}
         >
           🔄 {loading ? 'Refreshing...' : 'Refresh'}
-        </button>
-        <button onClick={addSamplePrescription} className="refresh-btn" style={{ marginLeft: '10px', backgroundColor: '#28a745' }}>
-          + Add Demo Student
-        </button>
-        <button onClick={clearOldTestData} className="refresh-btn" style={{ marginLeft: '10px', backgroundColor: '#dc3545' }}>
-          🗑️ Clear Old Data
-        </button>
-        <button onClick={clearAllPrescriptions} className="refresh-btn" style={{ marginLeft: '10px', backgroundColor: '#dc3545' }}>
-          🗑️ Clear All
         </button>
         
       </div>

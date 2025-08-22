@@ -6,6 +6,7 @@ import com.example.demo.repository.PrescriptionRepository;
 import com.example.demo.repository.PrescriptionMedicineRepository;
 import com.example.demo.repository.MedicineRepository;
 import com.example.demo.entity.Medicine;
+import com.example.demo.service.AutomatedInventoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,9 @@ public class PrescriptionController {
     
     @Autowired
     private MedicineRepository medicineRepository;
+    
+    @Autowired
+    private AutomatedInventoryService automatedInventoryService;
     
     // Get all prescriptions
     @GetMapping
@@ -90,6 +94,18 @@ public class PrescriptionController {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> medicinesData = (List<Map<String, Object>>) prescriptionData.get("medicines");
             
+            // Check for duplicate prescriptions (same patient + doctor + recent time)
+            if (queueNo != null) {
+                Prescription existingPrescription = prescriptionRepository.findByQueueNo(queueNo);
+                if (existingPrescription != null) {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("success", false);
+                    response.put("message", "Prescription already exists for this queue number: " + queueNo);
+                    response.put("existingPrescriptionId", existingPrescription.getId());
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+                }
+            }
+            
             // Create prescription
             Prescription prescription = new Prescription();
             prescription.setPatientName(patientName);
@@ -132,9 +148,17 @@ public class PrescriptionController {
                 }
             }
             
+            // Automatically process the new prescription for inventory availability
+            try {
+                automatedInventoryService.processNewPrescription(savedPrescription.getId());
+            } catch (Exception e) {
+                System.err.println("Error in automated prescription processing: " + e.getMessage());
+                // Continue with success response even if automation fails
+            }
+            
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("message", "Prescription created successfully");
+            response.put("message", "Prescription created and automatically processed for inventory");
             response.put("prescription", savedPrescription);
             response.put("prescriptionId", savedPrescription.getId());
             

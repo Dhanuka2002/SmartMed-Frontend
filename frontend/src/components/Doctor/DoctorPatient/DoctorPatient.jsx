@@ -535,12 +535,12 @@ function DoctorPatient() {
 
       // Save prescription to database
       const prescriptionData = {
-        patientName: patientInfo.name,
-        patientId: patientInfo.id,
-        studentId: selectedPatient.studentId,
-        queueNo: selectedPatient.queueNo,
+        patientName: String(patientInfo.name || ''),
+        patientId: String(patientInfo.id || ''),
+        studentId: String(selectedPatient.studentId || selectedPatient.studentId || ''),
+        queueNo: String(selectedPatient.queueNo || ''),
         doctorName: "Dr. Smith", // You can get this from user context
-        prescriptionText: prescriptionText.trim(),
+        prescriptionText: String(prescriptionText.trim() || ''),
         instructions: "Take as directed by doctor",
         medicines: prescriptionMedicines
       };
@@ -556,6 +556,28 @@ function DoctorPatient() {
       });
 
       if (!response.ok) {
+        if (response.status === 409) {
+          // Handle duplicate prescription
+          const result = await response.json();
+          alert(`⚠️ DUPLICATE PRESCRIPTION DETECTED\n\n${result.message}\n\nThe prescription already exists and patient is in pharmacy queue.`);
+          
+          // Still move to pharmacy queue and clear form
+          await addPrescriptionAndMoveToPharmacy(selectedPatient.queueNo, {
+            prescriptionId: result.existingPrescriptionId,
+            doctorName: "Dr. Smith",
+            status: "Already Prescribed",
+            isDuplicate: true
+          });
+          
+          // Clear the form
+          setPrescriptionText("");
+          setMedications([]);
+          setPrescriptionItems([]);
+          localStorage.removeItem('selectedPatient');
+          setSelectedPatient(null);
+          
+          return; // Exit early
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -564,44 +586,32 @@ function DoctorPatient() {
       if (result.success) {
         console.log('✅ Prescription saved to database:', result.prescription);
         
-        // Add prescription to context (this will make it appear in pharmacy queue)
-        const contextPrescriptionData = {
-          patientName: patientInfo.name,
-          patientId: patientInfo.id,
-          doctorName: "Dr. Smith",
-          medicines: prescriptionMedicines.map(med => ({
-            medicineId: med.medicineId,
-            medicineName: med.medicineName,
-            quantity: med.quantity,
-            dosage: med.dosage,
-            instructions: med.instructions
-          }))
-        };
-        const prescriptionId = addPrescription(contextPrescriptionData);
+        // Database prescription is created and will appear in pharmacy queue automatically
+        console.log('✅ Prescription will appear in pharmacy queue from database');
         
-        // DON'T automatically dispense medicines - pharmacy will handle this
-        // dispenseMedicines(prescriptionMedicines);
-
-        // Also maintain the existing queue service for compatibility
-        const legacyPrescription = {
-          prescriptionText,
-          medications: [...medications, ...prescriptionItems.map(item => ({
-            name: item.medicineName,
-            dosage: item.dosage,
-            frequency: item.frequency,
-            duration: item.duration,
-            instructions: item.instructions
-          }))],
+        // Reduce inventory for prescribed medicines
+        console.log('🔄 Reducing inventory for prescribed medicines...');
+        try {
+          await dispenseMedicines(prescriptionMedicines);
+          console.log('✅ Inventory successfully reduced for prescribed medicines');
+        } catch (inventoryError) {
+          console.warn('⚠️ Failed to reduce inventory:', inventoryError);
+          // Continue even if inventory reduction fails - pharmacist can handle manually
+        }
+        
+        // Move patient to pharmacy queue (without creating duplicate prescription)
+        await addPrescriptionAndMoveToPharmacy(selectedPatient.queueNo, {
+          prescriptionId: result.prescriptionId,
           doctorName: "Dr. Smith",
           prescriptionDate: new Date().toISOString(),
           patientName: patientInfo.name,
           patientId: patientInfo.id,
           queueNo: patientInfo.queueNo,
           status: "Prescribed",
-          instructions: "Take as directed"
-        };
-
-        await addPrescriptionAndMoveToPharmacy(selectedPatient.queueNo, legacyPrescription);
+          instructions: "Take as directed",
+          // Mark as database prescription to avoid duplicate creation
+          isDatabasePrescription: true
+        });
         
         alert(`Prescription #${result.prescriptionId} sent to pharmacy successfully! Patient ${patientInfo.name} moved to pharmacy queue.`);
         
@@ -626,7 +636,8 @@ function DoctorPatient() {
         try {
           console.log('⚠️ Database save failed, using legacy system only');
           
-          // Create prescription object for pharmacy context
+          // Fallback: Create context prescription since database failed
+          console.log('⚠️ Database unavailable, using fallback context prescription');
           const contextPrescriptionData = {
             patientName: patientInfo.name,
             patientId: patientInfo.id,
@@ -641,8 +652,18 @@ function DoctorPatient() {
           };
           const prescriptionId = addPrescription(contextPrescriptionData);
           
-          // Legacy prescription
-          const legacyPrescription = {
+          // Reduce inventory for prescribed medicines (fallback)
+          console.log('🔄 Reducing inventory for prescribed medicines (fallback)...');
+          try {
+            await dispenseMedicines(prescriptionMedicines);
+            console.log('✅ Inventory successfully reduced for prescribed medicines (fallback)');
+          } catch (inventoryError) {
+            console.warn('⚠️ Failed to reduce inventory (fallback):', inventoryError);
+            // Continue even if inventory reduction fails - pharmacist can handle manually
+          }
+          
+          // Move to pharmacy with fallback prescription data
+          const fallbackPrescription = {
             prescriptionText,
             medications: [...medications, ...prescriptionItems.map(item => ({
               name: item.medicineName,
@@ -657,10 +678,12 @@ function DoctorPatient() {
             patientId: patientInfo.id,
             queueNo: patientInfo.queueNo,
             status: "Prescribed",
-            instructions: "Take as directed"
+            instructions: "Take as directed",
+            // Mark as fallback to avoid confusion
+            isFallback: true
           };
 
-          await addPrescriptionAndMoveToPharmacy(selectedPatient.queueNo, legacyPrescription);
+          await addPrescriptionAndMoveToPharmacy(selectedPatient.queueNo, fallbackPrescription);
           
           alert(`⚠️ Prescription #${prescriptionId} sent to pharmacy (using legacy system - database unavailable). Patient ${patientInfo.name} moved to pharmacy queue.`);
           
