@@ -222,7 +222,14 @@ function DoctorPharmacy() {
       <div className="doctor-pharmacy-container">
         {/* Header Section */}
         <div className="pharmacy-header">
-
+        <div className="header-content">
+          <h1 className="page-title">
+            <span className="title-icon">💊</span>
+            Pharmacy Management
+          </h1>
+          <p className="page-subtitle">Manage medications and prescriptions</p>
+        </div>
+        
         <div className="stats-overview">
           
           <div className="stat-card warning">
@@ -296,7 +303,7 @@ function DoctorPharmacy() {
                 <div className="section-controls">
                   <div className="search-group">
                     <div className="search-input-container">
-                      
+                      <span className="search-icon">🔍</span>
                       <input
                         type="text"
                         placeholder="Search"
@@ -378,6 +385,7 @@ function DoctorPharmacy() {
                 <h3 className="section-title">Prescription Management</h3>
                 <div className="section-controls">
                   <div className="search-input-container">
+                    <span className="search-icon">🔍</span>
                     <input
                       type="text"
                       placeholder="Search prescriptions..."

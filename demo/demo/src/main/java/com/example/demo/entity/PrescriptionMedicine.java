@@ -50,6 +50,9 @@ public class PrescriptionMedicine {
     @Column(name = "dispensed_date")
     private LocalDateTime dispensedDate;
     
+    @Column(name = "dispensed_by")
+    private String dispensedBy;
+    
     // Constructors
     public PrescriptionMedicine() {
         this.createdDate = LocalDateTime.now();
@@ -171,6 +174,14 @@ public class PrescriptionMedicine {
     
     public void setDispensedDate(LocalDateTime dispensedDate) {
         this.dispensedDate = dispensedDate;
+    }
+    
+    public String getDispensedBy() {
+        return dispensedBy;
+    }
+    
+    public void setDispensedBy(String dispensedBy) {
+        this.dispensedBy = dispensedBy;
     }
     
     // Helper methods

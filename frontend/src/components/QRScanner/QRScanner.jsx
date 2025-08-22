@@ -6,6 +6,7 @@ import './QRScanner.css';
 
 const QRScanner = ({ onScanResult, onClose }) => {
   const videoRef = useRef(null);
+  const processingRef = useRef(false); // Ref to track processing state across re-renders
   const [scanner, setScanner] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState('');
@@ -13,13 +14,25 @@ const QRScanner = ({ onScanResult, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [lastScannedData, setLastScannedData] = useState(null);
   const [scanCooldown, setScanCooldown] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualInput, setManualInput] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     startScanner();
     return () => {
-      stopScanner();
+      // Cleanup on unmount
+      processingRef.current = false;
+      if (scanner) {
+        try {
+          scanner.stop();
+          scanner.destroy();
+        } catch (error) {
+          console.warn('⚠️ Error during component cleanup:', error);
+        }
+      }
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const startScanner = async () => {
     try {
@@ -27,34 +40,29 @@ const QRScanner = ({ onScanResult, onClose }) => {
       setError('');
       setIsScanning(false);
       
+      // Clean up any existing scanner first
+      if (scanner) {
+        console.log('🧹 Cleaning up existing scanner...');
+        try {
+          scanner.stop();
+          scanner.destroy();
+        } catch (cleanupError) {
+          console.warn('⚠️ Error during scanner cleanup:', cleanupError);
+        }
+        setScanner(null);
+      }
+      
       // Check basic requirements
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Camera API not supported in this browser');
       }
 
-      // Test camera access
-      console.log('📹 Testing camera access...');
-      let stream;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: 'environment',
-            width: { ideal: 640 },
-            height: { ideal: 480 }
-          } 
-        });
-        console.log('✅ Camera access granted');
-        
-        // Stop the test stream
-        stream.getTracks().forEach(track => track.stop());
-      } catch (cameraError) {
-        console.error('❌ Camera access failed:', cameraError);
-        throw cameraError;
-      }
-
       if (!videoRef.current) {
         throw new Error('Video element not available');
       }
+
+      // Add a small delay to ensure previous resources are released
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       console.log('🔍 Creating QR scanner instance...');
       const qrScanner = new QrScanner(
@@ -73,12 +81,55 @@ const QRScanner = ({ onScanResult, onClose }) => {
           preferredCamera: 'environment',
           highlightScanRegion: true,
           highlightCodeOutline: true,
-          maxScansPerSecond: 5,
+          maxScansPerSecond: 3, // Reduced to prevent resource conflicts
+          // Fallback camera constraints for better compatibility
+          videoElement: videoRef.current,
         }
       );
 
       console.log('▶️ Starting QR scanner...');
-      await qrScanner.start();
+      
+      // Try with environment camera first, then fallback to any available camera
+      try {
+        await qrScanner.start();
+      } catch (primaryError) {
+        console.warn('⚠️ Environment camera failed, trying any available camera...', primaryError);
+        
+        // Try to start with any available camera
+        const qrScannerFallback = new QrScanner(
+          videoRef.current,
+          (result) => {
+            console.log('🎯 QR code detected (fallback):', result.data);
+            handleScanSuccess(result);
+          },
+          {
+            onDecodeError: (error) => {
+              if (Math.random() < 0.01) {
+                console.log('🔍 Scanning for QR code (fallback)...');
+              }
+            },
+            preferredCamera: 'user', // Try front camera as fallback
+            highlightScanRegion: true,
+            highlightCodeOutline: true,
+            maxScansPerSecond: 3,
+            videoElement: videoRef.current,
+          }
+        );
+        
+        await qrScannerFallback.start();
+        // Clean up the primary scanner that failed
+        if (qrScanner) {
+          try {
+            qrScanner.destroy();
+          } catch (cleanupError) {
+            console.warn('⚠️ Error cleaning up failed primary scanner:', cleanupError);
+          }
+        }
+        setScanner(qrScannerFallback);
+        setIsScanning(true);
+        console.log('✅ QR Scanner started successfully with fallback camera!');
+        return;
+      }
       
       setScanner(qrScanner);
       setIsScanning(true);
@@ -88,24 +139,32 @@ const QRScanner = ({ onScanResult, onClose }) => {
       console.error('❌ Scanner start error:', err);
       let errorMessage = 'Failed to start camera. ';
       
-      switch (err.name) {
-        case 'NotAllowedError':
-          errorMessage += 'Camera permission denied. Please click "Allow" when prompted and refresh the page.';
-          break;
-        case 'NotFoundError':
-          errorMessage += 'No camera found on this device.';
-          break;
-        case 'NotSupportedError':
-          errorMessage += 'Camera not supported on this device.';
-          break;
-        case 'NotReadableError':
-          errorMessage += 'Camera is being used by another application.';
-          break;
-        case 'OverconstrainedError':
-          errorMessage += 'Camera constraints cannot be satisfied.';
-          break;
-        default:
-          errorMessage += err.message || 'Unknown camera error occurred.';
+      // Enhanced error handling
+      if (err.message && err.message.includes('videosource')) {
+        errorMessage += 'Camera is busy or being used by another application. Please close other apps using your camera and try again.';
+      } else {
+        switch (err.name) {
+          case 'NotAllowedError':
+            errorMessage += 'Camera permission denied. Please click "Allow" when prompted and refresh the page.';
+            break;
+          case 'NotFoundError':
+            errorMessage += 'No camera found on this device.';
+            break;
+          case 'NotSupportedError':
+            errorMessage += 'Camera not supported on this device.';
+            break;
+          case 'NotReadableError':
+            errorMessage += 'Camera is being used by another application.';
+            break;
+          case 'OverconstrainedError':
+            errorMessage += 'Camera constraints cannot be satisfied. Try a different camera.';
+            break;
+          case 'AbortError':
+            errorMessage += 'Camera access was interrupted. Please try again.';
+            break;
+          default:
+            errorMessage += err.message || 'Unknown camera error occurred.';
+        }
       }
       
       setError(errorMessage);
@@ -115,8 +174,14 @@ const QRScanner = ({ onScanResult, onClose }) => {
 
   const stopScanner = () => {
     if (scanner) {
-      scanner.stop();
-      scanner.destroy();
+      try {
+        console.log('🛑 Stopping QR scanner...');
+        scanner.stop();
+        scanner.destroy();
+        console.log('✅ QR scanner stopped and destroyed');
+      } catch (error) {
+        console.warn('⚠️ Error stopping scanner:', error);
+      }
       setScanner(null);
     }
     setIsScanning(false);
@@ -125,9 +190,14 @@ const QRScanner = ({ onScanResult, onClose }) => {
   const handleScanSuccess = async (result) => {
     console.log('🎯 QR Scan Success! Raw data:', result.data);
     
-    // Prevent rapid duplicate scans
-    if (scanCooldown) {
-      console.log('⏳ Scan cooldown active, ignoring duplicate scan');
+    // Prevent rapid duplicate scans with multiple checks including ref
+    if (scanCooldown || loading || isProcessing || processingRef.current) {
+      console.log('⏳ Scan already in progress, ignoring duplicate scan', {
+        scanCooldown,
+        loading,
+        isProcessing,
+        processingRef: processingRef.current
+      });
       return;
     }
     
@@ -137,19 +207,17 @@ const QRScanner = ({ onScanResult, onClose }) => {
       return;
     }
     
-    // Check if we're already processing a scan
-    if (loading) {
-      console.log('⚠️ Already processing a scan, ignoring new scan');
-      return;
-    }
-    
-    // Set cooldown and remember last scanned data
+    // Immediately set all processing flags to prevent race conditions
+    processingRef.current = true; // Set ref immediately for instant protection
     setScanCooldown(true);
+    setIsProcessing(true);
     setLastScannedData(result.data);
     setLoading(true);
+    
+    // Stop scanner immediately to prevent additional scans
     stopScanner();
     
-    console.log('🔒 Scan processing started - cooldown and loading active');
+    console.log('🔒 Scan processing started - all protections active');
 
     try {
       let qrData;
@@ -293,25 +361,46 @@ const QRScanner = ({ onScanResult, onClose }) => {
       }, 3000);
     }
     
-    // Reset cooldown after processing (extended for better duplicate prevention)
+    // Reset all processing flags after cooldown period
     setTimeout(() => {
+      processingRef.current = false;
       setScanCooldown(false);
-      setLastScannedData(null); // Also clear last scanned data after cooldown
-      console.log('🔓 Scan cooldown reset - ready for next scan');
-    }, 5000); // Increased to 5 seconds to prevent rapid duplicate scans
+      setIsProcessing(false);
+      setLastScannedData(null);
+      console.log('🔓 All processing flags reset - ready for next scan');
+    }, 5000); // 5 seconds cooldown to prevent rapid duplicate scans
     
     setLoading(false);
     console.log('✅ Scan processing completed - loading disabled');
     console.log('📊 Queue processing summary: queueProcessed =', queueProcessed || false);
   };
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     setError('');
     setScannedData(null);
     setLastScannedData(null);
+    processingRef.current = false;
     setScanCooldown(false);
-    console.log('🔄 Retrying scanner - cooldown reset');
+    setIsProcessing(false);
+    setLoading(false);
+    console.log('🔄 Retrying scanner - all flags reset');
+    
+    // Ensure complete cleanup before retry
+    stopScanner();
+    
+    // Wait a bit longer before retrying to ensure resources are released
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     startScanner();
+  };
+
+  const handleManualSubmit = () => {
+    if (manualInput.trim()) {
+      console.log('📝 Processing manual input:', manualInput);
+      handleScanSuccess({ data: manualInput.trim() });
+      setManualInput('');
+      setShowManualInput(false);
+    }
   };
 
   return (
@@ -361,9 +450,92 @@ const QRScanner = ({ onScanResult, onClose }) => {
                     <li>Make sure no other apps are using your camera</li>
                   </ol>
                 </div>
-                <button onClick={handleRetry} className="retry-btn">
-                  🔄 Try Again
-                </button>
+                <div className="error-actions">
+                  <button onClick={handleRetry} className="retry-btn">
+                    🔄 Try Again
+                  </button>
+                  <button 
+                    onClick={() => setShowManualInput(!showManualInput)} 
+                    className="manual-input-btn"
+                    style={{ 
+                      marginLeft: '0.5rem',
+                      background: '#6c757d', 
+                      color: 'white',
+                      border: 'none',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ⌨️ Manual Input
+                  </button>
+                </div>
+                
+                {showManualInput && (
+                  <div className="manual-input-section" style={{
+                    marginTop: '1rem',
+                    padding: '1rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    background: '#f8f9fa'
+                  }}>
+                    <h5>Manual QR Code Input</h5>
+                    <p style={{ fontSize: '0.9rem', color: '#666' }}>
+                      If camera scanning isn't working, you can manually enter the QR code data:
+                    </p>
+                    <input
+                      type="text"
+                      value={manualInput}
+                      onChange={(e) => setManualInput(e.target.value)}
+                      placeholder="Enter QR code data or medical record ID..."
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem',
+                        border: '1px solid #ccc',
+                        borderRadius: '4px',
+                        marginBottom: '0.5rem'
+                      }}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleManualSubmit();
+                        }
+                      }}
+                    />
+                    <div>
+                      <button 
+                        onClick={handleManualSubmit}
+                        disabled={!manualInput.trim()}
+                        style={{
+                          background: manualInput.trim() ? '#28a745' : '#ccc',
+                          color: 'white',
+                          border: 'none',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '4px',
+                          cursor: manualInput.trim() ? 'pointer' : 'not-allowed',
+                          marginRight: '0.5rem'
+                        }}
+                      >
+                        ✅ Process
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setShowManualInput(false);
+                          setManualInput('');
+                        }}
+                        style={{
+                          background: '#6c757d',
+                          color: 'white',
+                          border: 'none',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
