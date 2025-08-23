@@ -51,6 +51,12 @@ public class Prescription {
     @Column(name = "dispensed_by")
     private String dispensedBy;
     
+    @Column(name = "inventory_status")
+    private String inventoryStatus;
+    
+    @Column(name = "dispensed_date")
+    private LocalDateTime dispensedDate;
+    
     // One-to-Many relationship with PrescriptionMedicine
     @OneToMany(mappedBy = "prescription", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PrescriptionMedicine> prescriptionMedicines;
@@ -193,6 +199,22 @@ public class Prescription {
     
     public void setPrescriptionMedicines(List<PrescriptionMedicine> prescriptionMedicines) {
         this.prescriptionMedicines = prescriptionMedicines;
+    }
+    
+    public String getInventoryStatus() {
+        return inventoryStatus;
+    }
+    
+    public void setInventoryStatus(String inventoryStatus) {
+        this.inventoryStatus = inventoryStatus;
+    }
+    
+    public LocalDateTime getDispensedDate() {
+        return dispensedDate;
+    }
+    
+    public void setDispensedDate(LocalDateTime dispensedDate) {
+        this.dispensedDate = dispensedDate;
     }
     
     // Helper methods
