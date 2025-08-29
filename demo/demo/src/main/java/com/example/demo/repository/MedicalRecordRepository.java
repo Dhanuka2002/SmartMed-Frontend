@@ -11,6 +11,14 @@ public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, Lo
     
     List<MedicalRecord> findByStudentName(String studentName);
     
+    List<MedicalRecord> findByStudentEmail(String studentEmail);
+    
+    Optional<MedicalRecord> findByStudentEmailAndCreatedAtBetween(
+        String studentEmail, 
+        java.time.LocalDateTime startDate, 
+        java.time.LocalDateTime endDate
+    );
+    
     Optional<MedicalRecord> findByStudentNameAndCreatedAtBetween(
         String studentName, 
         java.time.LocalDateTime startDate, 

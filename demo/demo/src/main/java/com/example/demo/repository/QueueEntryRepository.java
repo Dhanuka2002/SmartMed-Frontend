@@ -48,4 +48,8 @@ public interface QueueEntryRepository extends JpaRepository<QueueEntry, Long> {
     // Count entries by stage
     @Query("SELECT COUNT(q) FROM QueueEntry q WHERE q.stage = :stage")
     long countByStage(@Param("stage") String stage);
+
+    // Find maximum queue number to avoid duplicates
+    @Query(value = "SELECT queue_no FROM queue_entries ORDER BY CAST(queue_no AS UNSIGNED) DESC LIMIT 1", nativeQuery = true)
+    String findMaxQueueNo();
 }

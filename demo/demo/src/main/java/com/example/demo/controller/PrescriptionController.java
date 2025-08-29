@@ -6,7 +6,7 @@ import com.example.demo.repository.PrescriptionRepository;
 import com.example.demo.repository.PrescriptionMedicineRepository;
 import com.example.demo.repository.MedicineRepository;
 import com.example.demo.entity.Medicine;
-import com.example.demo.service.AutomatedInventoryService;
+import com.example.demo.service.InventoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +33,7 @@ public class PrescriptionController {
     private MedicineRepository medicineRepository;
     
     @Autowired
-    private AutomatedInventoryService automatedInventoryService;
+    private InventoryService inventoryService;
     
     // Get all prescriptions
     @GetMapping
@@ -148,12 +148,24 @@ public class PrescriptionController {
                 }
             }
             
-            // Automatically process the new prescription for inventory availability
+            // Check medicine availability for the prescription
             try {
-                automatedInventoryService.processNewPrescription(savedPrescription.getId());
+                List<PrescriptionMedicine> prescriptionMedicines = prescriptionMedicineRepository.findByPrescriptionIdOrderByCreatedDateAsc(savedPrescription.getId());
+                Map<String, Object> availability = inventoryService.checkMedicineAvailability(prescriptionMedicines);
+                
+                // Update inventory status on prescription
+                Boolean allAvailable = (Boolean) availability.get("allAvailable");
+                if (allAvailable != null && !allAvailable) {
+                    savedPrescription.setInventoryStatus("Partial Stock Available");
+                } else {
+                    savedPrescription.setInventoryStatus("All Medicines Available");
+                }
+                prescriptionRepository.save(savedPrescription);
+                
             } catch (Exception e) {
-                System.err.println("Error in automated prescription processing: " + e.getMessage());
-                // Continue with success response even if automation fails
+                System.err.println("Error in prescription inventory check: " + e.getMessage());
+                savedPrescription.setInventoryStatus("Inventory Check Failed");
+                prescriptionRepository.save(savedPrescription);
             }
             
             Map<String, Object> response = new HashMap<>();
@@ -328,30 +340,30 @@ public class PrescriptionController {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> dispensedMedicines = (List<Map<String, Object>>) dispensingData.get("medicines");
             
-            // Update prescription medicines and reduce inventory
+            // Update prescription medicines with dispensed quantities
+            List<PrescriptionMedicine> prescriptionMedicines = prescriptionMedicineRepository.findByPrescriptionIdOrderByCreatedDateAsc(id);
             for (Map<String, Object> dispensedMed : dispensedMedicines) {
                 Long medicineId = Long.valueOf(dispensedMed.get("medicineId").toString());
                 Integer dispensedQuantity = Integer.valueOf(dispensedMed.get("dispensedQuantity").toString());
                 
-                // Find the prescription medicine record
-                List<PrescriptionMedicine> prescriptionMedicines = prescriptionMedicineRepository.findByPrescriptionIdAndStatus(id, "Pending");
+                // Find and update the prescription medicine record
                 for (PrescriptionMedicine prescriptionMedicine : prescriptionMedicines) {
                     if (medicineId.equals(prescriptionMedicine.getMedicineId())) {
                         prescriptionMedicine.setDispensedQuantity(dispensedQuantity);
                         prescriptionMedicine.setStatus(dispensedQuantity >= prescriptionMedicine.getQuantity() ? "Dispensed" : "Partially Dispensed");
+                        prescriptionMedicine.setDispensedBy(dispensedBy);
+                        prescriptionMedicine.setDispensedDate(LocalDateTime.now());
                         prescriptionMedicineRepository.save(prescriptionMedicine);
                         break;
                     }
                 }
-                
-                // Reduce inventory quantity
-                Optional<Medicine> optionalMedicine = medicineRepository.findById(medicineId);
-                if (optionalMedicine.isPresent()) {
-                    Medicine medicine = optionalMedicine.get();
-                    int newQuantity = Math.max(0, medicine.getQuantity() - dispensedQuantity);
-                    medicine.setQuantity(newQuantity);
-                    medicineRepository.save(medicine);
-                }
+            }
+            
+            // Update inventory using InventoryService (handles alerts automatically)
+            try {
+                inventoryService.updateInventoryAfterDispensing(prescriptionMedicines);
+            } catch (Exception e) {
+                System.err.println("Error updating inventory after dispensing: " + e.getMessage());
             }
             
             // Update prescription status

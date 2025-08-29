@@ -229,6 +229,17 @@ const Hospital_Staff = () => {
     }
 
     try {
+      // Prepare data with proper type conversion
+      const submissionData = {
+        ...formData,
+        // Convert empty strings to null for numeric fields
+        weight: formData.weight === '' ? null : parseFloat(formData.weight),
+        height: formData.height === '' ? null : parseFloat(formData.height),
+        chestInspiration: formData.chestInspiration === '' ? null : parseFloat(formData.chestInspiration),
+        chestExpiration: formData.chestExpiration === '' ? null : parseFloat(formData.chestExpiration),
+        hemoglobin: formData.hemoglobin === '' ? null : parseFloat(formData.hemoglobin)
+      };
+
       // You may need to add authentication headers here
       // For example, if you have a token: 'Authorization': 'Bearer ' + token
       const response = await fetch('http://localhost:8081/api/medical-records/save', {
@@ -237,7 +248,7 @@ const Hospital_Staff = () => {
           'Content-Type': 'application/json',
           // Add authentication headers if needed
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(submissionData)
       });
 
       // Check if the response is ok
