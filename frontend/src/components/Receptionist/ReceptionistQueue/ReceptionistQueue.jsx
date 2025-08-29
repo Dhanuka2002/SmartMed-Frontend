@@ -82,23 +82,6 @@ const ReceptionistQueue = () => {
     setSelectedStudent(student);
   };
 
-  const getStatusClass = (status) => {
-    switch (status.toLowerCase()) {
-      case 'waiting': return 'status-waiting';
-      case 'called': return 'status-called';
-      case 'completed': return 'status-completed';
-      default: return 'status-waiting';
-    }
-  };
-
-  const getPriorityClass = (priority) => {
-    switch (priority.toLowerCase()) {
-      case 'high': return 'priority-high';
-      case 'normal': return 'priority-normal';
-      case 'low': return 'priority-low';
-      default: return 'priority-normal';
-    }
-  };
 
   const getActionButtonClass = (action) => {
     switch (action.toLowerCase()) {
@@ -115,10 +98,7 @@ const ReceptionistQueue = () => {
       item.studentName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalWaiting = queueList.filter(item => item.status === 'Waiting').length;
-  const averageWaitTime = Math.round(
-    queueList.reduce((acc, item) => acc + parseInt(item.waitTime), 0) / queueList.length
-  );
+  const totalWaiting = queueList.length;
 
   return (
     <div className="queue-container">
@@ -132,15 +112,7 @@ const ReceptionistQueue = () => {
         <div className="queue-stats">
           <div className="stat-card">
             <div className="stat-number">{totalWaiting}</div>
-            <div className="stat-label">Waiting</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number">{averageWaitTime}</div>
-            <div className="stat-label">Avg Wait (min)</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number">{queueList.length}</div>
-            <div className="stat-label">Total Today</div>
+            <div className="stat-label">Total Students</div>
           </div>
         </div>
       </div>
@@ -189,9 +161,6 @@ const ReceptionistQueue = () => {
               <th>Queue No.</th>
               <th>Student Name</th>
               <th>Student ID</th>
-              <th>Status</th>
-              <th>Priority</th>
-              <th>Wait Time</th>
               <th>Action</th>
               <th>Details</th>
             </tr>
@@ -200,7 +169,7 @@ const ReceptionistQueue = () => {
             {filteredList.map((entry) => (
               <tr key={entry.queueNo} className="table-row">
                 <td>
-                  <div className="queue-number">#{entry.queueNo}</div>
+                  <div className="queue-number">{entry.queueNo}</div>
                 </td>
                 <td>
                   <div className="student-info">
@@ -212,19 +181,6 @@ const ReceptionistQueue = () => {
                 </td>
                 <td>
                   <div className="student-id">{entry.studentId || 'N/A'}</div>
-                </td>
-                <td>
-                  <span className={`status-badge ${getStatusClass(entry.status)}`}>
-                    {entry.status}
-                  </span>
-                </td>
-                <td>
-                  <span className={`priority-badge ${getPriorityClass(entry.priority)}`}>
-                    {entry.priority}
-                  </span>
-                </td>
-                <td>
-                  <div className="wait-time">{entry.waitTime}</div>
                 </td>
                 <td>
                   <select
@@ -242,15 +198,6 @@ const ReceptionistQueue = () => {
                   <button 
                     className="btn btn-sm btn-info"
                     onClick={() => handleViewDetails(entry)}
-                    style={{
-                      padding: '0.25rem 0.5rem',
-                      fontSize: '0.8rem',
-                      background: '#17a2b8',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
                   >
                     View
                   </button>
@@ -316,16 +263,8 @@ const ReceptionistQueue = () => {
                   <span>{selectedStudent.nic}</span>
                 </div>
                 <div className="detail-item">
-                  <label>Status:</label>
-                  <span>{selectedStudent.status}</span>
-                </div>
-                <div className="detail-item">
                   <label>Added Time:</label>
                   <span>{new Date(selectedStudent.addedTime).toLocaleString()}</span>
-                </div>
-                <div className="detail-item">
-                  <label>Wait Time:</label>
-                  <span>{selectedStudent.waitTime}</span>
                 </div>
               </div>
               
