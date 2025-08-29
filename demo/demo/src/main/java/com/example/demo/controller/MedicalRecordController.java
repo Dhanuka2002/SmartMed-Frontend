@@ -28,6 +28,15 @@ public class MedicalRecordController {
                 return ResponseEntity.badRequest().body(response);
             }
 
+            if (medicalRecord.getStudentEmail() == null || medicalRecord.getStudentEmail().trim().isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Student email is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Set the email field to the same value as studentEmail for database compatibility
+            medicalRecord.setEmail(medicalRecord.getStudentEmail());
+
             // Validate signatures
             if (medicalRecord.getMedicalOfficerSignature() == null || 
                 medicalRecord.getMedicalOfficerSignature().trim().isEmpty() ||
@@ -68,6 +77,16 @@ public class MedicalRecordController {
     public ResponseEntity<List<MedicalRecord>> getMedicalRecordsByStudent(@PathVariable String studentName) {
         try {
             List<MedicalRecord> records = medicalRecordRepository.findByStudentName(studentName);
+            return ResponseEntity.ok(records);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ArrayList<>());
+        }
+    }
+
+    @GetMapping("/student-email/{studentEmail}")
+    public ResponseEntity<List<MedicalRecord>> getMedicalRecordsByStudentEmail(@PathVariable String studentEmail) {
+        try {
+            List<MedicalRecord> records = medicalRecordRepository.findByStudentEmail(studentEmail);
             return ResponseEntity.ok(records);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(new ArrayList<>());
