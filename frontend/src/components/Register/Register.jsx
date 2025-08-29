@@ -6,8 +6,8 @@ import { FaUser, FaEnvelope, FaLock, FaUserTag } from "react-icons/fa";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    role: "",
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -16,10 +16,6 @@ const Register = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // Only Student registration is allowed through public registration
-  const userRoles = [
-    "Student"
-  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -44,8 +40,10 @@ const Register = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          role: formData.role,
-          name: formData.name,
+          role: "Student",
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           email: formData.email,
           password: formData.password,
         }),
@@ -88,29 +86,24 @@ const Register = () => {
           </p>
 
           <div className="input-group">
-            <FaUserTag className="icon" />
-            <select
-              name="role"
-              value={formData.role}
+            <FaUser className="icon" />
+            <input
+              type="text"
+              name="firstName"
+              placeholder="First Name"
+              value={formData.firstName}
               onChange={handleChange}
               required
-            >
-              <option value="">Select Category</option>
-              {userRoles.map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <div className="input-group">
             <FaUser className="icon" />
             <input
-              type="name"
-              name="name"
-              placeholder="Your Name"
-              value={formData.name}
+              type="text"
+              name="lastName"
+              placeholder="Last Name"
+              value={formData.lastName}
               onChange={handleChange}
               required
             />

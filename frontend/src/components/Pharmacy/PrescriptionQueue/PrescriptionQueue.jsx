@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 // Removed unused imports - only using database prescriptions now
 import { FiCalendar, FiUser, FiClock, FiCheck, FiEye } from "react-icons/fi";
+import { usePrescription } from "../../../contexts/PrescriptionContext";
 import "./PrescriptionQueue.css";
 
 function PrescriptionQueue() {
@@ -9,6 +10,9 @@ function PrescriptionQueue() {
   const [searchTerm, setSearchTerm] = useState("");
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [loading, setLoading] = useState(false);
+  
+  // Get prescription context for dispensed history
+  const { dispensedPrescriptions } = usePrescription();
 
   // Update last updated timestamp when prescriptions change
   useEffect(() => {
@@ -133,8 +137,45 @@ function PrescriptionQueue() {
         if (response.ok) {
           const result = await response.json();
           if (result.success) {
+            // Check if prescription already exists in dispensed history to avoid duplicates
+            const existingDispensed = JSON.parse(localStorage.getItem('contextDispensedPrescriptions') || '[]');
+            const isDuplicate = existingDispensed.some(p => 
+              p.queueNumber === prescription.queueNo ||
+              (p.studentId === prescription.studentId && 
+               p.studentName === prescription.studentName && 
+               p.prescription.doctorName === prescription.prescription.doctorName)
+            );
+
+            if (!isDuplicate) {
+              // Add the dispensed prescription to context for dispensed history
+              const dispensedPrescriptionData = {
+                id: `RX${Date.now()}${Math.random()}`, // Generate unique ID
+                queueNumber: prescription.queueNo,
+                studentName: prescription.studentName,
+                studentId: prescription.studentId,
+                email: prescription.email,
+                phone: prescription.phone,
+                prescription: {
+                  doctorName: prescription.prescription.doctorName,
+                  medications: prescription.prescription.medications,
+                  prescriptionText: prescription.prescription.prescriptionText || ""
+                },
+                prescriptionDate: prescription.prescriptionTime,
+                prescriptionTime: prescription.prescriptionTime,
+                status: 'dispensed',
+                dispensedDate: new Date().toISOString().split('T')[0],
+                dispensedTime: new Date().toLocaleTimeString(),
+                createdAt: new Date().toISOString()
+              };
+
+              // Add to localStorage for dispensed history
+              const updatedDispensed = [dispensedPrescriptionData, ...existingDispensed];
+              localStorage.setItem('contextDispensedPrescriptions', JSON.stringify(updatedDispensed));
+            }
+            
             alert('Prescription dispensed successfully!');
             loadDatabasePrescriptions(); // Reload to get updated status
+            return true; // Return success
           } else {
             throw new Error(result.message);
           }
@@ -147,6 +188,7 @@ function PrescriptionQueue() {
     } catch (error) {
       console.error('Error dispensing prescription:', error);
       alert(`Error dispensing prescription: ${error.message}`);
+      return false; // Return failure
     }
   };
 
@@ -577,9 +619,11 @@ function PrescriptionQueue() {
                     
                     <button 
                       className="modern-btn primary"
-                      onClick={() => {
-                        handleDispense(selectedPrescription.queueNo);
-                        setSelectedPrescription(null);
+                      onClick={async () => {
+                        const success = await handleDispense(selectedPrescription.queueNo);
+                        if (success) {
+                          setSelectedPrescription(null);
+                        }
                       }}
                       disabled={selectedPrescription.pharmacyStatus !== 'Ready'}
                     >

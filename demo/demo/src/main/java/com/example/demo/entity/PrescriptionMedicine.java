@@ -1,6 +1,7 @@
 package com.example.demo.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
 
 @Entity
@@ -14,6 +15,7 @@ public class PrescriptionMedicine {
     // Many-to-One relationship with Prescription
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prescription_id", nullable = false)
+    @JsonIgnore
     private Prescription prescription;
     
     // Reference to medicine from inventory

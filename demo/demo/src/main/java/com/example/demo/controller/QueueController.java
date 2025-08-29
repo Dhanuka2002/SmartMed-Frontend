@@ -17,11 +17,28 @@ public class QueueController {
     @Autowired
     private QueueEntryRepository queueEntryRepository;
 
-    private int queueCounter = 100; // Starting queue number
+    private int queueCounter = 1; // Starting queue number from 1
 
     // Generate unique queue number
     private synchronized String generateQueueNumber() {
-        return String.format("%03d", queueCounter++);
+        // Check for the highest existing queue number in database to avoid duplicates
+        try {
+            String maxQueueNo = queueEntryRepository.findMaxQueueNo();
+            if (maxQueueNo != null && !maxQueueNo.isEmpty()) {
+                int maxNum = Integer.parseInt(maxQueueNo);
+                queueCounter = Math.max(queueCounter, maxNum + 1);
+            } else {
+                // If no entries exist, start from 1
+                queueCounter = 1;
+            }
+        } catch (Exception e) {
+            // If there's an error, continue with current counter
+            System.err.println("Warning: Could not get max queue number from database: " + e.getMessage());
+        }
+        
+        String queueNo = String.format("%03d", queueCounter);
+        queueCounter++;
+        return queueNo;
     }
 
     // Add student to reception queue
@@ -334,7 +351,7 @@ public class QueueController {
         
         try {
             queueEntryRepository.deleteAll();
-            queueCounter = 100; // Reset counter
+            queueCounter = 1; // Reset counter to start from 1
             
             response.put("success", true);
             response.put("message", "All queues cleared successfully");
