@@ -24,26 +24,52 @@ public class AuthController {
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody User user) {
+    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, Object> requestData) {
         Map<String, Object> response = new HashMap<>();
 
+        // Extract data from request
+        String role = (String) requestData.get("role");
+        String firstName = (String) requestData.get("firstName");
+        String lastName = (String) requestData.get("lastName");
+        String name = (String) requestData.get("name");
+        String email = (String) requestData.get("email");
+        String password = (String) requestData.get("password");
+
         // Only allow Student registration through public registration
-        if (!user.getRole().equals("Student")) {
+        if (!"Student".equals(role)) {
             response.put("status", "error");
             response.put("message", "Only students can register through this form. Other roles must be created by admin.");
             return ResponseEntity.badRequest().body(response);
         }
 
-        Optional<User> existUser = userRepository.findByEmail(user.getEmail());
+        Optional<User> existUser = userRepository.findByEmail(email);
         if (existUser.isPresent()) {
             response.put("status", "error");
             response.put("message", "Email already exists!");
             return ResponseEntity.badRequest().body(response);
         }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // Create new user
+        User user = new User();
+        user.setRole(role);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
         user.setIsApproved(true); // Students are auto-approved
         user.setCreatedByAdmin(false);
+        
+        // Set names - prefer firstName/lastName if available, otherwise use combined name
+        if (firstName != null && lastName != null) {
+            user.setFirstName(firstName);
+            user.setLastName(lastName);
+            // name field is automatically set in the setter
+        } else if (name != null) {
+            user.setName(name);
+            // Try to split name into first and last
+            String[] nameParts = name.trim().split(" ", 2);
+            user.setFirstName(nameParts[0]);
+            user.setLastName(nameParts.length > 1 ? nameParts[1] : "");
+        }
+        
         userRepository.save(user);
 
         // Send confirmation email - wrap in try-catch to avoid failure on mail issues
@@ -78,6 +104,8 @@ public class AuthController {
                 response.put("message", "Login successful");
                 response.put("role", foundUser.getRole());
                 response.put("name", foundUser.getName());
+                response.put("firstName", foundUser.getFirstName());
+                response.put("lastName", foundUser.getLastName());
                 response.put("email", foundUser.getEmail());
                 response.put("userId", foundUser.getId());
                 return ResponseEntity.ok(response);

@@ -11,6 +11,12 @@ public class User {
     private Long id;
 
     private String name;
+    
+    @Column(name = "first_name")
+    private String firstName;
+    
+    @Column(name = "last_name")
+    private String lastName;
 
     @Column(unique = true)
     private String email;
@@ -37,6 +43,18 @@ public class User {
         this.isApproved = role.equals("Student") ? true : false;
         this.createdByAdmin = false;
     }
+    
+    public User(Long id, String firstName, String lastName, String email, String password, String role) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.name = (firstName + " " + lastName).trim();
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.isApproved = role.equals("Student") ? true : false;
+        this.createdByAdmin = false;
+    }
 
     // ----- Getters & Setters -----
 
@@ -54,6 +72,30 @@ public class User {
 
     public void setName(String name) {
         this.name = name;
+    }
+    
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+        // Auto-update full name when first name changes
+        if (this.lastName != null) {
+            this.name = (firstName + " " + this.lastName).trim();
+        }
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+        // Auto-update full name when last name changes
+        if (this.firstName != null) {
+            this.name = (this.firstName + " " + lastName).trim();
+        }
     }
 
     public String getEmail() {
