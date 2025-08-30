@@ -291,11 +291,114 @@
   }
 }
 
-/* Responsive design for success message */
-@media (max-width: 480px) {
+/* ===============================
+   RESPONSIVE LOGIN DESIGN
+   =============================== */
+
+/* Mobile First - Base Styles (320px and up) */
+@media screen and (min-width: 320px) {
+  .login-wrapper {
+    padding: var(--spacing-md);
+  }
+  
+  .login-card {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    border-radius: 8px;
+  }
+  
+  .login-header {
+    padding: var(--spacing-lg) var(--spacing-md) var(--spacing-md);
+  }
+  
+  .login-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .login-form {
+    padding: var(--spacing-md) var(--spacing-lg) var(--spacing-xl);
+  }
+  
+  .login-form h2 {
+    font-size: 1.3rem;
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .input-group {
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .input-group input {
+    padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) 42px;
+    font-size: 0.9rem;
+  }
+  
+  .login-btn {
+    padding: var(--spacing-md) 0;
+    font-size: 0.95rem;
+    margin-top: var(--spacing-md);
+  }
+  
+  .register-link {
+    margin-top: var(--spacing-md);
+    font-size: 0.85rem;
+  }
+  
+  /* Success message responsive */
   .success-message {
-    padding: 40px 30px;
-    margin: 20px;
+    padding: var(--spacing-xl) var(--spacing-lg);
+    margin: var(--spacing-md);
+    max-width: calc(100% - var(--spacing-xl));
+  }
+  
+  .success-icon {
+    font-size: 2.5rem;
+  }
+  
+  .success-title {
+    font-size: 1.4rem;
+  }
+  
+  .success-subtitle {
+    font-size: 0.95rem;
+  }
+}
+
+/* Small Mobile (480px and up) */
+@media screen and (min-width: 480px) {
+  .login-wrapper {
+    padding: var(--spacing-lg);
+  }
+  
+  .login-card {
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  
+  .login-header h1 {
+    font-size: 2rem;
+  }
+  
+  .login-form h2 {
+    font-size: 1.4rem;
+  }
+  
+  .input-group input {
+    font-size: 0.95rem;
+  }
+  
+  .login-btn {
+    font-size: 1rem;
+  }
+  
+  .register-link {
+    font-size: 0.9rem;
+  }
+  
+  .success-message {
+    padding: var(--spacing-xxl) var(--spacing-xl);
+    margin: var(--spacing-lg);
   }
   
   .success-icon {
@@ -308,5 +411,107 @@
   
   .success-subtitle {
     font-size: 1rem;
+  }
+}
+
+/* Tablet (768px and up) */
+@media screen and (min-width: 768px) {
+  .login-wrapper {
+    padding: var(--spacing-xl);
+  }
+  
+  .login-card {
+    max-width: 420px;
+  }
+  
+  .login-header {
+    padding: var(--spacing-xxl) var(--spacing-lg) var(--spacing-lg);
+  }
+  
+  .login-header h1 {
+    font-size: 2.2rem;
+  }
+  
+  .login-form {
+    padding: var(--spacing-lg) var(--spacing-xl) var(--spacing-xxl);
+  }
+  
+  .login-form h2 {
+    font-size: 1.5rem;
+  }
+  
+  .success-message {
+    max-width: 400px;
+    padding: var(--spacing-xxl) var(--spacing-xxl);
+  }
+  
+  .success-icon {
+    font-size: 3.5rem;
+  }
+  
+  .success-title {
+    font-size: 1.8rem;
+  }
+  
+  .success-subtitle {
+    font-size: 1.05rem;
+  }
+}
+
+/* Desktop (1024px and up) */
+@media screen and (min-width: 1024px) {
+  .login-header h1 {
+    font-size: 2.4rem;
+  }
+  
+  .login-form h2 {
+    font-size: 1.6rem;
+  }
+  
+  .success-icon {
+    font-size: 4rem;
+  }
+  
+  .success-title {
+    font-size: 2rem;
+  }
+  
+  .success-subtitle {
+    font-size: 1.1rem;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media screen and (orientation: landscape) and (max-height: 600px) {
+  .login-wrapper {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+  
+  .login-header {
+    padding: var(--spacing-md) var(--spacing-lg) var(--spacing-sm);
+  }
+  
+  .login-header h1 {
+    font-size: 1.6rem;
+  }
+  
+  .login-form {
+    padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-lg);
+  }
+  
+  .login-form h2 {
+    font-size: 1.2rem;
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .input-group {
+    margin-bottom: var(--spacing-sm);
+  }
+}
+
+/* High DPI displays */
+@media screen and (min-resolution: 192dpi), screen and (min-resolution: 2dppx) {
+  .login-card {
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
   }
 }

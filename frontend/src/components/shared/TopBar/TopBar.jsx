@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './TopBar.css';
-import { FiUser } from "react-icons/fi"; 
+import { FiUser, FiMenu, FiX } from "react-icons/fi"; 
 
-const TopBar = ({ userRole = 'User', userName = 'User', onLogout, onNotifications, onProfile }) => {
+const TopBar = ({ userRole = 'User', userName = 'User', onLogout, onNotifications, onProfile, onMenuToggle }) => {
   const [displayName, setDisplayName] = useState(userName);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Update display name when userName prop changes
   useEffect(() => {
@@ -44,9 +46,35 @@ const TopBar = ({ userRole = 'User', userName = 'User', onLogout, onNotification
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [userName]);
+
+  // Check screen size for mobile detection
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+
+    return () => {
+      window.removeEventListener('resize', checkScreenSize);
+    };
+  }, []);
+
+  const handleMenuToggle = () => {
+    setIsMenuOpen(!isMenuOpen);
+    if (onMenuToggle) {
+      onMenuToggle(!isMenuOpen);
+    }
+  };
   return (
     <div className="topbar">
       <div className="topbar-left">
+        {isMobile && (
+          <button className="mobile-menu-toggle" onClick={handleMenuToggle}>
+            {isMenuOpen ? <FiX /> : <FiMenu />}
+          </button>
+        )}
         <div className="role-display">
           <span className="role-name">{userRole}</span>
         </div>
@@ -57,10 +85,10 @@ const TopBar = ({ userRole = 'User', userName = 'User', onLogout, onNotification
       </div>
       
       <div className="topbar-right">
-           <div className="user-display">
-      <FiUser className="user-icon" />
-      <span className="user-name">{displayName}</span>
-    </div>
+        <div className="user-display">
+          <FiUser className="user-icon" />
+          <span className="user-name">{displayName}</span>
+        </div>
       </div>
     </div>
   );
