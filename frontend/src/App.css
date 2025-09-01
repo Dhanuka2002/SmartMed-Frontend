@@ -143,13 +143,12 @@ html {
     flex-direction: column;
   }
   
-  /* Mobile sidebar styles are now in component-specific CSS files */
-  
+  /* Mobile: No sidebar space reserved - sidebar is off-screen */
   .content-area {
-    margin-left: var(--sidebar-width);
+    margin-left: 0;
     margin-top: var(--topbar-height);
     padding: var(--spacing-md);
-    width: calc(100% - var(--sidebar-width));
+    width: 100%;
     min-height: calc(100vh - var(--topbar-height));
   }
   
@@ -171,7 +170,10 @@ html {
     font-size: 15px;
   }
   
+  /* Still no sidebar space on small mobile */
   .content-area {
+    margin-left: 0;
+    width: 100%;
     padding: var(--spacing-lg);
   }
   
@@ -192,12 +194,11 @@ html {
     font-size: 15px;
   }
   
-  /* Tablet sidebar styles are in component CSS files */
-  
+  /* Tablet: Sidebar becomes visible, reserve space */
   .content-area {
-    margin-left: var(--sidebar-width);
+    margin-left: var(--tablet-sidebar-width, 240px);
     padding: var(--spacing-lg);
-    width: calc(100% - var(--sidebar-width));
+    width: calc(100% - var(--tablet-sidebar-width, 240px));
     min-height: calc(100vh - var(--topbar-height));
   }
   
@@ -218,12 +219,11 @@ html {
     font-size: 16px;
   }
   
-  /* Desktop sidebar styles are in component CSS files */
-  
+  /* Desktop: Full sidebar width */
   .content-area {
-    margin-left: var(--sidebar-width);
+    margin-left: var(--sidebar-width, 280px);
     padding: var(--spacing-xl);
-    width: calc(100% - var(--sidebar-width));
+    width: calc(100% - var(--sidebar-width, 280px));
     min-height: calc(100vh - var(--topbar-height));
   }
   
@@ -242,7 +242,7 @@ html {
 @media screen and (min-width: 1200px) {
   .content-area {
     padding: var(--spacing-xxl);
-    width: calc(100% - var(--sidebar-width));
+    width: calc(100% - var(--sidebar-width, 280px));
   }
   
   .page-container,
