@@ -1,49 +1,87 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import QRScanner from '../../QRScanner/QRScanner';
+import { getReceptionQueue, moveStudentToDoctor, updateQueueEntryStatus } from '../../../services/queueService';
 import './ReceptionistQueue.css';
 
 const ReceptionistQueue = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [queueList, setQueueList] = useState([
-    { queueNo: '012', studentName: 'Amali Perera', status: 'Waiting', action: 'Call Now', priority: 'Normal', waitTime: '5 min' },
-    { queueNo: '013', studentName: 'Franklin John', status: 'Waiting', action: 'Skip', priority: 'High', waitTime: '12 min' },
-    { queueNo: '014', studentName: 'Lahiru Silva', status: 'Waiting', action: 'Call Now', priority: 'Normal', waitTime: '3 min' },
-    { queueNo: '015', studentName: 'Sarah Williams', status: 'Called', action: 'Hold', priority: 'Low', waitTime: '8 min' },
-    { queueNo: '016', studentName: 'Michael Chen', status: 'Waiting', action: 'Call Now', priority: 'High', waitTime: '15 min' },
-  ]);
+  const [queueList, setQueueList] = useState([]);
+  const [showScanner, setShowScanner] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+
+  // Load queue data on component mount and set up refresh interval
+  useEffect(() => {
+    loadQueueData();
+    const interval = setInterval(loadQueueData, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadQueueData = async () => {
+    try {
+      const receptionQueue = await getReceptionQueue();
+      setQueueList(receptionQueue);
+    } catch (error) {
+      console.error('Error loading reception queue:', error);
+      setQueueList([]);
+    }
+  };
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  const handleActionChange = (queueNo, action) => {
-    const updatedList = queueList.map(item => 
-      item.queueNo === queueNo ? { ...item, action } : item
-    );
-    setQueueList(updatedList);
+  const handleActionChange = async (queueNo, action) => {
+    try {
+      if (action === 'Send to Doctor') {
+        const confirmation = confirm('Are you sure you want to send this student to the doctor queue?');
+        if (!confirmation) return;
+        
+        // Move student to doctor queue
+        const result = await moveStudentToDoctor(queueNo);
+        console.log('✅ Student moved to doctor queue:', result);
+        
+        // Show success message with student details
+        alert(`✅ Student sent to doctor queue successfully!\n\nQueue Number: ${queueNo}\nStudent: ${result.studentName || 'Unknown'}\nStatus: ${result.status || 'Waiting for Doctor'}`);
+        
+        // Refresh the queue to remove the student from reception
+        loadQueueData();
+        
+        // Optional: Show notification to inform that student is now in doctor queue
+        setTimeout(() => {
+          const doctorNotification = confirm('Student has been successfully moved to doctor queue. Would you like to refresh the doctor queue view?');
+          if (doctorNotification) {
+            // You can add navigation logic here if needed
+            console.log('Doctor queue should be refreshed');
+          }
+        }, 1000);
+        
+      } else {
+        // Update status for other actions
+        await updateQueueEntryStatus('reception', queueNo, { action, status: action });
+        console.log(`Status updated for queue ${queueNo}: ${action}`);
+        loadQueueData(); // Refresh the queue
+      }
+    } catch (error) {
+      console.error('❌ Error updating action:', error);
+      alert(`❌ Error updating student status: ${error.message}`);
+    }
   };
 
   const handleRefresh = () => {
+    loadQueueData();
     console.log('Queue refreshed');
-    // Simulate refresh animation or fetch new data
   };
 
-  const getStatusClass = (status) => {
-    switch (status.toLowerCase()) {
-      case 'waiting': return 'status-waiting';
-      case 'called': return 'status-called';
-      case 'completed': return 'status-completed';
-      default: return 'status-waiting';
-    }
+  const handleScanResult = (medicalData) => {
+    console.log('QR scan result:', medicalData);
+    setShowScanner(false);
+    loadQueueData(); // Refresh queue to show new student
   };
 
-  const getPriorityClass = (priority) => {
-    switch (priority.toLowerCase()) {
-      case 'high': return 'priority-high';
-      case 'normal': return 'priority-normal';
-      case 'low': return 'priority-low';
-      default: return 'priority-normal';
-    }
+  const handleViewDetails = (student) => {
+    setSelectedStudent(student);
   };
+
 
   const getActionButtonClass = (action) => {
     switch (action.toLowerCase()) {
@@ -60,10 +98,7 @@ const ReceptionistQueue = () => {
       item.studentName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalWaiting = queueList.filter(item => item.status === 'Waiting').length;
-  const averageWaitTime = Math.round(
-    queueList.reduce((acc, item) => acc + parseInt(item.waitTime), 0) / queueList.length
-  );
+  const totalWaiting = queueList.length;
 
   return (
     <div className="queue-container">
@@ -77,15 +112,7 @@ const ReceptionistQueue = () => {
         <div className="queue-stats">
           <div className="stat-card">
             <div className="stat-number">{totalWaiting}</div>
-            <div className="stat-label">Waiting</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number">{averageWaitTime}</div>
-            <div className="stat-label">Avg Wait (min)</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number">{queueList.length}</div>
-            <div className="stat-label">Total Today</div>
+            <div className="stat-label">Total Students</div>
           </div>
         </div>
       </div>
@@ -117,11 +144,11 @@ const ReceptionistQueue = () => {
             </svg>
             Refresh
           </button>
-          <button className="btn btn-primary">
+          <button className="btn btn-primary" onClick={() => setShowScanner(true)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 5v14M5 12h14"></path>
+              <path d="M3,11H5V13H3V11M11,5H13V9H11V5M9,11H13V15H9V11M15,11H17V13H15V11M19,5H21V9H19V5M5,5H9V9H5V5"/>
             </svg>
-            Add Student
+            Scan QR Code
           </button>
         </div>
       </div>
@@ -133,35 +160,27 @@ const ReceptionistQueue = () => {
             <tr>
               <th>Queue No.</th>
               <th>Student Name</th>
-              <th>Status</th>
-              <th>Priority</th>
-              <th>Wait Time</th>
+              <th>Student ID</th>
               <th>Action</th>
+              <th>Details</th>
             </tr>
           </thead>
           <tbody>
             {filteredList.map((entry) => (
               <tr key={entry.queueNo} className="table-row">
                 <td>
-                  <div className="queue-number">#{entry.queueNo}</div>
+                  <div className="queue-number">{entry.queueNo}</div>
                 </td>
                 <td>
                   <div className="student-info">
                     <div className="student-name">{entry.studentName}</div>
+                    <div className="student-details" style={{fontSize: '0.8rem', color: '#666'}}>
+                      {entry.email}
+                    </div>
                   </div>
                 </td>
                 <td>
-                  <span className={`status-badge ${getStatusClass(entry.status)}`}>
-                    {entry.status}
-                  </span>
-                </td>
-                <td>
-                  <span className={`priority-badge ${getPriorityClass(entry.priority)}`}>
-                    {entry.priority}
-                  </span>
-                </td>
-                <td>
-                  <div className="wait-time">{entry.waitTime}</div>
+                  <div className="student-id">{entry.studentId || 'N/A'}</div>
                 </td>
                 <td>
                   <select
@@ -172,7 +191,16 @@ const ReceptionistQueue = () => {
                     <option value="Call Now">Call Now</option>
                     <option value="Skip">Skip</option>
                     <option value="Hold">Hold</option>
+                    <option value="Send to Doctor">Send to Doctor</option>
                   </select>
+                </td>
+                <td>
+                  <button 
+                    className="btn btn-sm btn-info"
+                    onClick={() => handleViewDetails(entry)}
+                  >
+                    View
+                  </button>
                 </td>
               </tr>
             ))}
@@ -190,6 +218,92 @@ const ReceptionistQueue = () => {
           </div>
         )}
       </div>
+
+      {/* QR Scanner Modal */}
+      {showScanner && (
+        <QRScanner
+          onScanResult={handleScanResult}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+
+      {/* Student Details Modal */}
+      {selectedStudent && (
+        <div className="modal-overlay" onClick={() => setSelectedStudent(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Student Details - Queue #{selectedStudent.queueNo}</h3>
+              <button 
+                className="modal-close"
+                onClick={() => setSelectedStudent(null)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="detail-grid">
+                <div className="detail-item">
+                  <label>Name:</label>
+                  <span>{selectedStudent.studentName}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Student ID:</label>
+                  <span>{selectedStudent.studentId}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Email:</label>
+                  <span>{selectedStudent.email}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Phone:</label>
+                  <span>{selectedStudent.phone}</span>
+                </div>
+                <div className="detail-item">
+                  <label>NIC:</label>
+                  <span>{selectedStudent.nic}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Added Time:</label>
+                  <span>{new Date(selectedStudent.addedTime).toLocaleString()}</span>
+                </div>
+              </div>
+              
+              {selectedStudent.medicalData && (
+                <div className="medical-summary">
+                  <h4>Medical Summary</h4>
+                  <div className="detail-grid">
+                    <div className="detail-item">
+                      <label>Academic Division:</label>
+                      <span>{selectedStudent.medicalData.student.academicDivision}</span>
+                    </div>
+                    <div className="detail-item">
+                      <label>Emergency Contact:</label>
+                      <span>{selectedStudent.medicalData.student.emergencyContact.name} ({selectedStudent.medicalData.student.emergencyContact.telephone})</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn btn-secondary"
+                onClick={() => setSelectedStudent(null)}
+              >
+                Close
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={() => {
+                  handleActionChange(selectedStudent.queueNo, 'Send to Doctor');
+                  setSelectedStudent(null);
+                }}
+              >
+                Send to Doctor
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,32 +1,27 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 import "./Register.css";
-import { FaUser, FaEnvelope, FaLock, FaUserTag } from "react-icons/fa";
+
+import { FaUser, FaEnvelope, FaLock, FaUserTag, FaCheckCircle } from "react-icons/fa";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    role: "",
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
 
-  const userRoles = [
-    "Student",
-    "Pharmacy",
-    "Doctor",
-    "Hospital Staff",
-    "Receptionist",
-    "Driver",
-  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -47,33 +42,39 @@ const Register = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          role: formData.role,
-          name: formData.name,
+          role: "Student",
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           email: formData.email,
           password: formData.password,
         }),
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        // Try to parse error message if possible
-        let errorMessage = "Registration failed";
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch {
-          errorMessage = await response.text();
-        }
-        alert(errorMessage);
+        alert(result.message || "Registration failed");
         setIsSubmitting(false);
         return;
       }
 
-      const result = await response.json();
-      alert(result.message);
+      // Store user data for success message
+      const userInfo = {
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        role: "Student"
+      };
+      
+      setUserData(userInfo);
+      setShowSuccess(true);
 
-      if (result.status === "success") {
+      // Show success message for 4 seconds then navigate to login
+      setTimeout(() => {
+        setShowSuccess(false);
         navigate("/login");
-      }
+      }, 4000);
+
     } catch (error) {
       console.error("Registration error:", error);
       alert("Error occurred during registration!");
@@ -84,6 +85,28 @@ const Register = () => {
 
   return (
     <div className="register-wrapper">
+      {/* Beautiful Success Message Overlay */}
+      {showSuccess && (
+        <div className="success-overlay">
+          <div className="success-message">
+            <div className="success-icon-container">
+              <FaCheckCircle className="success-icon" />
+            </div>
+            <h2 className="success-title">Registration Successful!</h2>
+            <p className="success-subtitle">Welcome to SmartMed, {userData?.name}!</p>
+            <p className="success-info">Your account has been created successfully.</p>
+            <div className="success-loading">
+              <div className="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <p>Redirecting to login page...</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="register-card">
         <div className="register-header">
           <h1>
@@ -92,32 +115,30 @@ const Register = () => {
         </div>
 
         <form className="register-form" onSubmit={handleSubmit}>
-          <h2>Sign Up</h2>
+          <h2>Student Registration</h2>
+          <p style={{color: '#666', fontSize: '14px', marginBottom: '20px', textAlign: 'center'}}>
+            Only students can register here. Other roles are managed by admin.
+          </p>
 
           <div className="input-group">
-            <FaUserTag className="icon" />
-            <select
-              name="role"
-              value={formData.role}
+            <FaUser className="icon" />
+            <input
+              type="text"
+              name="firstName"
+              placeholder="First Name"
+              value={formData.firstName}
               onChange={handleChange}
               required
-            >
-              <option value="">Select Category</option>
-              {userRoles.map(role => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <div className="input-group">
             <FaUser className="icon" />
             <input
               type="text"
-              name="name"
-              placeholder="Your Name"
-              value={formData.name}
+              name="lastName"
+              placeholder="Last Name"
+              value={formData.lastName}
               onChange={handleChange}
               required
             />
