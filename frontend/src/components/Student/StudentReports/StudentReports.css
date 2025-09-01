@@ -205,7 +205,7 @@
   gap: 1rem;
   transition: all 0.3s ease;
 }
-.stats-grid .stat-label,.stat-value {
+.stats-grid .stat-label, .stat-value {
   font-size: 0.875rem;
   color: #718096;
   font-weight: 500;
