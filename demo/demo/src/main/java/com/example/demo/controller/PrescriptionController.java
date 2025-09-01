@@ -90,6 +90,8 @@ public class PrescriptionController {
             String doctorName = (String) prescriptionData.get("doctorName");
             String prescriptionText = (String) prescriptionData.get("prescriptionText");
             String instructions = (String) prescriptionData.get("instructions");
+            String signature = (String) prescriptionData.get("signature");
+            String signedAtString = (String) prescriptionData.get("signedAt");
             
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> medicinesData = (List<Map<String, Object>>) prescriptionData.get("medicines");

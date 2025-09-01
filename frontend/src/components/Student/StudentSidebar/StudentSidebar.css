@@ -142,7 +142,7 @@
   color: white;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0px;
 }
 
 /* Enhanced Menu Items */
@@ -168,7 +168,7 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-weight: 500;
-  font-size: 14px;
+  font-size: 112px;
   letter-spacing: 0.025em;
   position: relative;
 }

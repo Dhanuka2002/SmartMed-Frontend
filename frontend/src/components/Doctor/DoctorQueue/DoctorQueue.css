@@ -218,15 +218,17 @@
 }
 
 .patient-id, .student-id {
-  display: block;
-  font-size: 0.875rem;
-  color: #667eea;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+ .student-id {
+	font-weight: 600;
+	color: #000;
+	font-size: 0.9rem;
+
+	padding: 0.5rem 0.75rem;
+	border-radius: 8px;
+	display: inline-block;
+	min-width: 80px;
+	text-align: center;
+}
 }
 
 .appointment-details {

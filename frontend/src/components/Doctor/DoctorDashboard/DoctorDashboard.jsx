@@ -228,13 +228,7 @@ function DoctorDashboard() {
         </div>
 
         <div className="header-right">
-          <div className="doctor-profile">
-            <div className="doctor-avatar">👨‍⚕️</div>
-            <div className="doctor-details">
-              <span className="doctor-name">Dr. Medical</span>
-              <span className="doctor-title">General Physician</span>
-            </div>
-          </div>
+          
           
           {/* Sound Control */}
           <div className="sound-controls">
