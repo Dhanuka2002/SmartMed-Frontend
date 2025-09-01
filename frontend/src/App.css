@@ -59,63 +59,20 @@ html {
   overflow: hidden;
 }
 
-/* Sidebar styles */
-.sidebar {
-  width: var(--sidebar-width);
-  background-color: #0B1224;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding-top: 30px;
-  position: fixed;
-  top: var(--topbar-height);
-  left: 0;
-  height: calc(100vh - var(--topbar-height));
-  z-index: 1000;
-}
-
-.sidebar ul {
-  list-style: none;
-  padding-left: 0;
-}
-
-.sidebar li {
-  padding: 12px 20px;
-  font-weight: 600;
-  color: #ffffff;
-  cursor: pointer;
-}
-
-
-.sidebar .settings {
-  padding: 16px;
-  border-top: 1px solid #1d2233;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 500;
-  color: white;
-  background-color: #0B1224;
-  cursor: pointer;
-}
-
-.sidebar .settings img {
-  width: 20px;
-  height: 10px;
-}
+/* Sidebar styles moved to component-specific CSS files */
 
 /* Content area */
 .content-area {
   flex: 1;
   padding: 30px;
-  background-color: #ffffff;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
   overflow-y: auto;
   margin-top: var(--topbar-height);
   margin-left: var(--sidebar-width);
   width: calc(100% - var(--sidebar-width));
   min-height: calc(100vh - var(--topbar-height));
-  transition: margin-left 0.3s ease, width 0.3s ease;
+  transition: margin-left 0.3s ease, width 0.3s ease, background-color 0.3s ease, color 0.3s ease;
   position: relative;
   box-sizing: border-box;
 }
@@ -186,15 +143,7 @@ html {
     flex-direction: column;
   }
   
-  /* Sidebar stays fixed for mobile too */
-  .sidebar {
-    width: var(--sidebar-width);
-    position: fixed;
-    top: var(--topbar-height);
-    left: 0;
-    height: calc(100vh - var(--topbar-height));
-    z-index: 1000;
-  }
+  /* Mobile sidebar styles are now in component-specific CSS files */
   
   .content-area {
     margin-left: var(--sidebar-width);
@@ -243,9 +192,7 @@ html {
     font-size: 15px;
   }
   
-  .sidebar {
-    width: var(--sidebar-width);
-  }
+  /* Tablet sidebar styles are in component CSS files */
   
   .content-area {
     margin-left: var(--sidebar-width);
@@ -271,9 +218,7 @@ html {
     font-size: 16px;
   }
   
-  .sidebar {
-    width: var(--sidebar-width);
-  }
+  /* Desktop sidebar styles are in component CSS files */
   
   .content-area {
     margin-left: var(--sidebar-width);
