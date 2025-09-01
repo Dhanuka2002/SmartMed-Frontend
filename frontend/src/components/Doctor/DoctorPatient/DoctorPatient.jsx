@@ -43,6 +43,7 @@ import "./DoctorPatient.css";
 import qr from "../../../assets/qr.png";
 import patientAvatar from "../../../assets/student.jpg";
 import Avatar from "../../common/Avatar/Avatar";
+import DigitalSignature from "../../common/DigitalSignature/DigitalSignature";
 
 function DoctorPatient() {
   const { addPrescription } = usePrescription();
@@ -66,6 +67,8 @@ function DoctorPatient() {
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState(null);
   const [patientFormData, setPatientFormData] = useState(null);
+  const [signature, setSignature] = useState(null);
+  const [signatureError, setSignatureError] = useState('');
 
   // Load selected patient from localStorage (set from DoctorQueue)
   useEffect(() => {
@@ -454,9 +457,22 @@ function DoctorPatient() {
     setMedications(medications.filter(med => med.id !== id));
   };
 
+  const handleSignatureChange = (signatureData) => {
+    setSignature(signatureData);
+    if (signatureError) {
+      setSignatureError('');
+    }
+  };
+
   const handleSign = async () => {
     if (!selectedPatient) {
       alert("No patient selected.");
+      return;
+    }
+
+    if (!signature) {
+      setSignatureError('Digital signature is required before sending to pharmacy.');
+      alert("Please provide your digital signature before sending to pharmacy.");
       return;
     }
 
@@ -542,7 +558,9 @@ function DoctorPatient() {
         doctorName: "Dr. Smith", // You can get this from user context
         prescriptionText: String(prescriptionText.trim() || ''),
         instructions: "Take as directed by doctor",
-        medicines: prescriptionMedicines
+        medicines: prescriptionMedicines,
+        signature: signature,
+        signedAt: new Date().toISOString()
       };
 
       console.log('🔄 Saving prescription to database:', prescriptionData);
@@ -1345,22 +1363,42 @@ function DoctorPatient() {
                       </div>
                     )}
                     
-                    <div className="action-buttons">
-                      <button 
-                        className="action-btn secondary"
-                        disabled={!selectedPatient}
-                      >
-                        <span className="btn-icon">💾</span>
-                        Save Draft
-                      </button>
-                      <button 
-                        className="action-btn primary" 
-                        onClick={handleSign}
-                        disabled={!selectedPatient || isLoading || (prescriptionItems.length === 0 && medications.length === 0 && !prescriptionText.trim())}
-                      >
-                        <span className="btn-icon">✍️</span>
-                        {isLoading ? 'Sending...' : 'Send to Pharmacy'}
-                      </button>
+                    {/* Digital Signature Section */}
+                    <div className="signature-section">
+                      <h3 className="signature-title">Digital Signature Required</h3>
+                      <p className="signature-description">
+                        Please sign below to authorize this prescription before sending to pharmacy
+                      </p>
+                      <div className="signature-container">
+                        <DigitalSignature
+                          onSignatureChange={handleSignatureChange}
+                          disabled={isLoading}
+                        />
+                        {signatureError && (
+                          <div className="signature-error-message">
+                            {signatureError}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Action buttons */}
+                      <div className="action-buttons">
+                        <button 
+                          className="action-btn secondary"
+                          disabled={!selectedPatient}
+                        >
+                          <span className="btn-icon">💾</span>
+                          Save Draft
+                        </button>
+                        <button 
+                          className="action-btn primary" 
+                          onClick={handleSign}
+                          disabled={!selectedPatient || isLoading || (prescriptionItems.length === 0 && medications.length === 0 && !prescriptionText.trim())}
+                        >
+                          <span className="btn-icon">✍️</span>
+                          {isLoading ? 'Sending...' : 'Send to Pharmacy'}
+                        </button>
+                      </div>
                     </div>
                   </div>
 
