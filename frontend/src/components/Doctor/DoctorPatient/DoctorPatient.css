@@ -1343,6 +1343,54 @@
   font-style: italic;
 }
 
+/* Digital Signature Section */
+.signature-section {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(37, 99, 235, 0.03));
+  border: 2px solid rgba(59, 130, 246, 0.15);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.signature-title {
+  color: #1d4ed8;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.signature-title::before {
+  content: "✍️";
+  font-size: 1.5rem;
+}
+
+.signature-description {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0 0 1.5rem 0;
+  font-style: italic;
+}
+
+.signature-container {
+  margin: 1rem 0;
+}
+
+.signature-error-message {
+  color: #dc2626;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+}
+
 .action-buttons {
   display: flex;
   gap: 1rem;

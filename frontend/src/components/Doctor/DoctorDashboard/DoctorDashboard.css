@@ -167,13 +167,23 @@ body {
   margin-bottom: 28px;
 }
 
+.stat-content {
+	margin-left: 50px;
+	align-items: center;
+  display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+
+
 .stat-card {
   background: white;
   border-radius: 16px;
-  padding: 24px;
+  padding: 5px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 0px;
   border: 1px solid #f1f5f9;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
@@ -186,9 +196,9 @@ body {
 
 .stat-icon {
   font-size: 28px;
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -206,9 +216,6 @@ body {
   background: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
-.stat-card.progress .stat-icon {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-}
 
 .stat-number {
   font-size: 32px;

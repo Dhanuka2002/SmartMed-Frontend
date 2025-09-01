@@ -241,16 +241,7 @@ function DoctorPharmacy() {
               <span className="stat-sublabel">{stockStats.outOfStock} out of stock</span>
             </div>
           </div>
-          <div className="stat-card">
-           
-            <div className="stat-content">
-              <span className="stat-value">{prescriptionStats.pending}</span>
-              <span className="stat-label">Pending Scripts</span>
-               <div className="stat-icon">📋</div>
-              <span className="stat-sublabel">{prescriptionStats.todaysPrescriptions} today</span>
-            </div>
-            
-          </div>
+         
           <div className="stat-card success">
             
             <div className="stat-content">
