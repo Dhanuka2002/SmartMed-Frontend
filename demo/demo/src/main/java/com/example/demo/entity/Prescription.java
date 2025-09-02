@@ -57,6 +57,12 @@ public class Prescription {
     @Column(name = "dispensed_date")
     private LocalDateTime dispensedDate;
     
+    @Column(name = "signature", columnDefinition = "LONGTEXT")
+    private String signature;
+    
+    @Column(name = "signed_at")
+    private LocalDateTime signedAt;
+    
     // One-to-Many relationship with PrescriptionMedicine
     @OneToMany(mappedBy = "prescription", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PrescriptionMedicine> prescriptionMedicines;
@@ -215,6 +221,22 @@ public class Prescription {
     
     public void setDispensedDate(LocalDateTime dispensedDate) {
         this.dispensedDate = dispensedDate;
+    }
+    
+    public String getSignature() {
+        return signature;
+    }
+    
+    public void setSignature(String signature) {
+        this.signature = signature;
+    }
+    
+    public LocalDateTime getSignedAt() {
+        return signedAt;
+    }
+    
+    public void setSignedAt(LocalDateTime signedAt) {
+        this.signedAt = signedAt;
     }
     
     // Helper methods
