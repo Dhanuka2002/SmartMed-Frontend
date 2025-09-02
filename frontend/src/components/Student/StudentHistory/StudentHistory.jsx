@@ -103,7 +103,7 @@ function StudentHistory() {
                 <div className="additional-info">
                   <span className="email-info">
                     📧 {studentData?.email || currentUser?.email || 'No email'}
-                  </span>
+                  </span> <br />
                   <span className="age-info">
                     👤 Age: {studentData?.age || 'Not provided'}
                   </span>
