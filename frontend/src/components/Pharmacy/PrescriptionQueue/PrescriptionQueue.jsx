@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 // Removed unused imports - only using database prescriptions now
 import { FiCalendar, FiUser, FiClock, FiCheck, FiEye } from "react-icons/fi";
 import { usePrescription } from "../../../contexts/PrescriptionContext";
-import SignatureDisplay from "../../common/SignatureDisplay/SignatureDisplay";
+import PrescriptionDisplay from "../../common/PrescriptionDisplay/PrescriptionDisplay";
 import "./PrescriptionQueue.css";
 
 function PrescriptionQueue() {
@@ -405,259 +405,21 @@ function PrescriptionQueue() {
         )}
       </div>
 
-      {/* Complete Prescription Details Interface */}
+      {/* Professional Prescription Display */}
       {selectedPrescription && (
-        <div className="prescription-details-overlay" onClick={() => setSelectedPrescription(null)}>
-          <div className="prescription-details-container" onClick={(e) => e.stopPropagation()}>
-            
-            {/* Main Prescription Details */}
-            <div className="floating-header">
-              <div className="header-content">
-                <div className="prescription-header-info">
-                  <div className="patient-avatar">
-                    <FiUser size={24} />
-                  </div>
-                  <div className="header-text">
-                    <h1 className="patient-title">{selectedPrescription.studentName}</h1>
-                    <p className="patient-subtitle">ID: {selectedPrescription.studentId} • Queue #{selectedPrescription.queueNo}</p>
-                  </div>
-                </div>
-                
-                <div className="header-status">
-                  <div className={`modern-status-badge ${getStatusClass(selectedPrescription.pharmacyStatus || 'Pending')}`}>
-                    <div className="status-indicator"></div>
-                    <span>{selectedPrescription.pharmacyStatus || 'Pending'}</span>
-                  </div>
-                  <button 
-                    className="modern-close-btn"
-                    onClick={() => setSelectedPrescription(null)}
-                    title="Close"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Main Content Area */}
-            <div className="modern-content-area">
-              
-              {/* Quick Info Panel */}
-              <div className="quick-info-panel">
-                <div className="info-grid">
-                  <div className="info-item">
-                    <div className="info-icon doctor-icon">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="m22 21-3-3m-2.9 1.5a3.5 3.5 0 1 1-4.9-4.9 3.5 3.5 0 0 1 4.9 4.9Z"></path>
-                      </svg>
-                    </div>
-                    <div className="info-content">
-                      <span className="info-label">Doctor</span>
-                      <span className="info-value">{selectedPrescription.prescription.doctorName}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="info-item">
-                    <div className="info-icon time-icon">
-                      <FiClock size={20} />
-                    </div>
-                    <div className="info-content">
-                      <span className="info-label">Prescribed</span>
-                      <span className="info-value">
-                        {new Date(selectedPrescription.prescriptionTime).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="info-item">
-                    <div className="info-icon medication-icon">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
-                        <path d="m9 9 5 12 1.774-5.226L21 14 9 9z"></path>
-                      </svg>
-                    </div>
-                    <div className="info-content">
-                      <span className="info-label">Medications</span>
-                      <span className="info-value">
-                        {selectedPrescription.prescription.medications?.length || 0} items
-                      </span>
-                    </div>
-                  </div>
-                  
-                
-                </div>
-              </div>
-
-              {/* Medications Table */}
-              {selectedPrescription.prescription.medications && selectedPrescription.prescription.medications.length > 0 && (
-                <div className="medications-section">
-                  <div className="section-header">
-                    <h2 className="section-title">
-                      <div className="title-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="12" cy="12" r="10"></circle>
-                          <circle cx="12" cy="12" r="3"></circle>
-                          <path d="m12 1 0 6m0 6 0 6M6 12l6 0m6 0 6 0"></path>
-                        </svg>
-                      </div>
-                      Prescribed Medications
-                    </h2>
-                    <div className="medication-count-badge">
-                      {selectedPrescription.prescription.medications.length}
-                    </div>
-                  </div>
-                  
-                  <div className="medications-table-container">
-                    <table className="medications-table">
-                      <thead>
-                        <tr>
-                          <th>Medicine Name</th>
-                          <th>Dosage</th>
-                          <th>Frequency</th>
-                          <th>Duration</th>
-                          <th>Quantity</th>
-                          <th>Instructions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedPrescription.prescription.medications.map((medication, index) => (
-                          <tr key={index}>
-                            <td>
-                              <div className="medicine-name-cell">
-                                <div className="medicine-icon">💊</div>
-                                <span className="medicine-name">{medication.name}</span>
-                              </div>
-                            </td>
-                            <td>
-                              <span className="dosage-text">{medication.dosage}</span>
-                            </td>
-                            <td>
-                              <span className="frequency-text">{medication.frequency}</span>
-                            </td>
-                            <td>
-                              <span className="duration-text">{medication.duration}</span>
-                            </td>
-                            <td>
-                              <span className="quantity-text">{medication.quantity || 'N/A'}</span>
-                            </td>
-                            <td>
-                              <span className="instructions-text">
-                                {medication.instructions || 'No specific instructions'}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Doctor's Notes */}
-              {selectedPrescription.prescription.prescriptionText && (
-                <div className="notes-section">
-                  <div className="section-header">
-                    <h2 className="section-title">
-                      <div className="title-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                          <polyline points="14,2 14,8 20,8"></polyline>
-                          <line x1="16" y1="13" x2="8" y2="13"></line>
-                          <line x1="16" y1="17" x2="8" y2="17"></line>
-                          <polyline points="10,9 9,9 8,9"></polyline>
-                        </svg>
-                      </div>
-                      Doctor's Notes
-                    </h2>
-                  </div>
-                  <div className="notes-content">
-                    <p>{selectedPrescription.prescription.prescriptionText}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Digital Signature Section */}
-              <div className="signature-section">
-                <div className="section-header">
-                  <h2 className="section-title">
-                    <div className="title-icon">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="m16 13 5.223 3.482a.5.5 0 0 1 0 .834L16 21"/>
-                        <path d="m13 13 5.223 3.482a.5.5 0 0 1 0 .834L13 21"/>
-                        <path d="M6 7h8a4 4 0 0 1 0 8h-8V7z"/>
-                        <path d="M6 7V3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4"/>
-                      </svg>
-                    </div>
-                    Doctor's Digital Signature
-                  </h2>
-                </div>
-                <div className="signature-content">
-                  <SignatureDisplay 
-                    prescriptionId={selectedPrescription.internalId}
-                    doctorName={selectedPrescription.prescription.doctorName}
-                    showHeader={false}
-                    className="pharmacy-signature-display"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Floating Action Bar */}
-            <div className="floating-action-bar">
-              <div className="action-bar-content">
-                <button 
-                  className="modern-btn secondary"
-                  onClick={() => setSelectedPrescription(null)}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="m15 18-6-6 6-6"></path>
-                  </svg>
-                  <span>Back to Queue</span>
-                </button>
-                
-                {selectedPrescription.pharmacyStatus !== 'Dispensed' && (
-                  <div className="dispense-controls">
-                    <select
-                      value={selectedPrescription.pharmacyStatus || 'Pending'}
-                      onChange={(e) => handleStatusUpdate(selectedPrescription.queueNo, e.target.value)}
-                      className="modern-status-select"
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Preparing">Preparing</option>
-                      <option value="Ready">Ready</option>
-                    </select>
-                    
-                    <button 
-                      className="modern-btn primary"
-                      onClick={async () => {
-                        const success = await handleDispense(selectedPrescription.queueNo);
-                        if (success) {
-                          setSelectedPrescription(null);
-                        }
-                      }}
-                      disabled={selectedPrescription.pharmacyStatus !== 'Ready'}
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="20,6 9,17 4,12"></polyline>
-                      </svg>
-                      <span>Dispense Medication</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        <PrescriptionDisplay 
+          prescription={selectedPrescription}
+          onClose={() => setSelectedPrescription(null)}
+          showDownload={true}
+          showPharmacyActions={true}
+          onStatusUpdate={handleStatusUpdate}
+          onDispense={async (queueNo) => {
+            const success = await handleDispense(queueNo);
+            if (success) {
+              setSelectedPrescription(null);
+            }
+          }}
+        />
       )}
     </div>
   );
