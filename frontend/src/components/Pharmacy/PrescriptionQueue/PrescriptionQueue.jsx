@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 // Removed unused imports - only using database prescriptions now
 import { FiCalendar, FiUser, FiClock, FiCheck, FiEye } from "react-icons/fi";
 import { usePrescription } from "../../../contexts/PrescriptionContext";
+import SignatureDisplay from "../../common/SignatureDisplay/SignatureDisplay";
 import "./PrescriptionQueue.css";
 
 function PrescriptionQueue() {
@@ -584,6 +585,31 @@ function PrescriptionQueue() {
                   </div>
                 </div>
               )}
+
+              {/* Digital Signature Section */}
+              <div className="signature-section">
+                <div className="section-header">
+                  <h2 className="section-title">
+                    <div className="title-icon">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="m16 13 5.223 3.482a.5.5 0 0 1 0 .834L16 21"/>
+                        <path d="m13 13 5.223 3.482a.5.5 0 0 1 0 .834L13 21"/>
+                        <path d="M6 7h8a4 4 0 0 1 0 8h-8V7z"/>
+                        <path d="M6 7V3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4"/>
+                      </svg>
+                    </div>
+                    Doctor's Digital Signature
+                  </h2>
+                </div>
+                <div className="signature-content">
+                  <SignatureDisplay 
+                    prescriptionId={selectedPrescription.internalId}
+                    doctorName={selectedPrescription.prescription.doctorName}
+                    showHeader={false}
+                    className="pharmacy-signature-display"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Floating Action Bar */}
