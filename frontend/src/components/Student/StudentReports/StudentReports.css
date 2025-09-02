@@ -114,15 +114,20 @@
   gap: 2rem;
 }
 
-.avatar-container {
+.profile-avatar-wrapper {
   position: relative;
 }
 
-.student-avatar {
-  width: 5rem;
-  height: 5rem;
-  border-radius: 50%;
+.profile-avatar-wrapper .avatar-container {
+  width: 100px;
+  height: 100px;
   border: 4px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.profile-avatar-wrapper .avatar-image {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
@@ -190,7 +195,7 @@
   padding: 2rem;
 }
 
-.stat-card {
+.stats-grid .stat-card {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 1rem;
@@ -200,7 +205,13 @@
   gap: 1rem;
   transition: all 0.3s ease;
 }
-
+.stats-grid .stat-label, .stat-value {
+  font-size: 0.875rem;
+  color: #718096;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  margin-left: -6rem;
+}
 .stat-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
@@ -392,22 +403,21 @@
   display: grid;
   gap: 1rem;
 }
-
-.table-header {
+.vaccination-table .table-header {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
   gap: 1rem;
   padding: 1rem;
-  background: #f7fafc;
+  background: #374151;
   border-radius: 0.75rem;
   font-weight: 600;
-  color: #4a5568;
+  color: wheat;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.table-row {
+.vaccination-table .table-row {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
   gap: 1rem;

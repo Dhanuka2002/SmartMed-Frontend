@@ -1,0 +1,158 @@
+.avatar-container {
+  position: relative;
+  display: inline-block;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #f0f0f0;
+  border: 2px solid #ddd;
+}
+
+.avatar-container.clickable {
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.avatar-container.clickable:hover {
+  border-color: #007bff;
+}
+
+/* Responsive Avatar Sizes */
+.avatar-small {
+  width: 32px;
+  height: 32px;
+}
+
+.avatar-medium {
+  width: 64px;
+  height: 64px;
+}
+
+.avatar-large {
+  width: 96px;
+  height: 96px;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e9ecef;
+  color: #6c757d;
+}
+
+.avatar-initials {
+  font-weight: bold;
+  font-size: 0.8em;
+}
+
+.avatar-small .avatar-initials {
+  font-size: 0.6em;
+}
+
+.avatar-large .avatar-initials {
+  font-size: 1.2em;
+}
+
+.avatar-upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.avatar-container:hover .avatar-upload-overlay {
+  opacity: 1;
+}
+
+.upload-icon {
+  font-size: 1.5em;
+  color: white;
+}
+
+/* ===============================
+   RESPONSIVE AVATAR DESIGN
+   =============================== */
+
+/* Small Mobile (480px and up) */
+@media screen and (min-width: 480px) {
+  .avatar-small {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .avatar-medium {
+    width: 72px;
+    height: 72px;
+  }
+  
+  .avatar-large {
+    width: 108px;
+    height: 108px;
+  }
+}
+
+/* Tablet (768px and up) */
+@media screen and (min-width: 768px) {
+  .avatar-small {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .avatar-medium {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .avatar-large {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .upload-icon {
+    font-size: 1.8em;
+  }
+}
+
+/* Desktop (1024px and up) */
+@media screen and (min-width: 1024px) {
+  .avatar-large {
+    width: 128px;
+    height: 128px;
+  }
+  
+  .upload-icon {
+    font-size: 2em;
+  }
+}
+
+/* Touch-friendly adjustments */
+@media (pointer: coarse) {
+  .avatar-container.clickable {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .avatar-image {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}

@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
-import { FaEnvelope, FaLock } from "react-icons/fa";
+import { FaEnvelope, FaLock, FaCheckCircle } from "react-icons/fa";
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [userData, setUserData] = useState(null);
 
   const navigate = useNavigate();
 
@@ -29,21 +31,49 @@ const Login = () => {
         body: JSON.stringify(formData),
       });
 
-      // ✅ Use text() not json()
-      const result = await response.text();
-      alert(result);
+      // ✅ Use json() to parse the response
+      const result = await response.json();
+      
+      if (result.status === "success") {
+        // Store user session data
+        const userInfo = {
+          role: result.role,
+          name: result.name,
+          email: result.email,
+          userId: result.userId
+        };
+        
+        localStorage.setItem('currentUser', JSON.stringify(userInfo));
+        setUserData(userInfo);
+        setShowSuccess(true);
 
-      if (result.includes("Login successful")) {
-        // ✅ Extract role from text
-        if (result.includes("Student")) {
-          navigate("/student/dashboard");
-        } else if (result.includes("Doctor")) {
-          navigate("/doctor/dashboard");
-        } else if (result.includes("Pharmacy")) {
-          navigate("/");
-        } else {
-          alert("Unknown role!");
-        }
+        // Show success message for 3 seconds then navigate
+        setTimeout(() => {
+          setShowSuccess(false);
+          
+          // Store role-specific data and navigate based on role
+          if (result.role === "Student") {
+            localStorage.setItem('studentName', result.name);
+            localStorage.setItem('studentEmail', result.email);
+            
+            // Always redirect students to dashboard
+            navigate("/student/dashboard");
+          } else if (result.role === "Doctor") {
+            navigate("/doctor/dashboard");
+          } else if (result.role === "Pharmacy") {
+            navigate("/inventory");
+          } else if (result.role === "Hospital Staff") {
+            navigate("/hospital-staff");
+          } else if (result.role === "Receptionist") {
+            navigate("/receptionist/dashboard");
+          } else if (result.role === "Admin") {
+            navigate("/admin/dashboard");
+          } else {
+            alert("Unknown role!");
+          }
+        }, 3000);
+      } else {
+        alert(result.message || "Login failed!");
       }
     } catch (error) {
       console.error(error);
@@ -53,6 +83,27 @@ const Login = () => {
 
   return (
     <div className="login-wrapper">
+      {/* Beautiful Success Message Overlay */}
+      {showSuccess && (
+        <div className="success-overlay">
+          <div className="success-message">
+            <div className="success-icon-container">
+              <FaCheckCircle className="success-icon" />
+            </div>
+            <h2 className="success-title">Login Successful!</h2>
+            <p className="success-subtitle">Welcome back, {userData?.name}!</p>
+            <div className="success-loading">
+              <div className="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <p>Redirecting to your dashboard...</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="login-card">
         <div className="login-header">
           <h1>
@@ -91,7 +142,7 @@ const Login = () => {
             Sign In
           </button>
           <p className="register-link">
-            Don’t have an account? <a href="/register">Register</a>
+            Don't have an account? <a href="/register">Register</a>
           </p>
         </form>
       </div>
