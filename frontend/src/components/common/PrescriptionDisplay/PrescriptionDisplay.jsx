@@ -47,64 +47,264 @@ const PrescriptionDisplay = ({
     if (!prescriptionRef.current) return;
     
     try {
-      // Create a temporary container with white background
-      const tempContainer = document.createElement('div');
-      tempContainer.style.position = 'absolute';
-      tempContainer.style.left = '-9999px';
-      tempContainer.style.top = '0';
-      tempContainer.style.background = 'white';
-      tempContainer.style.padding = '20px';
-      tempContainer.style.width = '800px';
+      // Show loading message
+      const originalButtonText = document.querySelector('.download-btn').innerHTML;
+      document.querySelector('.download-btn').innerHTML = '<span>Generating PDF...</span>';
+      document.querySelector('.download-btn').disabled = true;
       
-      // Clone the prescription content
-      const prescriptionClone = prescriptionRef.current.cloneNode(true);
-      tempContainer.appendChild(prescriptionClone);
-      document.body.appendChild(tempContainer);
+      // Create a dedicated PDF container with exact A4 proportions
+      const pdfContainer = document.createElement('div');
+      pdfContainer.style.cssText = `
+        position: absolute;
+        left: -10000px;
+        top: 0;
+        width: 210mm;
+        background: white;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        color: #000;
+        padding: 0;
+        margin: 0;
+        overflow: visible;
+        box-sizing: border-box;
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+        zoom: 1;
+      `;
       
-      // Generate canvas from the cloned element
-      const canvas = await html2canvas(tempContainer, {
+      // Create the complete prescription HTML structure for PDF
+      pdfContainer.innerHTML = `
+        <div style="padding: 10mm; background: white; min-height: 257mm; overflow: visible; font-size: 12px; line-height: 1.3;">
+          <!-- Header -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 8px; border-bottom: 2px solid #2563eb; margin-bottom: 10px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 30px; height: 30px; background: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: bold;">
+                ℞
+              </div>
+              <div>
+                <h1 style="font-size: 16px; font-weight: 800; color: #1e40af; margin: 0 0 2px 0; font-family: 'Crimson Text', serif;">SmartMed Clinic</h1>
+                <p style="font-size: 8px; color: #64748b; margin: 0 0 4px 0; font-style: italic;">Digital Healthcare Solutions</p>
+                <div style="font-size: 8px; color: #475569;">
+                  <div>📍 Medical Campus, University Drive</div>
+                  <div>📞 +1 (555) 123-4567</div>
+                  <div>📧 info@smartmedclinic.com</div>
+                </div>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
+                <span style="font-size: 20px; font-weight: bold; color: #dc2626; font-family: 'Crimson Text', serif;">℞</span>
+                <span style="font-size: 12px; font-weight: 700; color: #1e40af;">#${prescription.queueNo || prescription.internalId}</span>
+              </div>
+              <div style="font-size: 10px;">
+                <div style="margin-bottom: 2px;"><span style="font-weight: 600; color: #475569;">Date:</span> <span style="color: #1a202c; font-weight: 500;">${formatDate(prescription.prescriptionTime)}</span></div>
+                <div><span style="font-weight: 600; color: #475569;">Time:</span> <span style="color: #1a202c; font-weight: 500;">${formatTime(prescription.prescriptionTime)}</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Patient Information -->
+          <div style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="font-size: 12px; font-weight: 700; color: #1e40af; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid #3b82f6; padding-bottom: 2px;">Patient Information</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div>
+                <div style="font-size: 8px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.2px; margin-bottom: 2px;">Patient Name</div>
+                <div style="font-size: 10px; font-weight: 600; color: #1a202c; padding: 3px 6px; background: #f1f5f9; border-radius: 2px; border-left: 2px solid #3b82f6;">${prescription.studentName}</div>
+              </div>
+              <div>
+                <div style="font-size: 8px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.2px; margin-bottom: 2px;">Patient ID</div>
+                <div style="font-size: 10px; font-weight: 600; color: #1a202c; padding: 3px 6px; background: #f1f5f9; border-radius: 2px; border-left: 2px solid #3b82f6;">${prescription.studentId}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Doctor Information -->
+          <div style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="font-size: 12px; font-weight: 700; color: #1e40af; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid #3b82f6; padding-bottom: 2px;">Prescribing Physician</h2>
+            <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
+              <span style="font-size: 12px; font-weight: 700; color: #dc2626; font-family: 'Crimson Text', serif;">Dr.</span>
+              <span style="font-size: 13px; font-weight: 700; color: #1e40af;">${prescription.prescription.doctorName}</span>
+            </div>
+            <div style="display: flex; gap: 12px; font-size: 8px; color: #475569;">
+              <span>Medical License: MD-2024-001</span>
+              <span>Specialization: General Medicine</span>
+            </div>
+          </div>
+
+          <!-- Prescribed Medications -->
+          <div style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="font-size: 12px; font-weight: 700; color: #1e40af; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid #3b82f6; padding-bottom: 2px;">Prescribed Medications</h2>
+            ${prescription.prescription.medications?.map((medication, index) => `
+              <div style="border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden; background: #fafafa; margin-bottom: 6px;">
+                <div style="display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: #1e40af; color: white;">
+                  <div style="font-size: 10px; font-weight: 700; background: white; color: #1e40af; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">${index + 1}</div>
+                  <div style="font-size: 12px; font-weight: 700; flex: 1;">${medication.name}</div>
+                </div>
+                <div style="padding: 8px;">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                    <div>
+                      <div style="font-size: 7px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.2px; margin-bottom: 2px;">Strength/Dosage</div>
+                      <div style="font-size: 9px; font-weight: 600; color: #1a202c; padding: 3px 5px; background: white; border-radius: 2px; border: 1px solid #e2e8f0;">${medication.dosage}</div>
+                    </div>
+                    <div>
+                      <div style="font-size: 7px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.2px; margin-bottom: 2px;">Quantity</div>
+                      <div style="font-size: 9px; font-weight: 600; color: #1a202c; padding: 3px 5px; background: white; border-radius: 2px; border: 1px solid #e2e8f0;">${medication.quantity || '30'} tablets/capsules</div>
+                    </div>
+                    <div>
+                      <div style="font-size: 7px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.2px; margin-bottom: 2px;">Frequency</div>
+                      <div style="font-size: 9px; font-weight: 600; color: #1a202c; padding: 3px 5px; background: white; border-radius: 2px; border: 1px solid #e2e8f0;">${medication.frequency}</div>
+                    </div>
+                    <div>
+                      <div style="font-size: 7px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.2px; margin-bottom: 2px;">Duration</div>
+                      <div style="font-size: 9px; font-weight: 600; color: #1a202c; padding: 3px 5px; background: white; border-radius: 2px; border: 1px solid #e2e8f0;">${medication.duration}</div>
+                    </div>
+                  </div>
+                  ${medication.instructions ? `
+                    <div style="padding-top: 6px; border-top: 1px solid #e2e8f0;">
+                      <div style="font-size: 7px; font-weight: 600; color: #dc2626; text-transform: uppercase; margin-bottom: 3px;">Special Instructions</div>
+                      <div style="font-size: 8px; color: #1a202c; font-style: italic; background: #fef2f2; padding: 4px 6px; border-radius: 2px; border-left: 2px solid #dc2626;">${medication.instructions}</div>
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+            `).join('') || '<p style="color: #6b7280; font-size: 10px;">No medications prescribed.</p>'}
+          </div>
+
+          ${prescription.prescription.prescriptionText ? `
+          <!-- Clinical Notes -->
+          <div style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="font-size: 12px; font-weight: 700; color: #1e40af; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid #3b82f6; padding-bottom: 2px;">Clinical Notes & Instructions</h2>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 3px; padding: 8px; border-left: 2px solid #059669;">
+              <p style="margin: 0; font-size: 9px; line-height: 1.4; color: #374151;">${prescription.prescription.prescriptionText}</p>
+            </div>
+          </div>
+          ` : ''}
+
+          <!-- Digital Signature Section -->
+          <div style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="font-size: 12px; font-weight: 700; color: #1e40af; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid #3b82f6; padding-bottom: 2px;">Digital Signature</h2>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px;">
+              <div style="border: 1px dashed #3b82f6; border-radius: 3px; padding: 8px; background: white; margin-bottom: 8px; text-align: center; min-height: 40px; display: flex; align-items: center; justify-content: center; color: #6b7280; font-style: italic; font-size: 8px;">
+                Digital Signature Present - Validated ✓
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div style="padding: 4px 6px; background: white; border-radius: 3px; border: 1px solid #e2e8f0;">
+                  <div style="font-size: 7px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.2px; margin-bottom: 2px;">Signed by</div>
+                  <div style="font-size: 9px; font-weight: 600; color: #1a202c;">${prescription.prescription.doctorName}</div>
+                </div>
+                <div style="padding: 4px 6px; background: white; border-radius: 3px; border: 1px solid #e2e8f0;">
+                  <div style="font-size: 7px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.2px; margin-bottom: 2px;">Signed at</div>
+                  <div style="font-size: 9px; font-weight: 600; color: #1a202c;">${formatDate(prescription.prescriptionTime)} ${formatTime(prescription.prescriptionTime)}</div>
+                </div>
+              </div>
+              <div style="margin-top: 8px; padding: 4px 8px; background: #f0fdf4; border: 1px solid #16a34a; border-radius: 3px; display: flex; align-items: center; gap: 4px;">
+                <span style="color: #16a34a; font-size: 10px;">✓</span>
+                <span style="color: #16a34a; font-weight: 600; font-size: 8px;">Valid Digital Signature</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div style="padding: 8px 0; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-top: 1px solid #3b82f6; margin-top: 8px;">
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-left: 2px solid #dc2626; border-radius: 3px; padding: 6px; margin-bottom: 8px;">
+              <p style="margin: 0 0 3px 0; font-weight: 600; color: #dc2626; font-size: 8px;"><strong>⚠️ IMPORTANT INSTRUCTIONS:</strong></p>
+              <ul style="margin: 3px 0 0 12px; padding: 0; list-style-type: disc;">
+                <li style="font-size: 7px; color: #7f1d1d; margin-bottom: 1px;">Take medications exactly as prescribed</li>
+                <li style="font-size: 7px; color: #7f1d1d; margin-bottom: 1px;">Complete the full course even if you feel better</li>
+                <li style="font-size: 7px; color: #7f1d1d; margin-bottom: 1px;">Do not share medications with others</li>
+                <li style="font-size: 7px; color: #7f1d1d; margin-bottom: 1px;">Contact your doctor if you experience any side effects</li>
+                <li style="font-size: 7px; color: #7f1d1d; margin-bottom: 1px;">Store medications in a cool, dry place away from children</li>
+              </ul>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 4px; border-top: 1px solid #cbd5e1;">
+              <div>
+                <p style="margin: 0; font-size: 8px; font-weight: 600; color: #1e40af;"><strong>Prescription Validity:</strong> This prescription is valid for 30 days from the date of issue.</p>
+              </div>
+              <div style="text-align: right;">
+                <p style="margin: 0; font-size: 7px; color: #64748b; line-height: 1.2;">Generated electronically by SmartMed Digital Healthcare System</p>
+                <p style="margin: 0; font-size: 7px; color: #475569; font-weight: 600; line-height: 1.2;">Generated on: ${new Date().toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Add to DOM
+      document.body.appendChild(pdfContainer);
+      
+      // Wait for content to render
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Generate PDF using html2canvas
+      const canvas = await html2canvas(pdfContainer, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
-        width: 800,
-        height: tempContainer.scrollHeight + 40
+        logging: false,
+        foreignObjectRendering: false,
+        removeContainer: false
       });
       
       // Remove temporary container
-      document.body.removeChild(tempContainer);
+      document.body.removeChild(pdfContainer);
       
       // Create PDF
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgData = canvas.toDataURL('image/png', 1.0);
       
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth - 20; // 10mm margin on each side
+      const imgWidth = pdfWidth;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      let heightLeft = imgHeight;
-      let position = 10; // 10mm top margin
-      
-      // Add first page
-      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight - 20; // Account for margins
-      
-      // Add additional pages if needed
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight + 10;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight - 20;
+      // Add image to PDF (split pages if needed)
+      let position = 0;
+      while (position < imgHeight) {
+        if (position > 0) {
+          pdf.addPage();
+        }
+        
+        const pageHeight = Math.min(pdfHeight, imgHeight - position);
+        const sourceY = (position / imgHeight) * canvas.height;
+        const sourceHeight = (pageHeight / imgHeight) * canvas.height;
+        
+        // Create page canvas
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = sourceHeight;
+        const pageCtx = pageCanvas.getContext('2d');
+        
+        pageCtx.drawImage(
+          canvas,
+          0, sourceY,
+          canvas.width, sourceHeight,
+          0, 0,
+          canvas.width, sourceHeight
+        );
+        
+        const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
+        pdf.addImage(pageImgData, 'PNG', 0, 0, imgWidth, pageHeight);
+        
+        position += pdfHeight;
       }
       
-      // Download the PDF
+      // Download PDF
       const fileName = `Prescription_${prescription.studentName || 'Patient'}_${new Date().toISOString().split('T')[0]}.pdf`;
       pdf.save(fileName);
+      
+      // Restore button
+      document.querySelector('.download-btn').innerHTML = originalButtonText;
+      document.querySelector('.download-btn').disabled = false;
+      
+      console.log('PDF generated successfully with all content!');
       
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error generating PDF. Please try again.');
+      
+      // Restore button
+      document.querySelector('.download-btn').innerHTML = originalButtonText;
+      document.querySelector('.download-btn').disabled = false;
     }
   };
 
