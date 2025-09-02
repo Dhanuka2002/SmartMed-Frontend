@@ -18,7 +18,6 @@ import Reports from "./components/Pharmacy/Reports/Reports";
 import StudentSidebar from "./components/Student/StudentSidebar/StudentSidebar";
 import StudentDashboard from "./components/Student/Dashboard/StudentDashboard";
 import StudentProfile from "./components/Student/StudentProfile/StudentProfile";
-import StudentHistory from "./components/Student/StudentHistory/StudentHistory";
 import StudentReports from "./components/Student/StudentReports/StudentReports";
 import StudentTelemed from './components/Student/StudentTelemed/StudentTelemed';
 import StudentTelemedCall from './components/Student/StudentTelemedCall/StudentTelemedCall';
@@ -196,11 +195,7 @@ function App() {
                 <StudentProfile />
               </ProtectedRoute>
             } />
-            <Route path="/student/history" element={
-              <ProtectedRoute allowedRoles={['Student']}>
-                <StudentHistory />
-              </ProtectedRoute>
-            } />
+           
             <Route path="/student/reports" element={
               <ProtectedRoute allowedRoles={['Student']}>
                 <StudentReports />

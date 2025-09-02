@@ -56,15 +56,7 @@ function Sidebar() {
             Dashboard
           </NavLink>
         </li>
-        <li>
-          <NavLink 
-            to="/student/history"
-            className={({ isActive }) => isActive ? "menu-button active" : "menu-button"}
-          >
-            <FiClock size={18} className="menu-icon" />
-            History
-          </NavLink>
-        </li>
+      
         <li>
           <NavLink 
             to="/student/qrcode"

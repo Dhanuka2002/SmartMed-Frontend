@@ -44,16 +44,7 @@ function ReceptionistSidebar() {
           </NavLink>
         </li>
 
-        <li>
-          <NavLink 
-            to="/receptionist/qr"
-            className={({ isActive }) => isActive ? "menu-button active" : "menu-button"}
-          >
-            <FiActivity size={18} className="menu-icon" />
-            QR
-          </NavLink>
-        </li>
-
+       
         <li>
           <NavLink 
             to="/receptionist/queue"
