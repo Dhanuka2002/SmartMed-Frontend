@@ -67,17 +67,16 @@
 }
 
 /* Statistics Grid */
-.stats-grid {
+.queue-container .queue-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 2.5rem;
-  margin-bottom: 3.5rem;
+  gap: 0rem;
 }
 
 .stat-card {
   background: white;
   border-radius: var(--radius-xl);
-  padding: 3.75rem;
+  padding: 1.75rem;
   border: 1px solid var(--gray-200);
   box-shadow: var(--shadow-sm);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -101,7 +100,7 @@
   border-color: var(--gray-300);
 }
 
-.stat-number {
+.stat-card .stat-number {
   font-size: 2.5rem;
   font-weight: 800;
   color: var(--gray-900);
@@ -110,12 +109,13 @@
   font-feature-settings: 'tnum';
 }
 
-.stat-label {
+.stat-card .stat-label {
   font-size: 0.875rem;
   color: var(--gray-600);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  padding-right: 5rem;
 }
 
 /* Search Section */

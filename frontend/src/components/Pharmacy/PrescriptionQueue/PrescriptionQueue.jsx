@@ -288,12 +288,6 @@ function PrescriptionQueue() {
             </span>
             <span className="stat-label">Pending</span>
           </div>
-          <div className="stat-card" style={{ borderLeft: '4px solid #17a2b8' }}>
-            <span className="stat-number" style={{ color: '#0c5460' }}>
-              {(allPrescriptions || []).filter(p => p && p.pharmacyStatus === 'Preparing').length}
-            </span>
-            <span className="stat-label">Preparing</span>
-          </div>
           <div className="stat-card" style={{ borderLeft: '4px solid #28a745' }}>
             <span className="stat-number" style={{ color: '#155724' }}>
               {(allPrescriptions || []).filter(p => p && p.pharmacyStatus === 'Ready').length}
