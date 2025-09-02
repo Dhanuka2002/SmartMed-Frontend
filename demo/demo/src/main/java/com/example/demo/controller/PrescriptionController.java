@@ -120,6 +120,23 @@ public class PrescriptionController {
             prescription.setTotalMedicines(medicinesData != null ? medicinesData.size() : 0);
             prescription.setStatus("Pending");
             
+            // Save digital signature if provided
+            if (signature != null && !signature.trim().isEmpty()) {
+                prescription.setSignature(signature);
+                if (signedAtString != null && !signedAtString.trim().isEmpty()) {
+                    try {
+                        prescription.setSignedAt(LocalDateTime.parse(signedAtString.substring(0, 19))); // Parse ISO string
+                    } catch (Exception e) {
+                        prescription.setSignedAt(LocalDateTime.now()); // Fallback to current time
+                    }
+                } else {
+                    prescription.setSignedAt(LocalDateTime.now());
+                }
+                System.out.println("✅ Digital signature saved for prescription");
+            } else {
+                System.out.println("⚠️ No digital signature provided");
+            }
+            
             // Save prescription
             Prescription savedPrescription = prescriptionRepository.save(prescription);
             
@@ -175,6 +192,8 @@ public class PrescriptionController {
             response.put("message", "Prescription created and automatically processed for inventory");
             response.put("prescription", savedPrescription);
             response.put("prescriptionId", savedPrescription.getId());
+            response.put("hasSignature", savedPrescription.getSignature() != null);
+            response.put("signedAt", savedPrescription.getSignedAt());
             
             return ResponseEntity.ok(response);
             
@@ -393,6 +412,41 @@ public class PrescriptionController {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "Error dispensing prescription: " + e.getMessage());
+            
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+    
+    // Get prescription signature
+    @GetMapping("/{id}/signature")
+    public ResponseEntity<Map<String, Object>> getPrescriptionSignature(@PathVariable Long id) {
+        try {
+            Optional<Prescription> optionalPrescription = prescriptionRepository.findById(id);
+            
+            if (optionalPrescription.isPresent()) {
+                Prescription prescription = optionalPrescription.get();
+                
+                Map<String, Object> response = new HashMap<>();
+                response.put("prescriptionId", prescription.getId());
+                response.put("patientName", prescription.getPatientName());
+                response.put("doctorName", prescription.getDoctorName());
+                response.put("hasSignature", prescription.getSignature() != null);
+                response.put("signature", prescription.getSignature());
+                response.put("signedAt", prescription.getSignedAt());
+                response.put("success", true);
+                
+                return ResponseEntity.ok(response);
+            } else {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Prescription not found");
+                
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Error fetching prescription signature: " + e.getMessage());
             
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
