@@ -43,6 +43,7 @@ import "./DoctorPatient.css";
 import qr from "../../../assets/qr.png";
 import patientAvatar from "../../../assets/student.jpg";
 import Avatar from "../../common/Avatar/Avatar";
+import DigitalSignature from "../../common/DigitalSignature/DigitalSignature";
 
 function DoctorPatient() {
   const { addPrescription } = usePrescription();
@@ -66,6 +67,8 @@ function DoctorPatient() {
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState(null);
   const [patientFormData, setPatientFormData] = useState(null);
+  const [signature, setSignature] = useState(null);
+  const [signatureError, setSignatureError] = useState('');
 
   // Load selected patient from localStorage (set from DoctorQueue)
   useEffect(() => {
@@ -149,18 +152,18 @@ function DoctorPatient() {
     name: selectedPatient.studentName,
     id: selectedPatient.studentId,
     queueNo: selectedPatient.queueNo,
-    age: selectedPatient.medicalData?.student?.age || "N/A",
-    gender: selectedPatient.medicalData?.student?.gender || "N/A",
-    division: selectedPatient.medicalData?.student?.academicDivision || "N/A",
-    phone: selectedPatient.phone,
-    email: selectedPatient.email,
-    allergies: extractAllergies(selectedPatient.medicalData),
-    medicalConditions: extractMedicalConditions(selectedPatient.medicalData),
-    bloodType: selectedPatient.medicalData?.examination?.examination?.clinicalTests?.bloodGroup || "N/A",
+    age: selectedPatient.fullMedicalRecord?.student?.age || selectedPatient.medicalData?.student?.age || "N/A",
+    gender: selectedPatient.fullMedicalRecord?.student?.gender || selectedPatient.medicalData?.student?.gender || "N/A",
+    division: selectedPatient.fullMedicalRecord?.student?.academicDivision || selectedPatient.medicalData?.student?.academicDivision || "N/A",
+    phone: selectedPatient.fullMedicalRecord?.student?.telephoneNumber || selectedPatient.phone,
+    email: selectedPatient.fullMedicalRecord?.student?.email || selectedPatient.email,
+    allergies: extractAllergies(selectedPatient.fullMedicalRecord) || extractAllergies(selectedPatient.medicalData),
+    medicalConditions: extractMedicalConditions(selectedPatient.fullMedicalRecord) || extractMedicalConditions(selectedPatient.medicalData),
+    bloodType: selectedPatient.fullMedicalRecord?.examination?.examination?.clinicalTests?.bloodGroup || selectedPatient.medicalData?.examination?.examination?.clinicalTests?.bloodGroup || "N/A",
     lastVisit: new Date(selectedPatient.addedTime).toLocaleDateString(),
-    emergencyContact: selectedPatient.medicalData?.student?.emergencyContact?.telephone || "N/A",
-    emergencyContactName: selectedPatient.medicalData?.student?.emergencyContact?.name || "N/A",
-    emergencyContactRelation: selectedPatient.medicalData?.student?.emergencyContact?.relationship || "N/A"
+    emergencyContact: selectedPatient.fullMedicalRecord?.student?.emergencyContact?.telephone || selectedPatient.medicalData?.student?.emergencyContact?.telephone || "N/A",
+    emergencyContactName: selectedPatient.fullMedicalRecord?.student?.emergencyContact?.name || selectedPatient.medicalData?.student?.emergencyContact?.name || "N/A",
+    emergencyContactRelation: selectedPatient.fullMedicalRecord?.student?.emergencyContact?.relationship || selectedPatient.medicalData?.student?.emergencyContact?.relationship || "N/A"
   } : {
     name: "No Patient Selected",
     id: "N/A",
@@ -454,9 +457,22 @@ function DoctorPatient() {
     setMedications(medications.filter(med => med.id !== id));
   };
 
+  const handleSignatureChange = (signatureData) => {
+    setSignature(signatureData);
+    if (signatureError) {
+      setSignatureError('');
+    }
+  };
+
   const handleSign = async () => {
     if (!selectedPatient) {
       alert("No patient selected.");
+      return;
+    }
+
+    if (!signature) {
+      setSignatureError('Digital signature is required before sending to pharmacy.');
+      alert("Please provide your digital signature before sending to pharmacy.");
       return;
     }
 
@@ -495,87 +511,216 @@ function DoctorPatient() {
       const prescriptionMedicines = [
         // From structured prescription items
         ...prescriptionItems.map(item => ({
-          medicineId: item.medicineId || Date.now(),
+          medicineId: item.medicineId || null,
           medicineName: item.medicineName,
           quantity: parseInt(item.quantity) || 1,
           dosage: item.dosage,
-          instructions: `${item.frequency} for ${item.duration} - ${item.instructions}`.trim()
+          frequency: item.frequency,
+          duration: item.duration,
+          instructions: item.instructions || `${item.frequency} for ${item.duration}`.trim()
         })),
         // From legacy medication entries
-        ...medications.map((med, index) => ({
-          medicineId: Date.now() + index,
+        ...medications.map(med => ({
+          medicineId: null,
           medicineName: med.name,
           quantity: parseInt(med.duration) || 10,
           dosage: med.dosage,
-          instructions: `${med.frequency} - ${med.instructions}`.trim()
+          frequency: med.frequency,
+          duration: med.duration,
+          instructions: med.instructions || `${med.frequency}`.trim()
         }))
       ];
 
       // Add text-based prescriptions as additional medicines
       if (prescriptionText.trim()) {
         const textPrescriptions = prescriptionText.split('\n').filter(line => line.trim());
-        textPrescriptions.forEach((prescription, index) => {
+        textPrescriptions.forEach((prescription) => {
           if (prescription.trim()) {
             prescriptionMedicines.push({
-              medicineId: Date.now() + prescriptionMedicines.length + index,
+              medicineId: null,
               medicineName: prescription.trim(),
               quantity: 1,
               dosage: "As prescribed",
+              frequency: "As directed",
+              duration: "As needed",
               instructions: "Take as directed by doctor"
             });
           }
         });
       }
 
-      // Create prescription object for pharmacy context
+      // Save prescription to database
       const prescriptionData = {
-        patientName: patientInfo.name,
-        patientId: patientInfo.id,
+        patientName: String(patientInfo.name || ''),
+        patientId: String(patientInfo.id || ''),
+        studentId: String(selectedPatient.studentId || selectedPatient.studentId || ''),
+        queueNo: String(selectedPatient.queueNo || ''),
         doctorName: "Dr. Smith", // You can get this from user context
-        medicines: prescriptionMedicines
+        prescriptionText: String(prescriptionText.trim() || ''),
+        instructions: "Take as directed by doctor",
+        medicines: prescriptionMedicines,
+        signature: signature,
+        signedAt: new Date().toISOString()
       };
 
-      // Add prescription to context (this will make it appear in pharmacy queue)
-      const prescriptionId = addPrescription(prescriptionData);
-      
-      // Update inventory quantities when prescription is sent
-      dispenseMedicines(prescriptionMedicines);
+      console.log('🔄 Saving prescription to database:', prescriptionData);
 
-      // Also maintain the existing queue service for compatibility
-      const legacyPrescription = {
-        prescriptionText,
-        medications: [...medications, ...prescriptionItems.map(item => ({
-          name: item.medicineName,
-          dosage: item.dosage,
-          frequency: item.frequency,
-          duration: item.duration,
-          instructions: item.instructions
-        }))],
-        doctorName: "Dr. Smith",
-        prescriptionDate: new Date().toISOString(),
-        patientName: patientInfo.name,
-        patientId: patientInfo.id,
-        queueNo: patientInfo.queueNo,
-        status: "Prescribed",
-        instructions: "Take as directed"
-      };
+      const response = await fetch('http://localhost:8081/api/prescriptions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(prescriptionData),
+      });
 
-      await addPrescriptionAndMoveToPharmacy(selectedPatient.queueNo, legacyPrescription);
+      if (!response.ok) {
+        if (response.status === 409) {
+          // Handle duplicate prescription
+          const result = await response.json();
+          alert(`⚠️ DUPLICATE PRESCRIPTION DETECTED\n\n${result.message}\n\nThe prescription already exists and patient is in pharmacy queue.`);
+          
+          // Still move to pharmacy queue and clear form
+          await addPrescriptionAndMoveToPharmacy(selectedPatient.queueNo, {
+            prescriptionId: result.existingPrescriptionId,
+            doctorName: "Dr. Smith",
+            status: "Already Prescribed",
+            isDuplicate: true
+          });
+          
+          // Clear the form
+          setPrescriptionText("");
+          setMedications([]);
+          setPrescriptionItems([]);
+          localStorage.removeItem('selectedPatient');
+          setSelectedPatient(null);
+          
+          return; // Exit early
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
       
-      alert(`Prescription #${prescriptionId} sent to pharmacy successfully! Patient ${patientInfo.name} moved to pharmacy queue.`);
-      
-      // Clear the form
-      setPrescriptionText("");
-      setMedications([]);
-      setPrescriptionItems([]);
-      
-      // Clear selected patient
-      localStorage.removeItem('selectedPatient');
-      setSelectedPatient(null);
+      if (result.success) {
+        console.log('✅ Prescription saved to database:', result.prescription);
+        
+        // Database prescription is created and will appear in pharmacy queue automatically
+        console.log('✅ Prescription will appear in pharmacy queue from database');
+        
+        // Reduce inventory for prescribed medicines
+        console.log('🔄 Reducing inventory for prescribed medicines...');
+        try {
+          await dispenseMedicines(prescriptionMedicines);
+          console.log('✅ Inventory successfully reduced for prescribed medicines');
+        } catch (inventoryError) {
+          console.warn('⚠️ Failed to reduce inventory:', inventoryError);
+          // Continue even if inventory reduction fails - pharmacist can handle manually
+        }
+        
+        // Move patient to pharmacy queue (without creating duplicate prescription)
+        await addPrescriptionAndMoveToPharmacy(selectedPatient.queueNo, {
+          prescriptionId: result.prescriptionId,
+          doctorName: "Dr. Smith",
+          prescriptionDate: new Date().toISOString(),
+          patientName: patientInfo.name,
+          patientId: patientInfo.id,
+          queueNo: patientInfo.queueNo,
+          status: "Prescribed",
+          instructions: "Take as directed",
+          // Mark as database prescription to avoid duplicate creation
+          isDatabasePrescription: true
+        });
+        
+        alert(`Prescription #${result.prescriptionId} sent to pharmacy successfully! Patient ${patientInfo.name} moved to pharmacy queue.`);
+        
+        // Clear the form
+        setPrescriptionText("");
+        setMedications([]);
+        setPrescriptionItems([]);
+        
+        // Clear selected patient
+        localStorage.removeItem('selectedPatient');
+        setSelectedPatient(null);
+        
+      } else {
+        throw new Error(result.message || 'Failed to save prescription to database');
+      }
       
     } catch (error) {
       console.error('Error sending prescription:', error);
-      alert('Error sending prescription to pharmacy. Please try again.');
+      
+      // If database save fails, still try to use legacy system
+      if (error.message.includes('HTTP') || error.message.includes('database')) {
+        try {
+          console.log('⚠️ Database save failed, using legacy system only');
+          
+          // Fallback: Create context prescription since database failed
+          console.log('⚠️ Database unavailable, using fallback context prescription');
+          const contextPrescriptionData = {
+            patientName: patientInfo.name,
+            patientId: patientInfo.id,
+            doctorName: "Dr. Smith",
+            medicines: prescriptionMedicines.map(med => ({
+              medicineId: med.medicineId,
+              medicineName: med.medicineName,
+              quantity: med.quantity,
+              dosage: med.dosage,
+              instructions: med.instructions
+            }))
+          };
+          const prescriptionId = addPrescription(contextPrescriptionData);
+          
+          // Reduce inventory for prescribed medicines (fallback)
+          console.log('🔄 Reducing inventory for prescribed medicines (fallback)...');
+          try {
+            await dispenseMedicines(prescriptionMedicines);
+            console.log('✅ Inventory successfully reduced for prescribed medicines (fallback)');
+          } catch (inventoryError) {
+            console.warn('⚠️ Failed to reduce inventory (fallback):', inventoryError);
+            // Continue even if inventory reduction fails - pharmacist can handle manually
+          }
+          
+          // Move to pharmacy with fallback prescription data
+          const fallbackPrescription = {
+            prescriptionText,
+            medications: [...medications, ...prescriptionItems.map(item => ({
+              name: item.medicineName,
+              dosage: item.dosage,
+              frequency: item.frequency,
+              duration: item.duration,
+              instructions: item.instructions
+            }))],
+            doctorName: "Dr. Smith",
+            prescriptionDate: new Date().toISOString(),
+            patientName: patientInfo.name,
+            patientId: patientInfo.id,
+            queueNo: patientInfo.queueNo,
+            status: "Prescribed",
+            instructions: "Take as directed",
+            // Mark as fallback to avoid confusion
+            isFallback: true
+          };
+
+          await addPrescriptionAndMoveToPharmacy(selectedPatient.queueNo, fallbackPrescription);
+          
+          alert(`⚠️ Prescription #${prescriptionId} sent to pharmacy (using legacy system - database unavailable). Patient ${patientInfo.name} moved to pharmacy queue.`);
+          
+          // Clear the form
+          setPrescriptionText("");
+          setMedications([]);
+          setPrescriptionItems([]);
+          
+          // Clear selected patient
+          localStorage.removeItem('selectedPatient');
+          setSelectedPatient(null);
+          
+        } catch (legacyError) {
+          console.error('Legacy system also failed:', legacyError);
+          alert('❌ Error sending prescription to pharmacy. Both database and legacy systems failed. Please try again.');
+        }
+      } else {
+        alert('❌ Error sending prescription to pharmacy. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -1218,22 +1363,42 @@ function DoctorPatient() {
                       </div>
                     )}
                     
-                    <div className="action-buttons">
-                      <button 
-                        className="action-btn secondary"
-                        disabled={!selectedPatient}
-                      >
-                        <span className="btn-icon">💾</span>
-                        Save Draft
-                      </button>
-                      <button 
-                        className="action-btn primary" 
-                        onClick={handleSign}
-                        disabled={!selectedPatient || isLoading || (prescriptionItems.length === 0 && medications.length === 0 && !prescriptionText.trim())}
-                      >
-                        <span className="btn-icon">✍️</span>
-                        {isLoading ? 'Sending...' : 'Send to Pharmacy'}
-                      </button>
+                    {/* Digital Signature Section */}
+                    <div className="signature-section">
+                      <h3 className="signature-title">Digital Signature Required</h3>
+                      <p className="signature-description">
+                        Please sign below to authorize this prescription before sending to pharmacy
+                      </p>
+                      <div className="signature-container">
+                        <DigitalSignature
+                          onSignatureChange={handleSignatureChange}
+                          disabled={isLoading}
+                        />
+                        {signatureError && (
+                          <div className="signature-error-message">
+                            {signatureError}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Action buttons */}
+                      <div className="action-buttons">
+                        <button 
+                          className="action-btn secondary"
+                          disabled={!selectedPatient}
+                        >
+                          <span className="btn-icon">💾</span>
+                          Save Draft
+                        </button>
+                        <button 
+                          className="action-btn primary" 
+                          onClick={handleSign}
+                          disabled={!selectedPatient || isLoading || (prescriptionItems.length === 0 && medications.length === 0 && !prescriptionText.trim())}
+                        >
+                          <span className="btn-icon">✍️</span>
+                          {isLoading ? 'Sending...' : 'Send to Pharmacy'}
+                        </button>
+                      </div>
                     </div>
                   </div>
 

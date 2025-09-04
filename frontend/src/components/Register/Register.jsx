@@ -2,24 +2,22 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Register.css";
 
-import { FaUser, FaEnvelope, FaLock, FaUserTag } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaLock, FaUserTag, FaCheckCircle } from "react-icons/fa";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    role: "",
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
 
-  // Only Student registration is allowed through public registration
-  const userRoles = [
-    "Student"
-  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -44,8 +42,10 @@ const Register = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          role: formData.role,
-          name: formData.name,
+          role: "Student",
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           email: formData.email,
           password: formData.password,
         }),
@@ -59,10 +59,21 @@ const Register = () => {
         return;
       }
 
-      alert(result.message + " Please login with your credentials.");
+      // Store user data for success message
+      const userInfo = {
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        role: "Student"
+      };
+      
+      setUserData(userInfo);
+      setShowSuccess(true);
 
-      // Redirect to login page after successful registration
-      navigate("/login");
+      // Show success message for 4 seconds then navigate to login
+      setTimeout(() => {
+        setShowSuccess(false);
+        navigate("/login");
+      }, 4000);
 
     } catch (error) {
       console.error("Registration error:", error);
@@ -74,6 +85,28 @@ const Register = () => {
 
   return (
     <div className="register-wrapper">
+      {/* Beautiful Success Message Overlay */}
+      {showSuccess && (
+        <div className="success-overlay">
+          <div className="success-message">
+            <div className="success-icon-container">
+              <FaCheckCircle className="success-icon" />
+            </div>
+            <h2 className="success-title">Registration Successful!</h2>
+            <p className="success-subtitle">Welcome to SmartMed, {userData?.name}!</p>
+            <p className="success-info">Your account has been created successfully.</p>
+            <div className="success-loading">
+              <div className="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <p>Redirecting to login page...</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="register-card">
         <div className="register-header">
           <h1>
@@ -88,29 +121,24 @@ const Register = () => {
           </p>
 
           <div className="input-group">
-            <FaUserTag className="icon" />
-            <select
-              name="role"
-              value={formData.role}
+            <FaUser className="icon" />
+            <input
+              type="text"
+              name="firstName"
+              placeholder="First Name"
+              value={formData.firstName}
               onChange={handleChange}
               required
-            >
-              <option value="">Select Category</option>
-              {userRoles.map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <div className="input-group">
             <FaUser className="icon" />
             <input
-              type="name"
-              name="name"
-              placeholder="Your Name"
-              value={formData.name}
+              type="text"
+              name="lastName"
+              placeholder="Last Name"
+              value={formData.lastName}
               onChange={handleChange}
               required
             />

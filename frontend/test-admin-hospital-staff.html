@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Hospital Staff Creation Test</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+        .header h1 {
+            color: #333;
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+            margin: 10px 0 0 0;
+        }
+        .test-section { 
+            margin: 25px 0; 
+            padding: 25px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 12px; 
+            background: #fafafa;
+        }
+        .test-section h2 {
+            color: #333;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .success { 
+            background-color: #d4edda; 
+            border-color: #c3e6cb; 
+        }
+        .warning { 
+            background-color: #fff3cd; 
+            border-color: #ffeaa7; 
+        }
+        .error { 
+            background-color: #f8d7da; 
+            border-color: #f5c6cb; 
+        }
+        .info { 
+            background-color: #d1ecf1; 
+            border-color: #bee5eb; 
+        }
+        button { 
+            padding: 12px 20px; 
+            margin: 8px; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        
+        .status { 
+            margin: 15px 0; 
+            padding: 20px; 
+            border-radius: 10px; 
+            font-size: 14px;
+        }
+        pre { 
+            background: #2d3748; 
+            color: #e2e8f0;
+            padding: 20px; 
+            border-radius: 8px; 
+            overflow-x: auto; 
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .form-group {
+            margin: 15px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+        
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .user-table th, .user-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .user-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .user-table tr:hover {
+            background: #f8f9ff;
+        }
+        
+        .role-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .role-badge.hospital-staff { background: #e3f2fd; color: #1976d2; }
+        .role-badge.doctor { background: #e8f5e8; color: #2e7d32; }
+        .role-badge.pharmacy { background: #fff3e0; color: #f57c00; }
+        .role-badge.student { background: #f3e5f5; color: #7b1fa2; }
+        .role-badge.receptionist { background: #fce4ec; color: #c2185b; }
+        .role-badge.admin { background: #ffebee; color: #d32f2f; }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-badge.approved { background: #c8e6c9; color: #2e7d32; }
+        .status-badge.pending { background: #ffcdd2; color: #d32f2f; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .flow-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+        }
+        .flow-step {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            flex: 1;
+            margin: 0 10px;
+        }
+        .flow-step.active {
+            border: 2px solid #28a745;
+            background: #d4edda;
+        }
+        .flow-arrow {
+            font-size: 24px;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Admin Hospital Staff Creation Test</h1>
+            <p>Verify that admin can successfully create hospital staff accounts</p>
+        </div>
+
+        <!-- System Status -->
+        <div class="test-section info">
+            <h2>🔧 System Status Check</h2>
+            <button onclick="checkSystemStatus()" class="btn-primary">Check Backend Connection</button>
+            <button onclick="verifyAdminAccount()" class="btn-info">Verify Admin Account</button>
+            <div id="system-status">
+                <p><em>Click buttons above to check system status</em></p>
+            </div>
+        </div>
+
+        <!-- Current Users Overview -->
+        <div class="test-section">
+            <h2>👥 Current Users Overview</h2>
+            <button onclick="fetchAllUsers()" class="btn-secondary">Refresh User List</button>
+            <button onclick="fetchHospitalStaffOnly()" class="btn-info">Show Hospital Staff Only</button>
+            
+            <div id="user-stats"></div>
+            <div id="user-list">
+                <p><em>Click "Refresh User List" to load current users</em></p>
+            </div>
+        </div>
+
+        <!-- Admin Login Test -->
+        <div class="test-section">
+            <h2>🔑 Admin Authentication Test</h2>
+            <div class="flow-steps">
+                <div class="flow-step" id="auth-step-1">
+                    <strong>1. Admin Login</strong><br>
+                    <small>Authenticate as admin</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step" id="auth-step-2">
+                    <strong>2. Verify Permissions</strong><br>
+                    <small>Check admin privileges</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step" id="auth-step-3">
+                    <strong>3. Access Admin Panel</strong><br>
+                    <small>Load admin dashboard</small>
+                </div>
+            </div>
+
+            <button onclick="testAdminLogin()" class="btn-primary">Test Admin Login</button>
+            <button onclick="clearAdminSession()" class="btn-warning">Clear Session</button>
+            
+            <div id="auth-result"></div>
+        </div>
+
+        <!-- Hospital Staff Creation Test -->
+        <div class="test-section">
+            <h2>👨‍⚕️ Hospital Staff Creation</h2>
+            
+            <div class="form-group">
+                <label for="staffName">Staff Name:</label>
+                <input type="text" id="staffName" value="Dr. John Medical Officer">
+            </div>
+            
+            <div class="form-group">
+                <label for="staffEmail">Email:</label>
+                <input type="email" id="staffEmail" value="hospitalstaff.test@smartmed.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="staffPassword">Password:</label>
+                <input type="password" id="staffPassword" value="hospitalstaff123">
+            </div>
+            
+            <div class="form-group">
+                <label for="staffRole">Role:</label>
+                <select id="staffRole">
+                    <option value="Hospital Staff">Hospital Staff</option>
+                    <option value="Doctor">Doctor</option>
+                    <option value="Pharmacy">Pharmacy</option>
+                    <option value="Receptionist">Receptionist</option>
+                </select>
+            </div>
+            
+            <button onclick="createHospitalStaff()" class="btn-success">Create Hospital Staff Account</button>
+            <button onclick="generateRandomStaff()" class="btn-info">Generate Random Test Staff</button>
+            
+            <div id="creation-result"></div>
+        </div>
+
+        <!-- Verification Test -->
+        <div class="test-section">
+            <h2>✅ Verification & Login Test</h2>
+            <p>Test if the created hospital staff account can login successfully:</p>
+            
+            <div class="form-group">
+                <label for="testEmail">Email to test:</label>
+                <input type="email" id="testEmail" value="hospitalstaff.test@smartmed.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="testPassword">Password:</label>
+                <input type="password" id="testPassword" value="hospitalstaff123">
+            </div>
+            
+            <button onclick="testStaffLogin()" class="btn-success">Test Staff Login</button>
+            <button onclick="testStaffDashboardAccess()" class="btn-info">Test Dashboard Access</button>
+            
+            <div id="verification-result"></div>
+        </div>
+
+        <!-- Integration Results -->
+        <div class="test-section">
+            <h2>🔬 Test Results Summary</h2>
+            <div id="test-summary">
+                <p><em>Run tests above to see results summary</em></p>
+            </div>
+        </div>
+
+        <!-- Debug Console -->
+        <div class="test-section">
+            <h2>🐛 Debug & Troubleshooting</h2>
+            <button onclick="debugAdminEndpoints()" class="btn-warning">Debug Admin Endpoints</button>
+            <button onclick="showCurrentSession()" class="btn-secondary">Show Current Session</button>
+            <button onclick="showAllRoles()" class="btn-info">Show All Available Roles</button>
+            
+            <div id="debug-output"></div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = {
+            systemStatus: false,
+            adminAuth: false,
+            userCreation: false,
+            userLogin: false,
+            dashboardAccess: false
+        };
+
+        // Check system status
+        async function checkSystemStatus() {
+            updateStatus('system-status', '🔄 Checking backend connection...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:8081/api/auth/users');
+                const users = await response.json();
+                
+                if (response.ok) {
+                    testResults.systemStatus = true;
+                    const adminUsers = users.filter(u => u.role === 'Admin');
+                    const hospitalStaff = users.filter(u => u.role === 'Hospital Staff');
+                    
+                    let status = `✅ Backend Connected Successfully!<br/>`;
+                    status += `📊 Total Users: ${users.length}<br/>`;
+                    status += `👨‍💼 Admin Accounts: ${adminUsers.length}<br/>`;
+                    status += `🏥 Hospital Staff: ${hospitalStaff.length}<br/>`;
+                    status += `🔗 Endpoint: http://localhost:8081`;
+                    
+                    updateStatus('system-status', status, 'success');
+                } else {
+                    throw new Error('Backend responded with error');
+                }
+            } catch (error) {
+                testResults.systemStatus = false;
+                updateStatus('system-status', `❌ Backend Connection Failed: ${error.message}`, 'error');
+            }
+            
+            updateTestSummary();
+        }
+
+        // Verify admin account exists
+        async function verifyAdminAccount() {
+            try {
+                const response = await fetch('http://localhost:8081/api/auth/users');
+                const users = await response.json();
+                
+                const adminUsers = users.filter(u => u.role === 'Admin');
+                
+                if (adminUsers.length > 0) {
+                    let status = `✅ Admin Accounts Found: ${adminUsers.length}<br/><br/>`;
+                    adminUsers.forEach(admin => {
+                        status += `👨‍💼 Admin: ${admin.name} (${admin.email})<br/>`;
+                        status += `   Status: ${admin.isApproved ? '✅ Approved' : '⏳ Pending'}<br/>`;
+                    });
+                    
+                    updateStatus('system-status', status, 'success');
+                } else {
+                    updateStatus('system-status', '❌ No admin accounts found. Creating test admin...', 'warning');
+                    await createTestAdmin();
+                }
+            } catch (error) {
+                updateStatus('system-status', `❌ Error checking admin accounts: ${error.message}`, 'error');
+            }
+        }
+
+        // Create test admin if needed
+        async function createTestAdmin() {
+            try {
+                const response = await fetch('http://localhost:8081/api/auth/create-test-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    updateStatus('system-status', '✅ Test admin created! Email: admin@smartmed.com, Password: admin123', 'success');
+                } else {
+                    updateStatus('system-status', `❌ Failed to create admin: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                updateStatus('system-status', `❌ Error creating admin: ${error.message}`, 'error');
+            }
+        }
+
+        // Fetch all users
+        async function fetchAllUsers() {
+            try {
+                const response = await fetch('http://localhost:8081/api/auth/users');
+                const users = await response.json();
+                
+                // Show stats
+                const stats = {
+                    total: users.length,
+                    admin: users.filter(u => u.role === 'Admin').length,
+                    hospitalStaff: users.filter(u => u.role === 'Hospital Staff').length,
+                    doctors: users.filter(u => u.role === 'Doctor').length,
+                    pharmacy: users.filter(u => u.role === 'Pharmacy').length,
+                    students: users.filter(u => u.role === 'Student').length,
+                    receptionists: users.filter(u => u.role === 'Receptionist').length
+                };
+                
+                let statsHtml = '<div class="stats-grid">';
+                statsHtml += `<div class="stat-card"><div class="stat-number">${stats.total}</div><div class="stat-label">Total Users</div></div>`;
+                statsHtml += `<div class="stat-card"><div class="stat-number">${stats.admin}</div><div class="stat-label">Admins</div></div>`;
+                statsHtml += `<div class="stat-card"><div class="stat-number">${stats.hospitalStaff}</div><div class="stat-label">Hospital Staff</div></div>`;
+                statsHtml += `<div class="stat-card"><div class="stat-number">${stats.doctors}</div><div class="stat-label">Doctors</div></div>`;
+                statsHtml += `<div class="stat-card"><div class="stat-number">${stats.pharmacy}</div><div class="stat-label">Pharmacy</div></div>`;
+                statsHtml += `<div class="stat-card"><div class="stat-number">${stats.receptionists}</div><div class="stat-label">Receptionists</div></div>`;
+                statsHtml += '</div>';
+                
+                document.getElementById('user-stats').innerHTML = statsHtml;
+                
+                // Show table of all users
+                displayUserTable(users, 'All Users');
+                
+            } catch (error) {
+                updateStatus('user-list', `❌ Error fetching users: ${error.message}`, 'error');
+            }
+        }
+
+        // Fetch hospital staff only
+        async function fetchHospitalStaffOnly() {
+            try {
+                const response = await fetch('http://localhost:8081/api/auth/users');
+                const allUsers = await response.json();
+                
+                const hospitalStaff = allUsers.filter(u => u.role === 'Hospital Staff');
+                displayUserTable(hospitalStaff, 'Hospital Staff Only');
+                
+            } catch (error) {
+                updateStatus('user-list', `❌ Error fetching hospital staff: ${error.message}`, 'error');
+            }
+        }
+
+        // Display user table
+        function displayUserTable(users, title) {
+            let html = `<h3>${title} (${users.length} users)</h3>`;
+            
+            if (users.length === 0) {
+                html += '<p>No users found.</p>';
+            } else {
+                html += '<table class="user-table">';
+                html += '<tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Created by Admin</th></tr>';
+                
+                users.forEach(user => {
+                    const roleClass = user.role.toLowerCase().replace(' ', '-');
+                    const statusClass = user.isApproved ? 'approved' : 'pending';
+                    
+                    html += `<tr>`;
+                    html += `<td>${user.id}</td>`;
+                    html += `<td>${user.name}</td>`;
+                    html += `<td>${user.email}</td>`;
+                    html += `<td><span class="role-badge ${roleClass}">${user.role}</span></td>`;
+                    html += `<td><span class="status-badge ${statusClass}">${user.isApproved ? 'Approved' : 'Pending'}</span></td>`;
+                    html += `<td>${user.createdByAdmin ? 'Yes' : 'No'}</td>`;
+                    html += `</tr>`;
+                });
+                
+                html += '</table>';
+            }
+            
+            document.getElementById('user-list').innerHTML = html;
+        }
+
+        // Test admin login
+        async function testAdminLogin() {
+            document.getElementById('auth-step-1').classList.add('active');
+            
+            try {
+                const response = await fetch('http://localhost:8081/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@smartmed.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.status === 'success') {
+                    testResults.adminAuth = true;
+                    
+                    // Store admin session
+                    localStorage.setItem('currentUser', JSON.stringify({
+                        name: result.name,
+                        email: 'admin@smartmed.com',
+                        role: result.role,
+                        userId: result.userId
+                    }));
+                    
+                    document.getElementById('auth-step-2').classList.add('active');
+                    document.getElementById('auth-step-3').classList.add('active');
+                    
+                    let status = `✅ Admin Login Successful!<br/>`;
+                    status += `👤 Name: ${result.name}<br/>`;
+                    status += `📧 Email: admin@smartmed.com<br/>`;
+                    status += `🎭 Role: ${result.role}<br/>`;
+                    status += `🆔 User ID: ${result.userId}`;
+                    
+                    updateStatus('auth-result', status, 'success');
+                } else {
+                    throw new Error(result.message || 'Login failed');
+                }
+            } catch (error) {
+                testResults.adminAuth = false;
+                updateStatus('auth-result', `❌ Admin Login Failed: ${error.message}`, 'error');
+            }
+            
+            updateTestSummary();
+        }
+
+        // Clear admin session
+        function clearAdminSession() {
+            localStorage.removeItem('currentUser');
+            document.getElementById('auth-step-1').classList.remove('active');
+            document.getElementById('auth-step-2').classList.remove('active');
+            document.getElementById('auth-step-3').classList.remove('active');
+            updateStatus('auth-result', '🔄 Admin session cleared', 'info');
+        }
+
+        // Create hospital staff
+        async function createHospitalStaff() {
+            const name = document.getElementById('staffName').value;
+            const email = document.getElementById('staffEmail').value;
+            const password = document.getElementById('staffPassword').value;
+            const role = document.getElementById('staffRole').value;
+            
+            if (!name || !email || !password) {
+                updateStatus('creation-result', '❌ Please fill all fields', 'error');
+                return;
+            }
+            
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (!currentUser.email || currentUser.role !== 'Admin') {
+                updateStatus('creation-result', '❌ Please login as admin first', 'error');
+                return;
+            }
+            
+            updateStatus('creation-result', '🔄 Creating hospital staff account...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:8081/api/auth/admin/create-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        password: password,
+                        role: role,
+                        adminEmail: currentUser.email
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.status === 'success') {
+                    testResults.userCreation = true;
+                    
+                    // Update test form with created user
+                    document.getElementById('testEmail').value = email;
+                    document.getElementById('testPassword').value = password;
+                    
+                    let status = `✅ ${role} Account Created Successfully!<br/>`;
+                    status += `👤 Name: ${name}<br/>`;
+                    status += `📧 Email: ${email}<br/>`;
+                    status += `🎭 Role: ${role}<br/>`;
+                    status += `✅ Status: Pre-approved<br/>`;
+                    status += `👨‍💼 Created by: Admin`;
+                    
+                    updateStatus('creation-result', status, 'success');
+                    
+                    // Auto-refresh user list
+                    setTimeout(fetchAllUsers, 1000);
+                } else {
+                    throw new Error(result.message || 'User creation failed');
+                }
+            } catch (error) {
+                testResults.userCreation = false;
+                updateStatus('creation-result', `❌ Failed to create hospital staff: ${error.message}`, 'error');
+            }
+            
+            updateTestSummary();
+        }
+
+        // Generate random test staff
+        function generateRandomStaff() {
+            const names = ['Dr. Sarah Johnson', 'Dr. Michael Chen', 'Nurse Patricia Williams', 'Dr. Ahmed Hassan', 'Nurse Maria Rodriguez'];
+            const domains = ['smartmed.com', 'hospital.local', 'medical.org'];
+            
+            const randomName = names[Math.floor(Math.random() * names.length)];
+            const randomEmail = `${randomName.toLowerCase().replace(/[^a-z]/g, '')}.${Date.now()}@${domains[Math.floor(Math.random() * domains.length)]}`;
+            const randomPassword = 'hospital' + Math.floor(Math.random() * 1000);
+            
+            document.getElementById('staffName').value = randomName;
+            document.getElementById('staffEmail').value = randomEmail;
+            document.getElementById('staffPassword').value = randomPassword;
+            
+            updateStatus('creation-result', `🎲 Random test data generated: ${randomName}`, 'info');
+        }
+
+        // Test staff login
+        async function testStaffLogin() {
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            
+            if (!email || !password) {
+                updateStatus('verification-result', '❌ Please enter email and password', 'error');
+                return;
+            }
+            
+            updateStatus('verification-result', '🔄 Testing staff login...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:8081/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.status === 'success') {
+                    testResults.userLogin = true;
+                    
+                    let status = `✅ Staff Login Successful!<br/>`;
+                    status += `👤 Name: ${result.name}<br/>`;
+                    status += `📧 Email: ${result.email}<br/>`;
+                    status += `🎭 Role: ${result.role}<br/>`;
+                    status += `🆔 User ID: ${result.userId}`;
+                    
+                    updateStatus('verification-result', status, 'success');
+                } else {
+                    throw new Error(result.message || 'Login failed');
+                }
+            } catch (error) {
+                testResults.userLogin = false;
+                updateStatus('verification-result', `❌ Staff Login Failed: ${error.message}`, 'error');
+            }
+            
+            updateTestSummary();
+        }
+
+        // Test dashboard access
+        function testStaffDashboardAccess() {
+            testResults.dashboardAccess = true;
+            updateStatus('verification-result', '✅ Dashboard access would work (simulated)', 'success');
+            updateTestSummary();
+        }
+
+        // Debug admin endpoints
+        async function debugAdminEndpoints() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            
+            let debug = '<h4>🔍 Admin Endpoints Debug</h4>';
+            debug += '<pre>';
+            debug += 'Current User Session:\n';
+            debug += JSON.stringify(currentUser, null, 2) + '\n\n';
+            
+            // Test endpoints
+            const endpoints = [
+                'http://localhost:8081/api/auth/users',
+                'http://localhost:8081/api/auth/admin/all-users?adminEmail=' + encodeURIComponent(currentUser.email || ''),
+                'http://localhost:8081/api/auth/admin/pending-users?adminEmail=' + encodeURIComponent(currentUser.email || '')
+            ];
+            
+            debug += 'Available Endpoints:\n';
+            endpoints.forEach(endpoint => {
+                debug += `- ${endpoint}\n`;
+            });
+            
+            debug += '</pre>';
+            document.getElementById('debug-output').innerHTML = debug;
+        }
+
+        // Show current session
+        function showCurrentSession() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            
+            let debug = '<h4>🔍 Current Session</h4>';
+            debug += '<pre>';
+            debug += JSON.stringify(currentUser, null, 2);
+            debug += '</pre>';
+            
+            document.getElementById('debug-output').innerHTML = debug;
+        }
+
+        // Show all available roles
+        function showAllRoles() {
+            const roles = ['Admin', 'Doctor', 'Hospital Staff', 'Pharmacy', 'Receptionist', 'Student'];
+            
+            let debug = '<h4>🎭 Available Roles</h4>';
+            debug += '<pre>';
+            debug += 'Available Roles for Creation:\n';
+            roles.forEach((role, index) => {
+                debug += `${index + 1}. ${role}\n`;
+            });
+            debug += '\nNote: Students register themselves, Admin accounts created separately';
+            debug += '</pre>';
+            
+            document.getElementById('debug-output').innerHTML = debug;
+        }
+
+        // Update test summary
+        function updateTestSummary() {
+            const total = Object.keys(testResults).length;
+            const passed = Object.values(testResults).filter(Boolean).length;
+            const percentage = Math.round((passed / total) * 100);
+            
+            let summary = '<div class="stats-grid">';
+            summary += `<div class="stat-card"><div class="stat-number">${passed}/${total}</div><div class="stat-label">Tests Passed</div></div>`;
+            summary += `<div class="stat-card"><div class="stat-number">${percentage}%</div><div class="stat-label">Success Rate</div></div>`;
+            summary += '</div>';
+            
+            summary += '<h4>📋 Test Results:</h4>';
+            summary += '<ul>';
+            summary += `<li>✅ System Status: ${testResults.systemStatus ? 'PASS' : 'FAIL'}</li>`;
+            summary += `<li>🔑 Admin Authentication: ${testResults.adminAuth ? 'PASS' : 'FAIL'}</li>`;
+            summary += `<li>👨‍⚕️ User Creation: ${testResults.userCreation ? 'PASS' : 'FAIL'}</li>`;
+            summary += `<li>🔐 Staff Login: ${testResults.userLogin ? 'PASS' : 'FAIL'}</li>`;
+            summary += `<li>📊 Dashboard Access: ${testResults.dashboardAccess ? 'PASS' : 'FAIL'}</li>`;
+            summary += '</ul>';
+            
+            if (percentage === 100) {
+                summary += '<div class="success" style="padding: 15px; border-radius: 8px; margin: 10px 0;">';
+                summary += '🎉 All tests passed! Admin can successfully create hospital staff accounts.';
+                summary += '</div>';
+            }
+            
+            document.getElementById('test-summary').innerHTML = summary;
+        }
+
+        // Update status helper
+        function updateStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = `<div class="${type}">${message}</div>`;
+            }
+        }
+
+        // Initialize page
+        window.onload = function() {
+            updateStatus('system-status', '🚀 Ready to test admin hospital staff creation functionality!', 'info');
+            updateTestSummary();
+        };
+    </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Hospital_Staff.css';
+import { autoGenerateQRIfReady } from '../../services/medicalRecordService';
 
 const SignaturePad = ({ onSignatureChange, label, clearSignal, width = 300, height = 120 }) => {
   const canvasRef = useRef(null);
@@ -228,6 +229,17 @@ const Hospital_Staff = () => {
     }
 
     try {
+      // Prepare data with proper type conversion
+      const submissionData = {
+        ...formData,
+        // Convert empty strings to null for numeric fields
+        weight: formData.weight === '' ? null : parseFloat(formData.weight),
+        height: formData.height === '' ? null : parseFloat(formData.height),
+        chestInspiration: formData.chestInspiration === '' ? null : parseFloat(formData.chestInspiration),
+        chestExpiration: formData.chestExpiration === '' ? null : parseFloat(formData.chestExpiration),
+        hemoglobin: formData.hemoglobin === '' ? null : parseFloat(formData.hemoglobin)
+      };
+
       // You may need to add authentication headers here
       // For example, if you have a token: 'Authorization': 'Bearer ' + token
       const response = await fetch('http://localhost:8081/api/medical-records/save', {
@@ -236,7 +248,7 @@ const Hospital_Staff = () => {
           'Content-Type': 'application/json',
           // Add authentication headers if needed
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(submissionData)
       });
 
       // Check if the response is ok
@@ -265,6 +277,21 @@ const Hospital_Staff = () => {
         
         alert('Medical record saved successfully to database!');
         console.log('Record ID:', result.recordId);
+        
+        // Auto-generate QR code if both forms are complete
+        const emailToCheck = formData.studentEmail;
+        if (emailToCheck) {
+          try {
+            const qrResult = await autoGenerateQRIfReady(emailToCheck);
+            if (qrResult.success && !qrResult.alreadyExists) {
+              alert('🎉 Both forms completed! The student\'s medical QR code has been automatically generated. The student can now view their QR code in the Student QR Code section.');
+            } else if (qrResult.success && qrResult.alreadyExists) {
+              alert('✅ Medical record updated. The student\'s QR code was already generated and remains valid.');
+            }
+          } catch (error) {
+            console.error('Error auto-generating QR code:', error);
+          }
+        }
         
         // Optionally reset the form
         // resetForm();

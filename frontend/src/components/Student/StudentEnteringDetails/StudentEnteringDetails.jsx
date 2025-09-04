@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import "./StudentEnteringDetails.css";
 import Avatar from "../../common/Avatar/Avatar";
+import { autoGenerateQRIfReady } from '../../../services/medicalRecordService';
 
 function StudentEnteringDetails() {
   // Get current user data and auto-populate
@@ -8,6 +9,8 @@ function StudentEnteringDetails() {
   
   const [formData, setFormData] = useState({
     // Basic Information - auto-populate from registration
+    firstName: currentUser.name ? currentUser.name.split(' ')[0] : "",
+    lastName: currentUser.name ? currentUser.name.split(' ').slice(1).join(' ') : "",
     fullName: currentUser.name || "",
     nic: "",
     studentRegistrationNumber: "",
@@ -81,10 +84,19 @@ function StudentEnteringDetails() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
+    const updatedData = {
+      ...formData,
       [name]: value
-    }));
+    };
+    
+    // Auto-update fullName when firstName or lastName changes
+    if (name === 'firstName' || name === 'lastName') {
+      const firstName = name === 'firstName' ? value : formData.firstName;
+      const lastName = name === 'lastName' ? value : formData.lastName;
+      updatedData.fullName = `${firstName} ${lastName}`.trim();
+    }
+    
+    setFormData(updatedData);
   };
 
   const handleImageUpload = (e) => {
@@ -182,6 +194,19 @@ function StudentEnteringDetails() {
         alert('Student details saved successfully!');
         console.log('Saved with ID:', result.studentId);
         
+        // Auto-generate QR code if both forms are complete
+        const emailToCheck = currentUser?.email || formData.email;
+        if (emailToCheck) {
+          try {
+            const qrResult = await autoGenerateQRIfReady(emailToCheck);
+            if (qrResult.success && !qrResult.alreadyExists) {
+              alert('🎉 Both forms completed! Your medical QR code has been automatically generated. You can view it in the QR Code section.');
+            }
+          } catch (error) {
+            console.error('Error auto-generating QR code:', error);
+          }
+        }
+        
         // Trigger refresh event for dashboard
         window.dispatchEvent(new CustomEvent('studentDataUpdated'));
       } else {
@@ -210,9 +235,19 @@ function StudentEnteringDetails() {
             <div className="form-group">
               <input
                 type="text"
-                name="fullName"
-                placeholder="Full Name"
-                value={formData.fullName}
+                name="firstName"
+                placeholder="First Name"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                name="lastName"
+                placeholder="Last Name"
+                value={formData.lastName}
                 onChange={handleInputChange}
                 required
               />
