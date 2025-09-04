@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import "./App.css";
 import { PrescriptionProvider } from "./contexts/PrescriptionContext";
@@ -18,7 +18,6 @@ import Reports from "./components/Pharmacy/Reports/Reports";
 import StudentSidebar from "./components/Student/StudentSidebar/StudentSidebar";
 import StudentDashboard from "./components/Student/Dashboard/StudentDashboard";
 import StudentProfile from "./components/Student/StudentProfile/StudentProfile";
-import StudentHistory from "./components/Student/StudentHistory/StudentHistory";
 import StudentReports from "./components/Student/StudentReports/StudentReports";
 import StudentTelemed from './components/Student/StudentTelemed/StudentTelemed';
 import StudentTelemedCall from './components/Student/StudentTelemedCall/StudentTelemedCall';
@@ -63,6 +62,7 @@ import ProtectedRoute from './components/common/ProtectedRoute/ProtectedRoute';
 function App() {
   const location = useLocation();
   const pathname = location.pathname;
+  const [currentUser, setCurrentUser] = useState(null);
 
   const isStudent = pathname.startsWith("/student");
   const isDoctor = pathname.startsWith("/doctor");
@@ -75,6 +75,37 @@ function App() {
   const isIntro = pathname === "/intro" || pathname === "/";
 
   const isPharmacy = !isStudent && !isDoctor && !isReceptionist && !isAdmin && !isRegister && !isLogin && !isHospitalStaff && !isIntro;
+
+  // Load current user data from localStorage
+  useEffect(() => {
+    const loadCurrentUser = () => {
+      try {
+        const userData = localStorage.getItem('currentUser');
+        if (userData) {
+          const user = JSON.parse(userData);
+          setCurrentUser(user);
+        }
+      } catch (error) {
+        console.error('Error loading current user:', error);
+        setCurrentUser(null);
+      }
+    };
+
+    loadCurrentUser();
+
+    // Listen for localStorage changes (useful if user logs out in another tab)
+    const handleStorageChange = (e) => {
+      if (e.key === 'currentUser') {
+        loadCurrentUser();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [pathname]); // Re-run when pathname changes
 
   // Helper function to get user role
   const getUserRole = () => {
@@ -110,7 +141,7 @@ function App() {
         {!isRegister && !isLogin && !isHospitalStaff && !isIntro && !isAdmin && (
           <TopBar 
             userRole={getUserRole()}
-            userName="John Doe" // This should come from authentication context/localStorage
+            userName={currentUser?.name || 'User'}
             onLogout={handleLogout}
             onNotifications={handleNotifications}
             onProfile={handleProfile}
@@ -164,11 +195,7 @@ function App() {
                 <StudentProfile />
               </ProtectedRoute>
             } />
-            <Route path="/student/history" element={
-              <ProtectedRoute allowedRoles={['Student']}>
-                <StudentHistory />
-              </ProtectedRoute>
-            } />
+           
             <Route path="/student/reports" element={
               <ProtectedRoute allowedRoles={['Student']}>
                 <StudentReports />

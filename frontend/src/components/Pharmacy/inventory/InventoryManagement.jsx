@@ -181,43 +181,6 @@ function InventoryManagement() {
   const expiredMedicines = getExpiredMedicines();
   const nearExpiryMedicines = getNearExpiryMedicines();
 
-  // Demo function to add sample prescription (for testing)
-  const addSamplePrescription = () => {
-    const samplePatients = [
-      { name: "John Doe", id: "22IT099" },
-      { name: "Jane Smith", id: "22CS045" },
-      { name: "Mike Johnson", id: "22ME078" },
-      { name: "Sarah Wilson", id: "22EE032" }
-    ];
-    const sampleDoctors = ["Dr. Smith", "Dr. Johnson", "Dr. Brown", "Dr. Davis"];
-    
-    const randomPatient = samplePatients[Math.floor(Math.random() * samplePatients.length)];
-    const randomDoctor = sampleDoctors[Math.floor(Math.random() * sampleDoctors.length)];
-    
-    const samplePrescription = {
-      patientName: randomPatient.name,
-      patientId: randomPatient.id,
-      doctorName: randomDoctor,
-      medicines: [
-        { 
-          medicineId: 1, 
-          medicineName: "Paracetamol", 
-          quantity: Math.floor(Math.random() * 15) + 5, 
-          dosage: "500mg", 
-          instructions: "Take 1 tablet twice daily after meals" 
-        },
-        { 
-          medicineId: 2, 
-          medicineName: "Amoxicillin", 
-          quantity: Math.floor(Math.random() * 10) + 5, 
-          dosage: "250mg", 
-          instructions: "Take 1 tablet three times daily" 
-        }
-      ]
-    };
-    
-    addPrescription(samplePrescription);
-  };
 
   return (
     <div className="inventory-container">
@@ -338,13 +301,6 @@ function InventoryManagement() {
           <div className="section-header">
             <h2>Prescription Queue</h2>
             <p>Prescriptions waiting to be dispensed</p>
-            <button 
-              className="add-medicine-btn" 
-              onClick={addSamplePrescription}
-              style={{ fontSize: '12px', padding: '8px 16px' }}
-            >
-              + Add Demo Prescription
-            </button>
           </div>
           
           {prescriptions.length === 0 ? (

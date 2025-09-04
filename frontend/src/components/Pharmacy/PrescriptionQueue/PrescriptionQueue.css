@@ -48,6 +48,94 @@
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
+/* Digital Signature Section Styles */
+.signature-section {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-top: 1.5rem;
+  overflow: hidden;
+}
+
+.signature-content {
+  padding: 1.5rem;
+}
+
+.pharmacy-signature-display {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.pharmacy-signature-display .signature-content {
+  padding: 0;
+}
+
+.pharmacy-signature-display .signature-image-container {
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  background: var(--gray-50);
+  margin-bottom: 1rem;
+}
+
+.pharmacy-signature-display .signature-image {
+  max-height: 120px;
+  border-radius: var(--radius-sm);
+}
+
+.pharmacy-signature-display .signature-info {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pharmacy-signature-display .signature-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.pharmacy-signature-display .signature-detail:last-child {
+  border-bottom: none;
+}
+
+.pharmacy-signature-display .detail-label {
+  font-weight: 500;
+  color: var(--gray-600);
+  font-size: 0.875rem;
+}
+
+.pharmacy-signature-display .detail-value {
+  font-weight: 600;
+  color: var(--gray-900);
+  font-size: 0.875rem;
+}
+
+.pharmacy-signature-display .signature-validation {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--success-50);
+  border: 1px solid var(--success-500);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pharmacy-signature-display .validation-icon {
+  color: var(--success-500);
+  font-weight: bold;
+}
+
+.pharmacy-signature-display .validation-text {
+  color: var(--success-500);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
 /* Typography Hierarchy */
 .title {
   font-size: 2.25rem;
@@ -67,17 +155,16 @@
 }
 
 /* Statistics Grid */
-.stats-grid {
+.queue-container .queue-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 2.5rem;
-  margin-bottom: 3.5rem;
+  gap: 0rem;
 }
 
 .stat-card {
   background: white;
   border-radius: var(--radius-xl);
-  padding: 3.75rem;
+  padding: 1.75rem;
   border: 1px solid var(--gray-200);
   box-shadow: var(--shadow-sm);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -101,7 +188,7 @@
   border-color: var(--gray-300);
 }
 
-.stat-number {
+.stat-card .stat-number {
   font-size: 2.5rem;
   font-weight: 800;
   color: var(--gray-900);
@@ -110,12 +197,13 @@
   font-feature-settings: 'tnum';
 }
 
-.stat-label {
+.stat-card .stat-label {
   font-size: 0.875rem;
   color: var(--gray-600);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  padding-right: 5rem;
 }
 
 /* Search Section */

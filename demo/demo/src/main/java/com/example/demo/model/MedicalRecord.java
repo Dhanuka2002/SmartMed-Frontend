@@ -77,6 +77,10 @@ public class MedicalRecord {
     @Column(columnDefinition = "TEXT")
     private String medicalCondition;
     private String studentName;
+    @Column(name = "student_email")
+    private String studentEmail;
+    @Column(name = "email")
+    private String email;
     private String fitForStudies;
     @Column(columnDefinition = "TEXT")
     private String reason;
@@ -457,6 +461,22 @@ public class MedicalRecord {
 
     public void setStudentName(String studentName) {
         this.studentName = studentName;
+    }
+
+    public String getStudentEmail() {
+        return studentEmail;
+    }
+
+    public void setStudentEmail(String studentEmail) {
+        this.studentEmail = studentEmail;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getFitForStudies() {
