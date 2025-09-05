@@ -11,7 +11,7 @@ public class MailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    public void sendRegistrationEmail(String toEmail, String userName) {
+    public void sendRegistrationEmail(String toEmail, String userName, String password) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("pasindurandima12347@gmail.com");
         message.setTo(toEmail);
@@ -22,6 +22,7 @@ public class MailService {
                 "Account Details:\n" +
                 "• Name: " + userName + "\n" +
                 "• Email: " + toEmail + "\n" +
+                "• Password: " + password + "\n" +
                 "• Role: Student\n" +
                 "• Registration Date: " + new java.util.Date() + "\n\n" +
                 "What's next?\n" +

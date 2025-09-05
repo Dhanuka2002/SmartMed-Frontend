@@ -74,7 +74,7 @@ public class AuthController {
 
         // Send confirmation email - wrap in try-catch to avoid failure on mail issues
         try {
-            mailService.sendRegistrationEmail(user.getEmail(), user.getName());
+            mailService.sendRegistrationEmail(user.getEmail(), user.getName(), password);
         } catch (Exception e) {
             System.err.println("Failed to send email: " + e.getMessage());
         }
@@ -172,7 +172,7 @@ public class AuthController {
         
         // Send welcome email
         try {
-            mailService.sendRegistrationEmail(email, name);
+            mailService.sendRegistrationEmail(email, name, password);
         } catch (Exception e) {
             System.err.println("Failed to send email: " + e.getMessage());
         }
