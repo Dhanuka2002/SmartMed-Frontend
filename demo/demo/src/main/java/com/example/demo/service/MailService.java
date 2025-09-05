@@ -13,11 +13,29 @@ public class MailService {
 
     public void sendRegistrationEmail(String toEmail, String userName) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("your-email@gmail.com");  // ✅ Your email address
-        message.setTo(toEmail);                   // ✅ User's email address
-        message.setSubject("Registration Successful - SmartMed");
-        message.setText("Hello " + userName + ",\n\nYour registration was successful!\n\nThank you for using SmartMed!");
-
+        message.setFrom("pasindurandima12347@gmail.com");
+        message.setTo(toEmail);
+        message.setSubject("Welcome to SmartMed - Registration Successful! 🎉");
+        
+        String emailBody = "Dear " + userName + ",\n\n" +
+                "🎉 Congratulations! Your SmartMed account has been successfully created.\n\n" +
+                "Account Details:\n" +
+                "• Name: " + userName + "\n" +
+                "• Email: " + toEmail + "\n" +
+                "• Role: Student\n" +
+                "• Registration Date: " + new java.util.Date() + "\n\n" +
+                "What's next?\n" +
+                "✅ You can now log in to your SmartMed account\n" +
+                "✅ Access your personalized dashboard\n" +
+                "✅ Start managing your medical information\n\n" +
+                "Login URL: http://localhost:3000/login\n\n" +
+                "If you have any questions or need assistance, please don't hesitate to contact our support team.\n\n" +
+                "Thank you for choosing SmartMed!\n\n" +
+                "Best regards,\n" +
+                "The SmartMed Team\n" +
+                "Email: pasindurandima12347@gmail.com";
+        
+        message.setText(emailBody);
         mailSender.send(message);
     }
 }
