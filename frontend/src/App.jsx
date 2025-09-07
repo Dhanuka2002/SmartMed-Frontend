@@ -18,7 +18,6 @@ import Reports from "./components/Pharmacy/Reports/Reports";
 import StudentSidebar from "./components/Student/StudentSidebar/StudentSidebar";
 import StudentDashboard from "./components/Student/Dashboard/StudentDashboard";
 import StudentProfile from "./components/Student/StudentProfile/StudentProfile";
-import StudentHistory from "./components/Student/StudentHistory/StudentHistory";
 import StudentReports from "./components/Student/StudentReports/StudentReports";
 import StudentTelemed from './components/Student/StudentTelemed/StudentTelemed';
 import StudentTelemedCall from './components/Student/StudentTelemedCall/StudentTelemedCall';
@@ -44,6 +43,10 @@ import ReceptionistNotifications from './components/Receptionist/ReceptionistNot
 // Auth
 import Register from './components/Register/Register';
 import Login from './components/Login/login';
+import ChangePassword from './components/ChangePassword/ChangePassword';
+
+// Settings
+import Settings from './components/Settings/Settings';
 
 // Admin
 import AdminDashboard from './components/Admin/AdminDashboard/AdminDashboard';
@@ -71,11 +74,12 @@ function App() {
   const isAdmin = pathname.startsWith("/admin");
   const isRegister = pathname === "/register";
   const isLogin = pathname === "/login";
+  const isChangePassword = pathname === "/change-password";
   const isUsers = pathname === "/users";
   const isHospitalStaff = pathname === "/hospital-staff";
   const isIntro = pathname === "/intro" || pathname === "/";
 
-  const isPharmacy = !isStudent && !isDoctor && !isReceptionist && !isAdmin && !isRegister && !isLogin && !isHospitalStaff && !isIntro;
+  const isPharmacy = !isStudent && !isDoctor && !isReceptionist && !isAdmin && !isRegister && !isLogin && !isChangePassword && !isHospitalStaff && !isIntro;
 
   // Load current user data from localStorage
   useEffect(() => {
@@ -138,8 +142,8 @@ function App() {
     <MedicineInventoryProvider>
       <PrescriptionProvider>
         <div className="app-container">
-        {/* TopBar - Show for all authenticated users except admin, register, login, hospital staff, and intro */}
-        {!isRegister && !isLogin && !isHospitalStaff && !isIntro && !isAdmin && (
+        {/* TopBar - Show for all authenticated users except admin, register, login, change password, hospital staff, and intro */}
+        {!isRegister && !isLogin && !isChangePassword && !isHospitalStaff && !isIntro && !isAdmin && (
           <TopBar 
             userRole={getUserRole()}
             userName={currentUser?.name || 'User'}
@@ -150,11 +154,11 @@ function App() {
         )}
 
         <div className={isAdmin ? "admin-content-wrapper" : "main-content"}>
-          {/* Sidebars - not shown for admin, register, login, hospital staff, and intro */}
-          {!isRegister && !isLogin && !isHospitalStaff && !isIntro && !isAdmin && isStudent && <StudentSidebar />}
-          {!isRegister && !isLogin && !isHospitalStaff && !isIntro && !isAdmin && isDoctor && <DoctorSidebar />}
-          {!isRegister && !isLogin && !isHospitalStaff && !isIntro && !isAdmin && isReceptionist && <ReceptionistSidebar />}
-          {!isRegister && !isLogin && !isHospitalStaff && !isIntro && !isAdmin && isPharmacy && <PharmacySidebar />}
+          {/* Sidebars - not shown for admin, register, login, change password, hospital staff, and intro */}
+          {!isRegister && !isLogin && !isChangePassword && !isHospitalStaff && !isIntro && !isAdmin && isStudent && <StudentSidebar />}
+          {!isRegister && !isLogin && !isChangePassword && !isHospitalStaff && !isIntro && !isAdmin && isDoctor && <DoctorSidebar />}
+          {!isRegister && !isLogin && !isChangePassword && !isHospitalStaff && !isIntro && !isAdmin && isReceptionist && <ReceptionistSidebar />}
+          {!isRegister && !isLogin && !isChangePassword && !isHospitalStaff && !isIntro && !isAdmin && isPharmacy && <PharmacySidebar />}
 
           <div className="content-area">
             <Routes>
@@ -184,6 +188,11 @@ function App() {
                 <PrescriptionQueue />
               </ProtectedRoute>
             } />
+            <Route path="/pharmacy/settings" element={
+              <ProtectedRoute allowedRoles={['Pharmacy']}>
+                <Settings />
+              </ProtectedRoute>
+            } />
 
             {/* Student Routes */}
             <Route path="/student/dashboard" element={
@@ -196,11 +205,7 @@ function App() {
                 <StudentProfile />
               </ProtectedRoute>
             } />
-            <Route path="/student/history" element={
-              <ProtectedRoute allowedRoles={['Student']}>
-                <StudentHistory />
-              </ProtectedRoute>
-            } />
+           
             <Route path="/student/reports" element={
               <ProtectedRoute allowedRoles={['Student']}>
                 <StudentReports />
@@ -224,6 +229,11 @@ function App() {
             <Route path="/student/entering-details" element={
               <ProtectedRoute allowedRoles={['Student']}>
                 <StudentEnteringDetails />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/settings" element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <Settings />
               </ProtectedRoute>
             } />
 
@@ -263,6 +273,11 @@ function App() {
                 <DoctorReport />
               </ProtectedRoute>
             } />
+            <Route path="/doctor/settings" element={
+              <ProtectedRoute allowedRoles={['Doctor']}>
+                <Settings />
+              </ProtectedRoute>
+            } />
 
             {/* Receptionist Routes */}
             <Route path="/receptionist/dashboard" element={
@@ -280,6 +295,11 @@ function App() {
                 <ReceptionistNotifications />
               </ProtectedRoute>
             } />
+            <Route path="/receptionist/settings" element={
+              <ProtectedRoute allowedRoles={['Receptionist']}>
+                <Settings />
+              </ProtectedRoute>
+            } />
 
             {/* Admin Routes */}
             <Route path="/admin/dashboard" element={
@@ -291,6 +311,7 @@ function App() {
             {/* Auth Pages */}
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/change-password" element={<ChangePassword />} />
 
             {/* Users Page */}
             <Route path="/users" element={<Users />} />

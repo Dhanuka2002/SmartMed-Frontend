@@ -16,6 +16,7 @@ import {
 } from "react-icons/fi";
 
 // ✅ Correct import path (if logo is in src/assets)
+// Settings tab added for all roles
 
 
 function Sidebar() {
@@ -56,15 +57,7 @@ function Sidebar() {
             Dashboard
           </NavLink>
         </li>
-        <li>
-          <NavLink 
-            to="/student/history"
-            className={({ isActive }) => isActive ? "menu-button active" : "menu-button"}
-          >
-            <FiClock size={18} className="menu-icon" />
-            History
-          </NavLink>
-        </li>
+      
         <li>
           <NavLink 
             to="/student/qrcode"
@@ -99,6 +92,15 @@ function Sidebar() {
           >
             <FiEdit3 size={18} className="menu-icon" />
             Entering Details
+          </NavLink>
+        </li>
+        <li>
+          <NavLink 
+            to="/student/settings"
+            className={({ isActive }) => isActive ? "menu-button active" : "menu-button"}
+          >
+            <FiSettings size={18} className="menu-icon" />
+            Settings
           </NavLink>
         </li>
       </ul>
