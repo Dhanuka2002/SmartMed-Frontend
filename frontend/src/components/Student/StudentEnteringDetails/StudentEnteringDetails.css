@@ -194,6 +194,10 @@
 
 .entering-details-container .upload-box .upload-avatar {
   margin-bottom: 0 !important;
+  display: block;
+  margin: 0 auto; /* centers the image horizontally */
+  cursor: pointer;
+  
 }
 
 .entering-details-container .upload-text {
