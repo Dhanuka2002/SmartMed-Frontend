@@ -74,7 +74,7 @@ public class AuthController {
 
         // Send confirmation email - wrap in try-catch to avoid failure on mail issues
         try {
-            mailService.sendRegistrationEmail(user.getEmail(), user.getName());
+            mailService.sendRegistrationEmail(user.getEmail(), user.getName(), password);
         } catch (Exception e) {
             System.err.println("Failed to send email: " + e.getMessage());
         }
@@ -172,7 +172,7 @@ public class AuthController {
         
         // Send welcome email
         try {
-            mailService.sendRegistrationEmail(email, name);
+            mailService.sendRegistrationEmail(email, name, password);
         } catch (Exception e) {
             System.err.println("Failed to send email: " + e.getMessage());
         }
@@ -267,6 +267,60 @@ public class AuthController {
         response.put("status", "success");
         response.put("message", "Test admin created successfully");
         response.put("admin", admin);
+        return ResponseEntity.ok(response);
+    }
+    
+    @PostMapping("/change-password")
+    public ResponseEntity<Map<String, Object>> changePassword(@RequestBody Map<String, String> requestData) {
+        Map<String, Object> response = new HashMap<>();
+        
+        String email = requestData.get("email");
+        String currentPassword = requestData.get("currentPassword");
+        String newPassword = requestData.get("newPassword");
+        
+        // Validate input
+        if (email == null || currentPassword == null || newPassword == null) {
+            response.put("status", "error");
+            response.put("message", "All fields are required!");
+            return ResponseEntity.badRequest().body(response);
+        }
+        
+        if (newPassword.length() < 6) {
+            response.put("status", "error");
+            response.put("message", "New password must be at least 6 characters long!");
+            return ResponseEntity.badRequest().body(response);
+        }
+        
+        // Find user by email
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (!userOptional.isPresent()) {
+            response.put("status", "error");
+            response.put("message", "User not found!");
+            return ResponseEntity.status(404).body(response);
+        }
+        
+        User user = userOptional.get();
+        
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            response.put("status", "error");
+            response.put("message", "Current password is incorrect!");
+            return ResponseEntity.status(401).body(response);
+        }
+        
+        // Update password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        
+        // Send password change confirmation email
+        try {
+            mailService.sendPasswordChangeEmail(user.getEmail(), user.getName(), newPassword);
+        } catch (Exception e) {
+            System.err.println("Failed to send password change email: " + e.getMessage());
+        }
+        
+        response.put("status", "success");
+        response.put("message", "Password changed successfully! A confirmation email has been sent.");
         return ResponseEntity.ok(response);
     }
 }
