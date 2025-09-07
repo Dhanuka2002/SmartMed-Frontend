@@ -15,7 +15,7 @@ import {
   FiLogOut
 } from "react-icons/fi";
 
-
+// Settings tab added for all roles
 
 function ReceptionistSidebar() {
   const navigate = useNavigate();
@@ -64,9 +64,15 @@ function ReceptionistSidebar() {
             Notification
           </NavLink>
         </li>
-
-        
-
+        <li>
+          <NavLink 
+            to="/receptionist/settings"
+            className={({ isActive }) => isActive ? "menu-button active" : "menu-button"}
+          >
+            <FiSettings size={18} className="menu-icon" />
+            Settings
+          </NavLink>
+        </li>
       </ul>
 
       <div className="sidebar-bottom">

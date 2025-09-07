@@ -6,7 +6,7 @@ import "./PharmacySidebar.css";
 import { FiSettings, FiClipboard, FiBox, FiFileText, FiBarChart2, FiLogOut } from "react-icons/fi";
 
 // ✅ Correct import path (if logo is in src/assets)
-
+// Settings tab added for all roles
 
 function Sidebar() {
   const navigate = useNavigate();
@@ -64,6 +64,15 @@ function Sidebar() {
           >
             <FiBarChart2 size={18} className="menu-icon" />
             Reports
+          </NavLink>
+        </li>
+        <li>
+          <NavLink 
+            to="/pharmacy/settings"
+            className={({ isActive }) => isActive ? "menu-button active" : "menu-button"}
+          >
+            <FiSettings size={18} className="menu-icon" />
+            Settings
           </NavLink>
         </li>
       </ul>

@@ -93,6 +93,15 @@ function DoctorSidebar() {
             Telemed
           </NavLink>
         </li>
+        <li>
+          <NavLink 
+            to="/doctor/settings"
+            className={({ isActive }) => isActive ? "menu-button active" : "menu-button"}
+          >
+            <FiSettings size={18} className="menu-icon" />
+            Settings
+          </NavLink>
+        </li>
       </ul>
 
       <div className="sidebar-bottom">
