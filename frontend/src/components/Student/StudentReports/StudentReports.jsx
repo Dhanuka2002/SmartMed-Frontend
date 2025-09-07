@@ -8,6 +8,7 @@ function StudentReports() {
   const [studentData, setStudentData] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [studentFormData, setStudentFormData] = useState(null);
+  const [hospitalData, setHospitalData] = useState(null);
 
   useEffect(() => {
     // Get current user data from localStorage
@@ -29,6 +30,14 @@ function StudentReports() {
     const formData = localStorage.getItem('studentFormData');
     if (formData) {
       setStudentFormData(JSON.parse(formData));
+    }
+
+    // Get hospital data (Part 2 from Hospital Staff form)
+    if (user.email) {
+      const hospitalFormData = localStorage.getItem(`hospitalData_${user.email}`);
+      if (hospitalFormData) {
+        setHospitalData(JSON.parse(hospitalFormData));
+      }
     }
   }, []);
 
@@ -247,6 +256,208 @@ function StudentReports() {
           </div>
         )}
       </div>
+
+      {/* Hospital Staff Examination Results */}
+      {hospitalData && (
+        <div className="hospital-examination-section">
+          <div className="section-header">
+            <h2 className="section-title">Hospital Staff Medical Examination</h2>
+            <span className="section-subtitle">Part 2 - Medical Officer Assessment</span>
+          </div>
+
+          {/* Physical Measurements */}
+          <div className="measurements-overview">
+            <h3 className="subsection-title">Physical Measurements</h3>
+            <div className="measurements-grid">
+              <div className="measurement-card">
+                <div className="measurement-icon">⚖️</div>
+                <div className="measurement-value">{hospitalData.weight || 'N/A'}</div>
+                <div className="measurement-label">Weight (kg)</div>
+              </div>
+              <div className="measurement-card">
+                <div className="measurement-icon">📏</div>
+                <div className="measurement-value">{hospitalData.height || 'N/A'}</div>
+                <div className="measurement-label">Height (cm)</div>
+              </div>
+              <div className="measurement-card">
+                <div className="measurement-icon">🩸</div>
+                <div className="measurement-value">{hospitalData.bloodPressure || 'N/A'}</div>
+                <div className="measurement-label">Blood Pressure</div>
+              </div>
+              <div className="measurement-card">
+                <div className="measurement-icon">💓</div>
+                <div className="measurement-value">{hospitalData.pulse || 'N/A'}</div>
+                <div className="measurement-label">Pulse</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Clinical Test Results */}
+          <div className="clinical-results">
+            <h3 className="subsection-title">Clinical Test Results</h3>
+            <div className="clinical-grid">
+              <div className="clinical-card">
+                <div className="clinical-icon">🩸</div>
+                <div className="clinical-content">
+                  <span className="clinical-label">Blood Group</span>
+                  <span className="clinical-value">{hospitalData.bloodGroup || 'N/A'}</span>
+                </div>
+              </div>
+              <div className="clinical-card">
+                <div className="clinical-icon">🩸</div>
+                <div className="clinical-content">
+                  <span className="clinical-label">Hemoglobin</span>
+                  <span className="clinical-value">{hospitalData.hemoglobin ? `${hospitalData.hemoglobin} g/dL` : 'N/A'}</span>
+                </div>
+              </div>
+              <div className="clinical-card">
+                <div className="clinical-icon">💉</div>
+                <div className="clinical-content">
+                  <span className="clinical-label">Vaccination Status</span>
+                  <span className="clinical-value">{hospitalData.vaccinated === 'yes' ? '✅ Vaccinated' : hospitalData.vaccinated === 'no' ? '❌ Not Vaccinated' : 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Medical Assessment */}
+          <div className="medical-assessment">
+            <h3 className="subsection-title">Medical Assessment</h3>
+            <div className="assessment-grid">
+              <div className="assessment-card">
+                <div className="assessment-header">
+                  <span className="assessment-label">Fitness for Studies</span>
+                </div>
+                <div className={`assessment-status ${hospitalData.fitForStudies === 'fit' ? 'fit' : hospitalData.fitForStudies === 'not-fit' ? 'not-fit' : 'pending'}`}>
+                  {hospitalData.fitForStudies === 'fit' ? '✅ Fit for Studies' : 
+                   hospitalData.fitForStudies === 'not-fit' ? '❌ Not Fit for Studies' : 'Assessment Pending'}
+                </div>
+                {hospitalData.reason && (
+                  <div className="assessment-reason">
+                    <strong>Reason:</strong> {hospitalData.reason}
+                  </div>
+                )}
+              </div>
+              <div className="assessment-card">
+                <div className="assessment-header">
+                  <span className="assessment-label">Specialist Referral</span>
+                </div>
+                <div className={`assessment-status ${hospitalData.specialistReferral === 'yes' ? 'required' : hospitalData.specialistReferral === 'no' ? 'not-required' : 'pending'}`}>
+                  {hospitalData.specialistReferral === 'yes' ? '⚠️ Required' : 
+                   hospitalData.specialistReferral === 'no' ? '✅ Not Required' : 'Assessment Pending'}
+                </div>
+                {hospitalData.specialistReferral === 'yes' && hospitalData.medicalCondition && (
+                  <div className="assessment-reason">
+                    <strong>Condition:</strong> {hospitalData.medicalCondition}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* System Examinations */}
+          <div className="system-examinations">
+            <h3 className="subsection-title">System Examinations</h3>
+            <div className="systems-grid">
+              {/* Dental Health */}
+              <div className="system-card">
+                <div className="system-header">
+                  <span className="system-icon">🦷</span>
+                  <span className="system-title">Dental Health</span>
+                </div>
+                <div className="system-findings">
+                  <div className="finding-item">
+                    <span className="finding-label">Decayed:</span>
+                    <span className={`finding-value ${hospitalData.teethDecayed ? 'positive' : 'negative'}`}>
+                      {hospitalData.teethDecayed ? '✅ Yes' : '❌ No'}
+                    </span>
+                  </div>
+                  <div className="finding-item">
+                    <span className="finding-label">Missing:</span>
+                    <span className={`finding-value ${hospitalData.teethMissing ? 'positive' : 'negative'}`}>
+                      {hospitalData.teethMissing ? '✅ Yes' : '❌ No'}
+                    </span>
+                  </div>
+                  <div className="finding-item">
+                    <span className="finding-label">Gingivitis:</span>
+                    <span className={`finding-value ${hospitalData.teethGingivitis ? 'positive' : 'negative'}`}>
+                      {hospitalData.teethGingivitis ? '✅ Yes' : '❌ No'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Hearing & Speech */}
+              <div className="system-card">
+                <div className="system-header">
+                  <span className="system-icon">👂</span>
+                  <span className="system-title">Hearing & Speech</span>
+                </div>
+                <div className="system-findings">
+                  <div className="finding-item">
+                    <span className="finding-label">Right Ear:</span>
+                    <span className="finding-value">{hospitalData.hearingRight || 'N/A'}</span>
+                  </div>
+                  <div className="finding-item">
+                    <span className="finding-label">Left Ear:</span>
+                    <span className="finding-value">{hospitalData.hearingLeft || 'N/A'}</span>
+                  </div>
+                  <div className="finding-item">
+                    <span className="finding-label">Speech:</span>
+                    <span className="finding-value">{hospitalData.speech || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vision */}
+              <div className="system-card">
+                <div className="system-header">
+                  <span className="system-icon">👁️</span>
+                  <span className="system-title">Vision</span>
+                </div>
+                <div className="system-findings">
+                  <div className="finding-item">
+                    <span className="finding-label">Right Eye (w/o glasses):</span>
+                    <span className="finding-value">{hospitalData.visionRightWithout || 'N/A'}</span>
+                  </div>
+                  <div className="finding-item">
+                    <span className="finding-label">Left Eye (w/o glasses):</span>
+                    <span className="finding-value">{hospitalData.visionLeftWithout || 'N/A'}</span>
+                  </div>
+                  <div className="finding-item">
+                    <span className="finding-label">Color Vision:</span>
+                    <span className={`finding-value ${hospitalData.colorVisionNormal ? 'normal' : 'abnormal'}`}>
+                      {hospitalData.colorVisionNormal ? 'Normal' : 'Impaired'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cardiovascular */}
+              <div className="system-card">
+                <div className="system-header">
+                  <span className="system-icon">❤️</span>
+                  <span className="system-title">Cardiovascular</span>
+                </div>
+                <div className="system-findings">
+                  <div className="finding-item">
+                    <span className="finding-label">Heart Disease History:</span>
+                    <span className="finding-value">{hospitalData.heartDisease || 'N/A'}</span>
+                  </div>
+                  <div className="finding-item">
+                    <span className="finding-label">Heart Sound:</span>
+                    <span className="finding-value">{hospitalData.heartSound || 'N/A'}</span>
+                  </div>
+                  <div className="finding-item">
+                    <span className="finding-label">Murmurs:</span>
+                    <span className="finding-value">{hospitalData.murmurs || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Medical Information */}
       <div className="medical-grid">

@@ -265,35 +265,6 @@ function Dashboard() {
           </div>
         </section>
 
-        {/* QR Code Card */}
-        <section className="qr-card">
-          <div className="card-header">
-            <h2 className="card-title">Quick Access QR</h2>
-            <div className="card-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
-                <rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
-                <rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
-                <rect x="5" y="5" width="4" height="4" rx="0.5" fill="currentColor"/>
-                <rect x="15" y="5" width="4" height="4" rx="0.5" fill="currentColor"/>
-                <rect x="5" y="15" width="4" height="4" rx="0.5" fill="currentColor"/>
-                <rect x="13" y="13" width="2" height="2" fill="currentColor"/>
-                <rect x="17" y="13" width="2" height="2" fill="currentColor"/>
-                <rect x="19" y="13" width="2" height="2" fill="currentColor"/>
-                <rect x="13" y="17" width="2" height="2" fill="currentColor"/>
-                <rect x="19" y="17" width="2" height="2" fill="currentColor"/>
-                <rect x="17" y="19" width="2" height="2" fill="currentColor"/>
-                <rect x="19" y="19" width="2" height="2" fill="currentColor"/>
-              </svg>
-            </div>
-          </div>
-          <div className="qr-content">
-            <div className="qr-code-container">
-              <img src={qrCode} alt="Student QR Code" className="qr-image" />
-            </div>
-            <p className="qr-description">Scan this code for quick check-in at medical appointments</p>
-          </div>
-        </section>
 
      
       </main>

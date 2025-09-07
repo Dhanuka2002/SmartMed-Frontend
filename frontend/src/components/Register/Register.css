@@ -75,15 +75,12 @@
   width: 20px;
 }
 
-.input-group input,
-.input-group select {
-  width: 100%;
-  padding: 12px 15px 12px 42px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background: #f9fafb;
-  font-size: 0.95rem;
-  transition: border 0.3s ease;
+.input-group input[name="firstName"],
+.input-group input[name="lastName"],
+.input-group select[name="firstName"],
+.input-group select[name="lastName"] {
+  padding-left: 42px; /* Increase as needed for more space */
+  font-size: 0.95rem;
 }
 
 .input-group input:focus,
