@@ -311,11 +311,16 @@ function StudentEnteringDetails() {
                 required
               >
                 <option value="">Select Academic Division</option>
-                <option value="faculty-of-medicine">Faculty of Medicine</option>
-                <option value="faculty-of-engineering">Faculty of Engineering</option>
-                <option value="faculty-of-science">Faculty of Science</option>
-                <option value="faculty-of-arts">Faculty of Arts</option>
-                <option value="faculty-of-management">Faculty of Management</option>
+                <option value="chemical-engineering-technology">Chemical Engineering Technology</option>
+                <option value="civil-engineering-technology">Civil Engineering Technology</option>
+                <option value="electrical-engineering-technology">Electrical Engineering Technology</option>
+                <option value="electronic-telecommunication-engineering-technology">Electronic & Telecommunication Engineering Technology</option>
+                <option value="information-technology">Information Technology</option>
+                <option value="marine-technology">Marine Technology</option>
+                <option value="mechanical-engineering-technology">Mechanical Engineering Technology</option>
+                <option value="nautical-studies">Nautical Studies</option>
+                <option value="polymer-technology">Polymer Technology</option>
+                <option value="textile-clothing-technology">Textile & Clothing Technology</option>
               </select>
             </div>
           </div>
