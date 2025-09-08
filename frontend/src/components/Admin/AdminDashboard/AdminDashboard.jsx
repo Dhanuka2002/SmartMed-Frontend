@@ -10,7 +10,8 @@ const AdminDashboard = () => {
   const [currentUser, setCurrentUser] = useState(null);
   
   const [newUserForm, setNewUserForm] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     role: 'Doctor'
@@ -89,7 +90,7 @@ const AdminDashboard = () => {
       
       if (response.ok) {
         alert(result.message);
-        setNewUserForm({ name: '', email: '', password: '', role: 'Doctor' });
+        setNewUserForm({ firstName: '', lastName: '', email: '', password: '', role: 'Doctor' });
         fetchAllUsers();
       } else {
         alert(result.message || 'Error creating user');
@@ -347,12 +348,24 @@ const AdminDashboard = () => {
               </div>
               
               <div className="form-group">
-                <label htmlFor="name">Full Name</label>
+                <label htmlFor="firstName">First Name</label>
                 <input
                   type="text"
-                  id="name"
-                  name="name"
-                  value={newUserForm.name}
+                  id="firstName"
+                  name="firstName"
+                  value={newUserForm.firstName}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="lastName">Last Name</label>
+                <input
+                  type="text"
+                  id="lastName"
+                  name="lastName"
+                  value={newUserForm.lastName}
                   onChange={handleInputChange}
                   required
                 />

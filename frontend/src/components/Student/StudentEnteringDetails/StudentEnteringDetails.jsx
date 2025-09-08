@@ -66,12 +66,12 @@ function StudentEnteringDetails() {
     
     // Vaccinations
     vaccinations: {
-      bcg: "",
-      dpt: "",
-      mramur: "",
-      rubella: "",
-      hepatitisB: "",
-      chickenPox: ""
+      bcg: { taken: "", date: "" },
+      dpt: { taken: "", date: "" },
+      mramur: { taken: "", date: "" },
+      rubella: { taken: "", date: "" },
+      hepatitisB: { taken: "", date: "" },
+      chickenPox: { taken: "", date: "" }
     },
 
     // Certification
@@ -141,12 +141,17 @@ function StudentEnteringDetails() {
     }));
   };
 
-  const handleVaccinationChange = (vaccine, value) => {
+  const handleVaccinationChange = (vaccine, field, value) => {
     setFormData(prev => ({
       ...prev,
       vaccinations: {
         ...prev.vaccinations,
-        [vaccine]: value
+        [vaccine]: {
+          ...prev.vaccinations[vaccine],
+          [field]: value,
+          // Clear date if "No" is selected
+          ...(field === 'taken' && value === 'no' ? { date: '' } : {})
+        }
       }
     }));
   };
@@ -706,6 +711,7 @@ function StudentEnteringDetails() {
           <div className="vaccination-table">
             <div className="table-header">
               <div className="header-cell">Vaccinations</div>
+              <div className="header-cell">Taken</div>
               <div className="header-cell">Date</div>
             </div>
             
@@ -722,10 +728,39 @@ function StudentEnteringDetails() {
                   <label>{vaccine.label}</label>
                 </div>
                 <div className="cell">
+                  <div className="radio-group">
+                    <label>
+                      <input
+                        type="radio"
+                        name={`${vaccine.key}_taken`}
+                        value="yes"
+                        checked={formData.vaccinations[vaccine.key].taken === "yes"}
+                        onChange={(e) => handleVaccinationChange(vaccine.key, "taken", e.target.value)}
+                      />
+                      Yes
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name={`${vaccine.key}_taken`}
+                        value="no"
+                        checked={formData.vaccinations[vaccine.key].taken === "no"}
+                        onChange={(e) => handleVaccinationChange(vaccine.key, "taken", e.target.value)}
+                      />
+                      No
+                    </label>
+                  </div>
+                </div>
+                <div className="cell">
                   <input
                     type="date"
-                    value={formData.vaccinations[vaccine.key]}
-                    onChange={(e) => handleVaccinationChange(vaccine.key, e.target.value)}
+                    value={formData.vaccinations[vaccine.key].date}
+                    onChange={(e) => handleVaccinationChange(vaccine.key, "date", e.target.value)}
+                    disabled={formData.vaccinations[vaccine.key].taken !== "yes"}
+                    style={{
+                      opacity: formData.vaccinations[vaccine.key].taken === "yes" ? 1 : 0.5,
+                      cursor: formData.vaccinations[vaccine.key].taken === "yes" ? "pointer" : "not-allowed"
+                    }}
                   />
                 </div>
               </div>
