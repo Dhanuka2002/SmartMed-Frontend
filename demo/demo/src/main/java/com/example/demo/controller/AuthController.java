@@ -74,7 +74,7 @@ public class AuthController {
 
         // Send confirmation email - wrap in try-catch to avoid failure on mail issues
         try {
-            mailService.sendRegistrationEmail(user.getEmail(), user.getName());
+            mailService.sendRegistrationEmail(user.getEmail(), user.getName(), password);
         } catch (Exception e) {
             System.err.println("Failed to send email: " + e.getMessage());
         }
@@ -132,6 +132,8 @@ public class AuthController {
         
         String adminEmail = requestData.get("adminEmail");
         String role = requestData.get("role");
+        String firstName = requestData.get("firstName");
+        String lastName = requestData.get("lastName");
         String name = requestData.get("name");
         String email = requestData.get("email");
         String password = requestData.get("password");
@@ -161,18 +163,36 @@ public class AuthController {
         
         // Create new user
         User newUser = new User();
-        newUser.setName(name);
         newUser.setEmail(email);
         newUser.setPassword(passwordEncoder.encode(password));
         newUser.setRole(role);
         newUser.setIsApproved(true); // Admin-created users are pre-approved
         newUser.setCreatedByAdmin(true);
         
+        // Set names - prefer firstName/lastName if available, otherwise use combined name
+        if (firstName != null && !firstName.trim().isEmpty() && lastName != null && !lastName.trim().isEmpty()) {
+            newUser.setFirstName(firstName.trim());
+            newUser.setLastName(lastName.trim());
+            // name field is automatically set in the setter
+        } else if (name != null && !name.trim().isEmpty()) {
+            newUser.setName(name.trim());
+            // Try to split name into first and last
+            String[] nameParts = name.trim().split(" ", 2);
+            newUser.setFirstName(nameParts[0]);
+            newUser.setLastName(nameParts.length > 1 ? nameParts[1] : "");
+        } else {
+            // Fallback - ensure we have some values
+            String fName = firstName != null && !firstName.trim().isEmpty() ? firstName.trim() : "Unknown";
+            String lName = lastName != null && !lastName.trim().isEmpty() ? lastName.trim() : "User";
+            newUser.setFirstName(fName);
+            newUser.setLastName(lName);
+        }
+        
         userRepository.save(newUser);
         
         // Send welcome email
         try {
-            mailService.sendRegistrationEmail(email, name);
+            mailService.sendRegistrationEmail(email, newUser.getName(), password);
         } catch (Exception e) {
             System.err.println("Failed to send email: " + e.getMessage());
         }
@@ -255,7 +275,8 @@ public class AuthController {
         
         // Create admin user
         User admin = new User();
-        admin.setName("System Administrator");
+        admin.setFirstName("System");
+        admin.setLastName("Administrator");
         admin.setEmail("admin@smartmed.com");
         admin.setPassword(passwordEncoder.encode("admin123"));
         admin.setRole("Admin");
@@ -267,6 +288,60 @@ public class AuthController {
         response.put("status", "success");
         response.put("message", "Test admin created successfully");
         response.put("admin", admin);
+        return ResponseEntity.ok(response);
+    }
+    
+    @PostMapping("/change-password")
+    public ResponseEntity<Map<String, Object>> changePassword(@RequestBody Map<String, String> requestData) {
+        Map<String, Object> response = new HashMap<>();
+        
+        String email = requestData.get("email");
+        String currentPassword = requestData.get("currentPassword");
+        String newPassword = requestData.get("newPassword");
+        
+        // Validate input
+        if (email == null || currentPassword == null || newPassword == null) {
+            response.put("status", "error");
+            response.put("message", "All fields are required!");
+            return ResponseEntity.badRequest().body(response);
+        }
+        
+        if (newPassword.length() < 6) {
+            response.put("status", "error");
+            response.put("message", "New password must be at least 6 characters long!");
+            return ResponseEntity.badRequest().body(response);
+        }
+        
+        // Find user by email
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (!userOptional.isPresent()) {
+            response.put("status", "error");
+            response.put("message", "User not found!");
+            return ResponseEntity.status(404).body(response);
+        }
+        
+        User user = userOptional.get();
+        
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            response.put("status", "error");
+            response.put("message", "Current password is incorrect!");
+            return ResponseEntity.status(401).body(response);
+        }
+        
+        // Update password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        
+        // Send password change confirmation email
+        try {
+            mailService.sendPasswordChangeEmail(user.getEmail(), user.getName(), newPassword);
+        } catch (Exception e) {
+            System.err.println("Failed to send password change email: " + e.getMessage());
+        }
+        
+        response.put("status", "success");
+        response.put("message", "Password changed successfully! A confirmation email has been sent.");
         return ResponseEntity.ok(response);
     }
 }
