@@ -81,9 +81,7 @@ public class User {
     public void setFirstName(String firstName) {
         this.firstName = firstName;
         // Auto-update full name when first name changes
-        if (this.lastName != null) {
-            this.name = (firstName + " " + this.lastName).trim();
-        }
+        updateFullName();
     }
 
     public String getLastName() {
@@ -93,9 +91,7 @@ public class User {
     public void setLastName(String lastName) {
         this.lastName = lastName;
         // Auto-update full name when last name changes
-        if (this.firstName != null) {
-            this.name = (this.firstName + " " + lastName).trim();
-        }
+        updateFullName();
     }
 
     public String getEmail() {
@@ -136,5 +132,16 @@ public class User {
     
     public void setCreatedByAdmin(Boolean createdByAdmin) {
         this.createdByAdmin = createdByAdmin;
+    }
+    
+    // Helper method to update full name from first and last names
+    private void updateFullName() {
+        if (this.firstName != null && this.lastName != null) {
+            this.name = (this.firstName + " " + this.lastName).trim();
+        } else if (this.firstName != null) {
+            this.name = this.firstName.trim();
+        } else if (this.lastName != null) {
+            this.name = this.lastName.trim();
+        }
     }
 }

@@ -132,6 +132,8 @@ public class AuthController {
         
         String adminEmail = requestData.get("adminEmail");
         String role = requestData.get("role");
+        String firstName = requestData.get("firstName");
+        String lastName = requestData.get("lastName");
         String name = requestData.get("name");
         String email = requestData.get("email");
         String password = requestData.get("password");
@@ -161,18 +163,36 @@ public class AuthController {
         
         // Create new user
         User newUser = new User();
-        newUser.setName(name);
         newUser.setEmail(email);
         newUser.setPassword(passwordEncoder.encode(password));
         newUser.setRole(role);
         newUser.setIsApproved(true); // Admin-created users are pre-approved
         newUser.setCreatedByAdmin(true);
         
+        // Set names - prefer firstName/lastName if available, otherwise use combined name
+        if (firstName != null && !firstName.trim().isEmpty() && lastName != null && !lastName.trim().isEmpty()) {
+            newUser.setFirstName(firstName.trim());
+            newUser.setLastName(lastName.trim());
+            // name field is automatically set in the setter
+        } else if (name != null && !name.trim().isEmpty()) {
+            newUser.setName(name.trim());
+            // Try to split name into first and last
+            String[] nameParts = name.trim().split(" ", 2);
+            newUser.setFirstName(nameParts[0]);
+            newUser.setLastName(nameParts.length > 1 ? nameParts[1] : "");
+        } else {
+            // Fallback - ensure we have some values
+            String fName = firstName != null && !firstName.trim().isEmpty() ? firstName.trim() : "Unknown";
+            String lName = lastName != null && !lastName.trim().isEmpty() ? lastName.trim() : "User";
+            newUser.setFirstName(fName);
+            newUser.setLastName(lName);
+        }
+        
         userRepository.save(newUser);
         
         // Send welcome email
         try {
-            mailService.sendRegistrationEmail(email, name, password);
+            mailService.sendRegistrationEmail(email, newUser.getName(), password);
         } catch (Exception e) {
             System.err.println("Failed to send email: " + e.getMessage());
         }
@@ -255,7 +275,8 @@ public class AuthController {
         
         // Create admin user
         User admin = new User();
-        admin.setName("System Administrator");
+        admin.setFirstName("System");
+        admin.setLastName("Administrator");
         admin.setEmail("admin@smartmed.com");
         admin.setPassword(passwordEncoder.encode("admin123"));
         admin.setRole("Admin");
