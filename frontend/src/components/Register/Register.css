@@ -83,11 +83,53 @@
   font-size: 0.95rem;
 }
 
+.input-group input {
+  width: 100%;
+  padding: 12px 45px 12px 45px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #fff;
+}
+
 .input-group input:focus,
 .input-group select:focus {
   border-color: #3245ff;
   outline: none;
   background: #fff;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  font-size: 1rem;
+  padding: 5px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+}
+
+.password-toggle:hover {
+  color: #3245ff;
+  background-color: rgba(50, 69, 255, 0.1);
+}
+
+/* Ensure password and confirm password inputs have proper spacing */
+.input-group input[type="password"],
+.input-group input[type="text"] {
+  padding: 12px 45px 12px 45px;
 }
 
 .register-btn {
