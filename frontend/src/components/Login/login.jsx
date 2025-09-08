@@ -98,7 +98,7 @@ const Login = () => {
                 <span></span>
                 <span></span>
               </div>
-              <p>Redirecting to your dashboard...</p>
+              <p>Redirecting to your dashboard....</p>
             </div>
           </div>
         </div>
