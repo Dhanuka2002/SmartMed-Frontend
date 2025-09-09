@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './AdminDashboard.css';
-import { FaUsers, FaUserPlus, FaUserCheck, FaTrash } from 'react-icons/fa';
+import { FaUsers, FaUserPlus, FaUserCheck, FaClock, FaTrash } from 'react-icons/fa';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [users, setUsers] = useState([]);
+  const [pendingUsers, setPendingUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   
@@ -13,7 +14,7 @@ const AdminDashboard = () => {
     lastName: '',
     email: '',
     password: '',
-    role: ''
+    role: 'Doctor'
   });
 
   const availableRoles = ['Doctor', 'Pharmacy', 'Hospital Staff', 'Receptionist'];
@@ -23,6 +24,7 @@ const AdminDashboard = () => {
     if (user && user.role === 'Admin') {
       setCurrentUser(user);
       fetchAllUsers();
+      fetchPendingUsers();
     }
   }, []);
 
@@ -46,6 +48,22 @@ const AdminDashboard = () => {
     setLoading(false);
   };
 
+  const fetchPendingUsers = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('currentUser'));
+      if (!user || !user.email) {
+        console.error('Admin user email not found for pending users');
+        return;
+      }
+      const response = await fetch(`http://localhost:8081/api/auth/admin/pending-users?adminEmail=${encodeURIComponent(user.email)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setPendingUsers(data);
+      }
+    } catch (error) {
+      console.error('Error fetching pending users:', error);
+    }
+  };
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
@@ -72,7 +90,7 @@ const AdminDashboard = () => {
       
       if (response.ok) {
         alert(result.message);
-        setNewUserForm({ firstName: '', lastName: '', email: '', password: '', role: '' });
+        setNewUserForm({ firstName: '', lastName: '', email: '', password: '', role: 'Doctor' });
         fetchAllUsers();
       } else {
         alert(result.message || 'Error creating user');
@@ -84,6 +102,32 @@ const AdminDashboard = () => {
     setLoading(false);
   };
 
+  const handleApproveUser = async (userId) => {
+    try {
+      const user = JSON.parse(localStorage.getItem('currentUser'));
+      const response = await fetch('http://localhost:8081/api/auth/admin/approve-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: userId.toString(),
+          adminEmail: user.email
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        alert(result.message);
+        fetchPendingUsers();
+        fetchAllUsers();
+      } else {
+        alert(result.message || 'Error approving user');
+      }
+    } catch (error) {
+      console.error('Error approving user:', error);
+      alert('Error occurred while approving user');
+    }
+  };
 
   const handleInputChange = (e) => {
     setNewUserForm({
@@ -99,13 +143,16 @@ const AdminDashboard = () => {
     const pharmacyCount = users.filter(u => u.role === 'Pharmacy').length;
     const staffCount = users.filter(u => u.role === 'Hospital Staff').length;
     const receptionistCount = users.filter(u => u.role === 'Receptionist').length;
+    const pendingCount = pendingUsers.length;
+    
     return {
       totalUsers,
       studentCount,
       doctorCount,
       pharmacyCount,
       staffCount,
-      receptionistCount
+      receptionistCount,
+      pendingCount
     };
   };
 
@@ -210,6 +257,12 @@ const AdminDashboard = () => {
           <FaUserPlus /> Create User
         </button>
         <button 
+          className={activeTab === 'pending' ? 'tab active' : 'tab'}
+          onClick={() => setActiveTab('pending')}
+        >
+          <FaClock /> Pending Approvals
+        </button>
+        <button 
           className={activeTab === 'manage' ? 'tab active' : 'tab'}
           onClick={() => setActiveTab('manage')}
         >
@@ -264,6 +317,13 @@ const AdminDashboard = () => {
                   <p>Receptionists</p>
                 </div>
               </div>
+              <div className="stat-card pending">
+                <FaClock className="stat-icon" />
+                <div className="stat-info">
+                  <h3>{stats.pendingCount}</h3>
+                  <p>Pending Approvals</p>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -284,7 +344,6 @@ const AdminDashboard = () => {
             onChange={handleInputChange}
             required
           >
-            <option value="">Select Role</option>
             {availableRoles.map(role => (
               <option key={role} value={role}>{role}</option>
             ))}
@@ -299,7 +358,6 @@ const AdminDashboard = () => {
             name="firstName"
             value={newUserForm.firstName}
             onChange={handleInputChange}
-            placeholder="Enter first name"
             required
           />
         </div>
@@ -312,7 +370,6 @@ const AdminDashboard = () => {
             name="lastName"
             value={newUserForm.lastName}
             onChange={handleInputChange}
-            placeholder="Enter last name"
             required
           />
         </div>
@@ -325,7 +382,6 @@ const AdminDashboard = () => {
             name="email"
             value={newUserForm.email}
             onChange={handleInputChange}
-            placeholder="Enter email address"
             required
           />
         </div>
@@ -338,7 +394,6 @@ const AdminDashboard = () => {
             name="password"
             value={newUserForm.password}
             onChange={handleInputChange}
-            placeholder="Enter password"
             required
           />
         </div>
@@ -351,7 +406,44 @@ const AdminDashboard = () => {
   </div>
 )}
 
-
+        {activeTab === 'pending' && (
+          <div className="pending-section">
+            <h2>Pending User Approvals</h2>
+            {pendingUsers.length === 0 ? (
+              <p>No pending approvals.</p>
+            ) : (
+              <div className="users-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingUsers.map(user => (
+                      <tr key={user.id}>
+                        <td>{user.name}</td>
+                        <td>{user.email}</td>
+                        <td>{user.role}</td>
+                        <td>
+                          <button 
+                            onClick={() => handleApproveUser(user.id)}
+                            className="approve-btn"
+                          >
+                            <FaUserCheck /> Approve
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
 
         {activeTab === 'manage' && (
           <div className="manage-section">
@@ -367,6 +459,8 @@ const AdminDashboard = () => {
                       <th>Name</th>
                       <th>Email</th>
                       <th>Role</th>
+                      <th>Status</th>
+                      <th>Created By Admin</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -380,6 +474,12 @@ const AdminDashboard = () => {
                             {user.role}
                           </span>
                         </td>
+                        <td>
+                          <span className={`status-badge ${user.isApproved ? 'approved' : 'pending'}`}>
+                            {user.isApproved ? 'Approved' : 'Pending'}
+                          </span>
+                        </td>
+                        <td>{user.createdByAdmin ? 'Yes' : 'No'}</td>
                       </tr>
                     ))}
                   </tbody>
