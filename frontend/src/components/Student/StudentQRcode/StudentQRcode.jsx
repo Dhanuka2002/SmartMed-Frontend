@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
-import QRScanner from '../../QRScanner/QRScanner';
 import { processCompleteMedicalRecordByEmail, checkFormsCompletion } from '../../../services/medicalRecordService';
 import './StudentQRcode.css';
 
 function StudentQRCode() {
-  const [copied, setCopied] = useState(false);
   const [studentName, setStudentName] = useState("");
   const [studentEmail, setStudentEmail] = useState("");
   const [qrCodeData, setQrCodeData] = useState("");
   const [medicalRecordId, setMedicalRecordId] = useState("");
-  const [showScanner, setShowScanner] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
   const [showEmailInput, setShowEmailInput] = useState(false);
@@ -116,15 +113,6 @@ function StudentQRCode() {
     dataUrl: `${window.location.origin}/api/medical-records/${medicalRecordId}`
   }) : "";
 
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(qrValue);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
-  };
 
   const handleDownload = () => {
     if (!qrCodeData) return;
@@ -135,26 +123,6 @@ function StudentQRCode() {
     link.click();
   };
 
-  const handleShare = async () => {
-    if (navigator.share && qrCodeData) {
-      try {
-        await navigator.share({
-          title: `${studentName}'s Medical QR Code`,
-          text: 'SmartMed Medical QR Code',
-          url: qrCodeData,
-        });
-      } catch (err) {
-        console.error('Share failed:', err);
-      }
-    }
-  };
-  
-  const handleScanResult = (medicalData) => {
-    console.log('Scanned medical data:', medicalData);
-    // You can handle the scanned data here (e.g., display in a modal)
-    alert(`Scanned medical record for: ${medicalData.student.fullName}`);
-    setShowScanner(false);
-  };
 
   return (
     <div className="qr-main-container">
@@ -363,26 +331,9 @@ function StudentQRCode() {
 
           {qrCodeData && (
             <div className="qr-actions">
-              <button
-                onClick={handleCopyLink}
-                className={`qr-btn qr-btn-primary ${copied ? 'qr-btn-success' : ''}`}
-              >
-                {copied ? 'QR Data Copied!' : 'Copy QR Data'}
-              </button>
-
               <div className="qr-btn-group">
                 <button onClick={handleDownload} className="qr-btn qr-btn-secondary">
                   Download QR
-                </button>
-                <button onClick={handleShare} className="qr-btn qr-btn-secondary">
-                  Share QR
-                </button>
-                <button 
-                  onClick={() => setShowScanner(true)} 
-                  className="qr-btn qr-btn-secondary"
-                  style={{background: '#e74c3c'}}
-                >
-                  Scan QR Code
                 </button>
               </div>
             </div>
@@ -396,12 +347,6 @@ function StudentQRCode() {
         </div>
       </div>
       
-      {showScanner && (
-        <QRScanner
-          onScanResult={handleScanResult}
-          onClose={() => setShowScanner(false)}
-        />
-      )}
     </div>
   );
 }

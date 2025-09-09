@@ -116,9 +116,7 @@ const Register = () => {
 
         <form className="register-form" onSubmit={handleSubmit}>
           <h2>Student Registration</h2>
-          <p style={{color: '#666', fontSize: '14px', marginBottom: '20px', textAlign: 'center'}}>
-            Only students can register here. Other roles are managed by admin.
-          </p>
+         
 
           <div className="input-group">
             <FaUser className="icon" />
