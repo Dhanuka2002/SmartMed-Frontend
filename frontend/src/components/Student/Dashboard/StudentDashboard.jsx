@@ -91,14 +91,15 @@ function Dashboard() {
       }
     }
     
-    // Only clear profile image if it was set for a different user
-    // We'll let the fetchProfileImageFromBackend handle setting the correct image
+    // Clear profile image if it was for a different user
+    setProfileImage(null);
   };
 
   const fetchProfileImageFromBackend = async (user) => {
     setLoading(true);
     try {
-      // Don't clear profileImage here - let other sources take priority
+      // Clear any cached profile image first
+      setProfileImage(null);
       
       // Strategy 1: Try to find by login email
       let response = await fetch(`http://localhost:8081/api/student-details/profile-image/email/${encodeURIComponent(user.email)}`);
@@ -167,36 +168,19 @@ function Dashboard() {
                 <div className="avatar-loading">
                   <span>...</span>
                 </div>
-              ) : (() => {
-                // Priority order: studentFormData -> studentData -> profileImage (backend)
-                const imageSource = studentFormData?.profileImage || studentData?.profileImage || profileImage;
-                
-                return imageSource ? (
-                  <img 
-                    src={imageSource}
-                    alt={currentUser?.name || studentData?.fullName || 'Student'}
-                    className="dashboard-avatar-image"
-                    onError={(e) => {
-                      // If image fails to load, show initials
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                ) : (
-                  <div className="avatar-placeholder">
-                    <span className="avatar-initials">
-                      {(currentUser?.name || studentData?.fullName || 'Student').split(' ').map(name => name[0]).join('').toUpperCase().slice(0, 2)}
-                    </span>
-                  </div>
-                );
-              })()}
-              
-              {/* Fallback avatar for when image fails to load */}
-              <div className="avatar-placeholder" style={{display: 'none'}}>
-                <span className="avatar-initials">
-                  {(currentUser?.name || studentData?.fullName || 'Student').split(' ').map(name => name[0]).join('').toUpperCase().slice(0, 2)}
-                </span>
-              </div>
+              ) : (profileImage || studentFormData?.profileImage || studentData?.profileImage) ? (
+                <img 
+                  src={profileImage || studentFormData?.profileImage || studentData?.profileImage}
+                  alt={currentUser?.name || studentData?.fullName || 'Student'}
+                  className="dashboard-avatar-image"
+                />
+              ) : (
+                <div className="avatar-placeholder">
+                  <span className="avatar-initials">
+                    {(currentUser?.name || studentData?.fullName || 'Student').split(' ').map(name => name[0]).join('').toUpperCase().slice(0, 2)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
