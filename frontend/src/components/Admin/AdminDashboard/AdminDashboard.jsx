@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import './AdminDashboard.css';
-import { FaUsers, FaUserPlus, FaUserCheck, FaClock, FaTrash } from 'react-icons/fa';
+import { FaUsers, FaUserPlus, FaUserCheck, FaTrash } from 'react-icons/fa';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [users, setUsers] = useState([]);
-  const [pendingUsers, setPendingUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  
+
   const [newUserForm, setNewUserForm] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
-    role: 'Doctor'
+    role: ''
   });
 
   const availableRoles = ['Doctor', 'Pharmacy', 'Hospital Staff', 'Receptionist'];
@@ -24,7 +23,6 @@ const AdminDashboard = () => {
     if (user && user.role === 'Admin') {
       setCurrentUser(user);
       fetchAllUsers();
-      fetchPendingUsers();
     }
   }, []);
 
@@ -48,27 +46,10 @@ const AdminDashboard = () => {
     setLoading(false);
   };
 
-  const fetchPendingUsers = async () => {
-    try {
-      const user = JSON.parse(localStorage.getItem('currentUser'));
-      if (!user || !user.email) {
-        console.error('Admin user email not found for pending users');
-        return;
-      }
-      const response = await fetch(`http://localhost:8081/api/auth/admin/pending-users?adminEmail=${encodeURIComponent(user.email)}`);
-      if (response.ok) {
-        const data = await response.json();
-        setPendingUsers(data);
-      }
-    } catch (error) {
-      console.error('Error fetching pending users:', error);
-    }
-  };
-
   const handleCreateUser = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       const user = JSON.parse(localStorage.getItem('currentUser'));
       if (!user || !user.email) {
@@ -76,7 +57,7 @@ const AdminDashboard = () => {
         setLoading(false);
         return;
       }
-      
+
       const response = await fetch('http://localhost:8081/api/auth/admin/create-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,12 +66,12 @@ const AdminDashboard = () => {
           adminEmail: user.email
         })
       });
-      
+
       const result = await response.json();
-      
+
       if (response.ok) {
         alert(result.message);
-        setNewUserForm({ firstName: '', lastName: '', email: '', password: '', role: 'Doctor' });
+        setNewUserForm({ firstName: '', lastName: '', email: '', password: '', role: '' });
         fetchAllUsers();
       } else {
         alert(result.message || 'Error creating user');
@@ -100,33 +81,6 @@ const AdminDashboard = () => {
       alert('Error occurred while creating user');
     }
     setLoading(false);
-  };
-
-  const handleApproveUser = async (userId) => {
-    try {
-      const user = JSON.parse(localStorage.getItem('currentUser'));
-      const response = await fetch('http://localhost:8081/api/auth/admin/approve-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: userId.toString(),
-          adminEmail: user.email
-        })
-      });
-      
-      const result = await response.json();
-      
-      if (response.ok) {
-        alert(result.message);
-        fetchPendingUsers();
-        fetchAllUsers();
-      } else {
-        alert(result.message || 'Error approving user');
-      }
-    } catch (error) {
-      console.error('Error approving user:', error);
-      alert('Error occurred while approving user');
-    }
   };
 
   const handleInputChange = (e) => {
@@ -143,16 +97,13 @@ const AdminDashboard = () => {
     const pharmacyCount = users.filter(u => u.role === 'Pharmacy').length;
     const staffCount = users.filter(u => u.role === 'Hospital Staff').length;
     const receptionistCount = users.filter(u => u.role === 'Receptionist').length;
-    const pendingCount = pendingUsers.length;
-    
     return {
       totalUsers,
       studentCount,
       doctorCount,
       pharmacyCount,
       staffCount,
-      receptionistCount,
-      pendingCount
+      receptionistCount
     };
   };
 
@@ -200,7 +151,7 @@ const AdminDashboard = () => {
           </ul>
           <p>Current stored data: {JSON.stringify(currentUser)}</p>
           <div style={{ marginTop: '20px' }}>
-            <button 
+            <button
               onClick={createTestAdmin}
               style={{
                 padding: '10px 20px',
@@ -214,7 +165,7 @@ const AdminDashboard = () => {
             >
               Create Test Admin
             </button>
-            <button 
+            <button
               onClick={() => {
                 localStorage.clear();
                 window.location.href = '/login';
@@ -244,25 +195,19 @@ const AdminDashboard = () => {
       </div>
 
       <div className="admin-tabs">
-        <button 
+        <button
           className={activeTab === 'overview' ? 'tab active' : 'tab'}
           onClick={() => setActiveTab('overview')}
         >
           <FaUsers /> Overview
         </button>
-        <button 
+        <button
           className={activeTab === 'create' ? 'tab active' : 'tab'}
           onClick={() => setActiveTab('create')}
         >
           <FaUserPlus /> Create User
         </button>
-        <button 
-          className={activeTab === 'pending' ? 'tab active' : 'tab'}
-          onClick={() => setActiveTab('pending')}
-        >
-          <FaClock /> Pending Approvals
-        </button>
-        <button 
+        <button
           className={activeTab === 'manage' ? 'tab active' : 'tab'}
           onClick={() => setActiveTab('manage')}
         >
@@ -317,131 +262,90 @@ const AdminDashboard = () => {
                   <p>Receptionists</p>
                 </div>
               </div>
-              <div className="stat-card pending">
-                <FaClock className="stat-icon" />
-                <div className="stat-info">
-                  <h3>{stats.pendingCount}</h3>
-                  <p>Pending Approvals</p>
-                </div>
-              </div>
             </div>
           </div>
         )}
 
         {activeTab === 'create' && (
-  <div className="create-section">
-    <h2>Create New User</h2>
-    
-    {/* Form Container */}
-    <div className="form-container">
-      <form onSubmit={handleCreateUser} className="create-user-form">
-        <div className="form-group">
-          <label htmlFor="role">Role</label>
-          <select
-            id="role"
-            name="role"
-            value={newUserForm.role}
-            onChange={handleInputChange}
-            required
-          >
-            {availableRoles.map(role => (
-              <option key={role} value={role}>{role}</option>
-            ))}
-          </select>
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="firstName">First Name</label>
-          <input
-            type="text"
-            id="firstName"
-            name="firstName"
-            value={newUserForm.firstName}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="lastName">Last Name</label>
-          <input
-            type="text"
-            id="lastName"
-            name="lastName"
-            value={newUserForm.lastName}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={newUserForm.email}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={newUserForm.password}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        
-        <button type="submit" disabled={loading} className="create-btn">
-          {loading ? 'Creating...' : 'Create User'}
-        </button>
-      </form>
-    </div>
-  </div>
-)}
+          <div className="create-section">
+            <h2>Create New User</h2>
 
-        {activeTab === 'pending' && (
-          <div className="pending-section">
-            <h2>Pending User Approvals</h2>
-            {pendingUsers.length === 0 ? (
-              <p>No pending approvals.</p>
-            ) : (
-              <div className="users-table">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Role</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pendingUsers.map(user => (
-                      <tr key={user.id}>
-                        <td>{user.name}</td>
-                        <td>{user.email}</td>
-                        <td>{user.role}</td>
-                        <td>
-                          <button 
-                            onClick={() => handleApproveUser(user.id)}
-                            className="approve-btn"
-                          >
-                            <FaUserCheck /> Approve
-                          </button>
-                        </td>
-                      </tr>
+            {/* Form Container */}
+            <div className="form-container">
+              <form onSubmit={handleCreateUser} className="create-user-form">
+                <div className="form-group">
+                  <label htmlFor="role">Role</label>
+                  <select
+                    id="role"
+                    name="role"
+                    value={newUserForm.role}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">Select Role</option>
+                    {availableRoles.map(role => (
+                      <option key={role} value={role}>{role}</option>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="firstName">First Name</label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    value={newUserForm.firstName}
+                    onChange={handleInputChange}
+                    placeholder="Enter first name"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="lastName">Last Name</label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    value={newUserForm.lastName}
+                    onChange={handleInputChange}
+                    placeholder="Enter last name"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="email">Email</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={newUserForm.email}
+                    onChange={handleInputChange}
+                    placeholder="Enter email address"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="password">Password</label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={newUserForm.password}
+                    onChange={handleInputChange}
+                    placeholder="Enter password"
+                    required
+                  />
+                </div>
+
+                <button type="submit" disabled={loading} className="create-btn">
+                  {loading ? 'Creating...' : 'Create User'}
+                </button>
+              </form>
+            </div>
           </div>
         )}
 
@@ -459,8 +363,6 @@ const AdminDashboard = () => {
                       <th>Name</th>
                       <th>Email</th>
                       <th>Role</th>
-                      <th>Status</th>
-                      <th>Created By Admin</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -470,16 +372,10 @@ const AdminDashboard = () => {
                         <td>{user.name}</td>
                         <td>{user.email}</td>
                         <td>
-                          <span className={`role-badge ${user.role.toLowerCase().replace(' ', '-')}`}>
+                          <span className={`role-badge ${user.role ? user.role.toLowerCase().replace(/ /g, '-') : ''}`}>
                             {user.role}
                           </span>
                         </td>
-                        <td>
-                          <span className={`status-badge ${user.isApproved ? 'approved' : 'pending'}`}>
-                            {user.isApproved ? 'Approved' : 'Pending'}
-                          </span>
-                        </td>
-                        <td>{user.createdByAdmin ? 'Yes' : 'No'}</td>
                       </tr>
                     ))}
                   </tbody>
