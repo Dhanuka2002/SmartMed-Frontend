@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './AdminDashboard.css';
-import { FaUsers, FaUserPlus, FaUserCheck, FaClock, FaTrash, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaUsers, FaUserPlus, FaUserCheck, FaClock, FaTrash } from 'react-icons/fa';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -14,11 +14,8 @@ const AdminDashboard = () => {
     lastName: '',
     email: '',
     password: '',
-    confirmPassword: '',
     role: 'Doctor'
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const availableRoles = ['Doctor', 'Pharmacy', 'Hospital Staff', 'Receptionist'];
 
@@ -70,13 +67,6 @@ const AdminDashboard = () => {
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
-    
-    // Check if passwords match
-    if (newUserForm.password !== newUserForm.confirmPassword) {
-      alert('Passwords do not match!');
-      return;
-    }
-    
     setLoading(true);
     
     try {
@@ -100,7 +90,7 @@ const AdminDashboard = () => {
       
       if (response.ok) {
         alert(result.message);
-        setNewUserForm({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '', role: 'Doctor' });
+        setNewUserForm({ firstName: '', lastName: '', email: '', password: '', role: 'Doctor' });
         fetchAllUsers();
       } else {
         alert(result.message || 'Error creating user');
@@ -339,108 +329,82 @@ const AdminDashboard = () => {
         )}
 
         {activeTab === 'create' && (
-          <div className="create-section">
-            <h2>Create New User</h2>
-            <form onSubmit={handleCreateUser} className="create-user-form">
-              <div className="form-group">
-                <label htmlFor="role">Role</label>
-                <select
-                  id="role"
-                  name="role"
-                  value={newUserForm.role}
-                  onChange={handleInputChange}
-                  required
-                >
-                  {availableRoles.map(role => (
-                    <option key={role} value={role}>{role}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="firstName">First Name</label>
-                <input
-                  type="text"
-                  id="firstName"
-                  name="firstName"
-                  value={newUserForm.firstName}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="lastName">Last Name</label>
-                <input
-                  type="text"
-                  id="lastName"
-                  name="lastName"
-                  value={newUserForm.lastName}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="email">Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={newUserForm.email}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="password">Password</label>
-                <div className="password-input-wrapper">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    id="password"
-                    name="password"
-                    value={newUserForm.password}
-                    onChange={handleInputChange}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle-btn"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <FaEyeSlash /> : <FaEye />}
-                  </button>
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="confirmPassword">Confirm Password</label>
-                <div className="password-input-wrapper">
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={newUserForm.confirmPassword}
-                    onChange={handleInputChange}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle-btn"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                  </button>
-                </div>
-              </div>
-              
-              <button type="submit" disabled={loading} className="create-btn">
-                {loading ? 'Creating...' : 'Create User'}
-              </button>
-            </form>
-          </div>
-        )}
+  <div className="create-section">
+    <h2>Create New User</h2>
+    
+    {/* Form Container */}
+    <div className="form-container">
+      <form onSubmit={handleCreateUser} className="create-user-form">
+        <div className="form-group">
+          <label htmlFor="role">Role</label>
+          <select
+            id="role"
+            name="role"
+            value={newUserForm.role}
+            onChange={handleInputChange}
+            required
+          >
+            {availableRoles.map(role => (
+              <option key={role} value={role}>{role}</option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="firstName">First Name</label>
+          <input
+            type="text"
+            id="firstName"
+            name="firstName"
+            value={newUserForm.firstName}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="lastName">Last Name</label>
+          <input
+            type="text"
+            id="lastName"
+            name="lastName"
+            value={newUserForm.lastName}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={newUserForm.email}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={newUserForm.password}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        
+        <button type="submit" disabled={loading} className="create-btn">
+          {loading ? 'Creating...' : 'Create User'}
+        </button>
+      </form>
+    </div>
+  </div>
+)}
 
         {activeTab === 'pending' && (
           <div className="pending-section">
