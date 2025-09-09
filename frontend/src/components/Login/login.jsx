@@ -98,7 +98,7 @@ const Login = () => {
                 <span></span>
                 <span></span>
               </div>
-              <p>Redirecting to your dashboard...</p>
+              <p>Redirecting to your dashboard....</p>
             </div>
           </div>
         </div>
@@ -119,7 +119,7 @@ const Login = () => {
             <input
               type="email"
               name="email"
-              placeholder="youremail@example.com"
+              placeholder="E-mail"
               value={formData.email}
               onChange={handleChange}
               required

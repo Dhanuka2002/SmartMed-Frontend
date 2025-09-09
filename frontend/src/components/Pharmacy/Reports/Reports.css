@@ -48,10 +48,11 @@
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+  
 }
 
 .filter-select {
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 0.5rem;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
   font-size: 1rem;
@@ -59,6 +60,7 @@
   cursor: pointer;
   transition: border-color 0.3s ease;
   min-width: 150px;
+  
 }
 
 .filter-select:focus {
@@ -405,7 +407,12 @@
   font-weight: 700;
   color: #1f2937;
   margin: 0 0 1rem 0;
+  margin-left: -18px;
+  
 }
+
+
+
 
 /* Loading State */
 .loading-state {
@@ -414,7 +421,7 @@
   align-items: center;
   justify-content: center;
   min-height: 400px;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .loading-state h2 {
@@ -452,15 +459,34 @@
   gap: 1rem;
 }
 
-.update-indicator {
-  background: #ecfdf5;
-  color: #059669;
+.chart-controls .auto-update-indicator {
+  color: #f0fdf4;
   padding: 0.25rem 0.75rem;
   border-radius: 50px;
   font-size: 0.75rem;
   font-weight: 600;
-  animation: pulse 2s infinite;
+  animation: 
+  pulse 2s infinite;
 }
+
+.metric .metric-label{
+  color: #2563eb;
+  font-weight: 600px;
+  margin-right: -20px; 
+  padding-left: 10px; 
+}
+
+.metric .metric-value{
+  font-size: 1.5rem;
+  margin-right: -20px;
+  padding-left: 10px;
+}
+
+.chart-controls .live-indicator{
+  color: #f0fdf4;
+  margin-right: 8px;
+}
+
 
 .alert-count-badge {
   background: #fee2e2;

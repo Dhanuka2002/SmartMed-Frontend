@@ -337,7 +337,7 @@ const Reports = () => {
           <div className="chart-header">
             <h2>
               <span className="chart-icon">📈</span>
-              Daily Medicine Usage Stats
+              Daily Medicine Usage Status
             </h2>
             <div className="chart-controls">
               <span className="live-indicator">🔴 Live Updates</span>

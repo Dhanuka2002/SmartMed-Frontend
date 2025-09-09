@@ -1,8 +1,6 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
-import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Entity
 @Table(name = "users")
@@ -32,22 +30,9 @@ public class User {
     
     @Column(name = "created_by_admin")
     private Boolean createdByAdmin = false;
-    
-    @Column(name = "created_at")
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime createdAt;
-    
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-    }
 
     // ----- Constructors -----
-    public User() {
-        this.createdAt = LocalDateTime.now();
-    }
+    public User() {}
 
     public User(Long id, String name, String email, String password, String role) {
         this.id = id;
@@ -57,7 +42,6 @@ public class User {
         this.role = role;
         this.isApproved = role.equals("Student") ? true : false;
         this.createdByAdmin = false;
-        this.createdAt = LocalDateTime.now();
     }
     
     public User(Long id, String firstName, String lastName, String email, String password, String role) {
@@ -70,7 +54,6 @@ public class User {
         this.role = role;
         this.isApproved = role.equals("Student") ? true : false;
         this.createdByAdmin = false;
-        this.createdAt = LocalDateTime.now();
     }
 
     // ----- Getters & Setters -----
@@ -149,14 +132,6 @@ public class User {
     
     public void setCreatedByAdmin(Boolean createdByAdmin) {
         this.createdByAdmin = createdByAdmin;
-    }
-    
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-    
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
     
     // Helper method to update full name from first and last names
