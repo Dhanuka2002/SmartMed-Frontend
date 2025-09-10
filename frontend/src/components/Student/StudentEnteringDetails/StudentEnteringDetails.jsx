@@ -784,11 +784,11 @@ function StudentEnteringDetails() {
                 />
               </div>
               <div className="signature-field">
-                <label>Signature</label>
+                <label>Staff Member Name</label>
                 <input 
                   type="text" 
                   name="signature"
-                  placeholder="Your signature" 
+                  placeholder="Member Name" 
                   value={formData.signature}
                   onChange={handleInputChange}
                   required 
