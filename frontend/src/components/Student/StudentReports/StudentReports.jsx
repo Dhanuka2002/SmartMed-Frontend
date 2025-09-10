@@ -645,26 +645,6 @@ function StudentReports() {
         </div>
       </div>
 
-      {/* Medical Conditions Summary */}
-      {medicalConditions.total > 0 && (
-        <div className="conditions-summary">
-          <div className="card-header">
-            <div className="card-icon conditions-icon">📋</div>
-            <h3 className="card-title">Medical Conditions Summary</h3>
-          </div>
-          <div className="conditions-content">
-            {medicalConditions.conditions.map((condition, index) => (
-              <div key={index} className="condition-item">
-                <div className="condition-header">
-                  <span className="condition-name">{condition.name}</span>
-                  <span className="condition-status">Active</span>
-                </div>
-                <p className="condition-details">{condition.details}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {!studentData && (
         <div className="incomplete-profile-notice">
