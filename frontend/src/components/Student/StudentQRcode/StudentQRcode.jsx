@@ -16,6 +16,8 @@ function StudentQRCode() {
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [inputEmail, setInputEmail] = useState("");
   const [formsStatus, setFormsStatus] = useState({ hasStudentData: false, hasHospitalData: false, bothComplete: false });
+  const [allergiesData, setAllergiesData] = useState(null);
+  const [loadingAllergies, setLoadingAllergies] = useState(false);
 
   useEffect(() => {
     // Load current user data
@@ -78,6 +80,49 @@ function StudentQRCode() {
       window.removeEventListener('qrCodeGenerated', handleQRGenerated);
     };
   }, []);
+
+  // Fetch allergies data from hospital form data
+  const fetchAllergiesData = async (email) => {
+    setLoadingAllergies(true);
+    try {
+      // Try to get hospital data from localStorage
+      const hospitalData = JSON.parse(localStorage.getItem(`hospitalData_${email}`) || '{}');
+      
+      if (hospitalData.hasAllergies) {
+        const allergiesInfo = {
+          hasAllergies: hospitalData.hasAllergies,
+          allergies: hospitalData.allergies || {},
+          allergyDetails: hospitalData.allergyDetails || ''
+        };
+        setAllergiesData(allergiesInfo);
+      } else {
+        // Fallback to general hospital form data
+        const generalHospitalData = JSON.parse(localStorage.getItem('hospitalFormData') || '{}');
+        if (generalHospitalData.hasAllergies && generalHospitalData.studentEmail === email) {
+          const allergiesInfo = {
+            hasAllergies: generalHospitalData.hasAllergies,
+            allergies: generalHospitalData.allergies || {},
+            allergyDetails: generalHospitalData.allergyDetails || ''
+          };
+          setAllergiesData(allergiesInfo);
+        } else {
+          setAllergiesData({ hasAllergies: 'no', allergies: {}, allergyDetails: '' });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching allergies data:', error);
+      setAllergiesData({ hasAllergies: 'unknown', allergies: {}, allergyDetails: '' });
+    } finally {
+      setLoadingAllergies(false);
+    }
+  };
+
+  // Load allergies data when email changes
+  useEffect(() => {
+    if (studentEmail && studentEmail !== 'No Email') {
+      fetchAllergiesData(studentEmail);
+    }
+  }, [studentEmail]);
 
   // Generate QR code from medical data using email
   const generateMedicalQR = async () => {
@@ -370,6 +415,8 @@ function StudentQRCode() {
               </div>
             </div>
           )}
+
+       
         </div>
 
         <div className="qr-footer">

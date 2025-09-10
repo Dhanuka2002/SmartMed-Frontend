@@ -85,15 +85,18 @@ public class MedicalRecord {
     @Column(columnDefinition = "TEXT")
     private String reason;
 
+    // Allergies
+    private String hasAllergies;
+    @Column(columnDefinition = "TEXT")
+    private String allergies;
+    @Column(columnDefinition = "TEXT")  
+    private String allergyDetails;
+
     // Dates and Signatures
     private LocalDate date1;
-    private LocalDate date2;
     
     @Column(columnDefinition = "LONGTEXT")
     private String medicalOfficerSignature;
-    
-    @Column(columnDefinition = "LONGTEXT")
-    private String itumMedicalOfficerSignature;
 
     // Metadata
     private LocalDateTime createdAt;
@@ -503,13 +506,6 @@ public class MedicalRecord {
         this.date1 = date1;
     }
 
-    public LocalDate getDate2() {
-        return date2;
-    }
-
-    public void setDate2(LocalDate date2) {
-        this.date2 = date2;
-    }
 
     public String getMedicalOfficerSignature() {
         return medicalOfficerSignature;
@@ -519,13 +515,6 @@ public class MedicalRecord {
         this.medicalOfficerSignature = medicalOfficerSignature;
     }
 
-    public String getItumMedicalOfficerSignature() {
-        return itumMedicalOfficerSignature;
-    }
-
-    public void setItumMedicalOfficerSignature(String itumMedicalOfficerSignature) {
-        this.itumMedicalOfficerSignature = itumMedicalOfficerSignature;
-    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
@@ -541,5 +530,29 @@ public class MedicalRecord {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getHasAllergies() {
+        return hasAllergies;
+    }
+
+    public void setHasAllergies(String hasAllergies) {
+        this.hasAllergies = hasAllergies;
+    }
+
+    public String getAllergies() {
+        return allergies;
+    }
+
+    public void setAllergies(String allergies) {
+        this.allergies = allergies;
+    }
+
+    public String getAllergyDetails() {
+        return allergyDetails;
+    }
+
+    public void setAllergyDetails(String allergyDetails) {
+        this.allergyDetails = allergyDetails;
     }
 }

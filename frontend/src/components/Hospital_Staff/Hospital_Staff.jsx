@@ -139,6 +139,24 @@ const Hospital_Staff = () => {
   // Get current user email for tracking purposes
   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
   
+  // Predefined allergy categories
+  const defaultAllergyCategories = [
+    'Food Allergies',
+    'Drug/Medication Allergies', 
+    'Environmental Allergies',
+    'Seasonal Allergies',
+    'Insect Sting Allergies',
+    'Latex Allergies',
+    'Contact Allergies',
+    'Chemical Allergies',
+    'Animal Allergies',
+    'Metal Allergies'
+  ];
+  
+  const [allergyCategories, setAllergyCategories] = useState(defaultAllergyCategories);
+  const [newCategory, setNewCategory] = useState('');
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  
   const [formData, setFormData] = useState({
     studentEmail: currentUser.role === 'Student' ? currentUser.email : '',
     vaccinated: '',
@@ -187,9 +205,11 @@ const Hospital_Staff = () => {
     fitForStudies: '',
     reason: '',
     date1: '',
-    date2: '',
     medicalOfficerSignature: '',
-    itumMedicalOfficerSignature: ''
+    // Allergies section
+    allergies: {},
+    allergyDetails: '',
+    hasAllergies: ''
   });
 
   const [clearSignatures, setClearSignatures] = useState(0);
@@ -209,10 +229,52 @@ const Hospital_Staff = () => {
     }));
   };
 
+  const handleAllergyChange = (category, checked) => {
+    setFormData(prev => ({
+      ...prev,
+      allergies: {
+        ...prev.allergies,
+        [category]: checked
+      }
+    }));
+  };
+
+  const addNewAllergyCategory = () => {
+    if (newCategory.trim() && !allergyCategories.includes(newCategory.trim())) {
+      const updatedCategories = [...allergyCategories, newCategory.trim()];
+      setAllergyCategories(updatedCategories);
+      setNewCategory('');
+      setShowAddCategory(false);
+      
+      // Auto-select the newly added category
+      setFormData(prev => ({
+        ...prev,
+        allergies: {
+          ...prev.allergies,
+          [newCategory.trim()]: true
+        }
+      }));
+    }
+  };
+
+  const removeAllergyCategory = (categoryToRemove) => {
+    if (!defaultAllergyCategories.includes(categoryToRemove)) {
+      setAllergyCategories(prev => prev.filter(cat => cat !== categoryToRemove));
+      setFormData(prev => {
+        const newAllergies = { ...prev.allergies };
+        delete newAllergies[categoryToRemove];
+        return {
+          ...prev,
+          allergies: newAllergies
+        };
+      });
+    }
+  };
+
   const handleSubmit = async () => {
-    // Check if both signatures are present
-    if (!formData.medicalOfficerSignature || !formData.itumMedicalOfficerSignature) {
-      alert('Please provide both digital signatures before submitting.');
+    // Check if medical officer signature is present
+    if (!formData.medicalOfficerSignature) {
+      alert('Please provide the medical officer digital signature before submitting.');
       return;
     }
     
@@ -237,7 +299,9 @@ const Hospital_Staff = () => {
         height: formData.height === '' ? null : parseFloat(formData.height),
         chestInspiration: formData.chestInspiration === '' ? null : parseFloat(formData.chestInspiration),
         chestExpiration: formData.chestExpiration === '' ? null : parseFloat(formData.chestExpiration),
-        hemoglobin: formData.hemoglobin === '' ? null : parseFloat(formData.hemoglobin)
+        hemoglobin: formData.hemoglobin === '' ? null : parseFloat(formData.hemoglobin),
+        // Serialize allergies object to JSON string for backend storage
+        allergies: JSON.stringify(formData.allergies)
       };
 
       // You may need to add authentication headers here
@@ -308,8 +372,7 @@ const Hospital_Staff = () => {
     setClearSignatures(prev => prev + 1);
     setFormData(prev => ({
       ...prev,
-      medicalOfficerSignature: '',
-      itumMedicalOfficerSignature: ''
+      medicalOfficerSignature: ''
     }));
   };
 
@@ -848,9 +911,138 @@ const Hospital_Staff = () => {
             </div>
           </div>
 
+          {/* Allergies Section */}
+          <div className="form-section">
+            <label className="section-title">10. Allergies and Sensitivities</label>
+            
+            {/* Has Allergies Question */}
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ fontWeight: 'bold', marginBottom: '0.5rem', display: 'block' }}>
+                Does the student have any known allergies?
+              </label>
+              <div className="radio-group">
+                <label>
+                  <input 
+                    type="radio" 
+                    name="hasAllergies" 
+                    value="yes" 
+                    onChange={handleInputChange}
+                  />
+                  Yes
+                </label>
+                <label>
+                  <input 
+                    type="radio" 
+                    name="hasAllergies" 
+                    value="no" 
+                    onChange={handleInputChange}
+                  />
+                  No
+                </label>
+              </div>
+            </div>
+
+            {/* Allergy Categories - Show only if has allergies */}
+            {formData.hasAllergies === 'yes' && (
+              <>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ fontWeight: 'bold', marginBottom: '0.5rem', display: 'block' }}>
+                    Select applicable allergy categories:
+                  </label>
+                  <div className="allergy-categories">
+                    {allergyCategories.map((category, index) => (
+                      <div key={index} className="allergy-category-item">
+                        <label className="allergy-checkbox">
+                          <input 
+                            type="checkbox" 
+                            checked={formData.allergies[category] || false}
+                            onChange={(e) => handleAllergyChange(category, e.target.checked)}
+                          />
+                          {category}
+                        </label>
+                        {!defaultAllergyCategories.includes(category) && (
+                          <button 
+                            type="button" 
+                            className="remove-category-btn"
+                            onClick={() => removeAllergyCategory(category)}
+                            title="Remove custom category"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Add New Category */}
+                <div style={{ marginBottom: '1rem' }}>
+                  {!showAddCategory ? (
+                    <button 
+                      type="button" 
+                      className="add-category-btn"
+                      onClick={() => setShowAddCategory(true)}
+                    >
+                      + Add New Allergy Category
+                    </button>
+                  ) : (
+                    <div className="add-category-form">
+                      <input 
+                        type="text"
+                        value={newCategory}
+                        onChange={(e) => setNewCategory(e.target.value)}
+                        placeholder="Enter new allergy category"
+                        onKeyPress={(e) => e.key === 'Enter' && addNewAllergyCategory()}
+                      />
+                      <button 
+                        type="button" 
+                        className="add-btn"
+                        onClick={addNewAllergyCategory}
+                      >
+                        Add
+                      </button>
+                      <button 
+                        type="button" 
+                        className="cancel-btn"
+                        onClick={() => {
+                          setShowAddCategory(false);
+                          setNewCategory('');
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Allergy Details */}
+                <div>
+                  <label style={{ fontWeight: 'bold', marginBottom: '0.5rem', display: 'block' }}>
+                    Please provide specific details about allergies (medications, foods, reactions, etc.):
+                  </label>
+                  <textarea 
+                    name="allergyDetails" 
+                    value={formData.allergyDetails}
+                    onChange={handleInputChange}
+                    rows="4"
+                    placeholder="Describe specific allergies, symptoms, severity, treatments used, etc..."
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '2px solid #ddd',
+                      borderRadius: '6px',
+                      fontSize: '1rem',
+                      resize: 'vertical'
+                    }}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Specialist Referral */}
           <div className="form-section">
-            <label className="section-title">10. Does the student need referral to a specialist regarding any medical condition?</label>
+            <label className="section-title">11. Does the student need referral to a specialist regarding any medical condition?</label>
             <div className="radio-group">
               <label>
                 <input 
@@ -950,20 +1142,10 @@ const Hospital_Staff = () => {
                   height={120}
                 />
               </div>
-              <div className="signature-item">
-                <label>ITUM Medical Officer Signature</label>
-                <SignaturePad
-                  onSignatureChange={(data) => handleSignatureChange('itumMedicalOfficerSignature', data)}
-                  label="ITUM Medical Officer"
-                  clearSignal={clearSignatures}
-                  width={300}
-                  height={120}
-                />
-              </div>
             </div>
             <div className="signature-actions">
-              <button type="button" className="clear-all-btn" onClick={clearAllSignatures}>
-                Clear All Signatures
+              <button type="button" className="clear-signature-btn" onClick={clearAllSignatures}>
+                Clear Signature
               </button>
             </div>
           </div>
