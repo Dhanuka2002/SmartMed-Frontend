@@ -37,15 +37,35 @@ public class MedicalRecordController {
             // Set the email field to the same value as studentEmail for database compatibility
             medicalRecord.setEmail(medicalRecord.getStudentEmail());
 
-            // Validate signatures
+            // Validate signature
             if (medicalRecord.getMedicalOfficerSignature() == null || 
-                medicalRecord.getMedicalOfficerSignature().trim().isEmpty() ||
-                medicalRecord.getItumMedicalOfficerSignature() == null || 
-                medicalRecord.getItumMedicalOfficerSignature().trim().isEmpty()) {
+                medicalRecord.getMedicalOfficerSignature().trim().isEmpty()) {
                 
                 response.put("status", "error");
-                response.put("message", "Both digital signatures are required");
+                response.put("message", "Medical officer digital signature is required");
                 return ResponseEntity.badRequest().body(response);
+            }
+
+            // Validate and process allergies data
+            if (medicalRecord.getHasAllergies() != null && "yes".equals(medicalRecord.getHasAllergies())) {
+                // If patient has allergies, ensure allergy details are provided
+                if ((medicalRecord.getAllergies() == null || medicalRecord.getAllergies().trim().isEmpty()) &&
+                    (medicalRecord.getAllergyDetails() == null || medicalRecord.getAllergyDetails().trim().isEmpty())) {
+                    
+                    response.put("status", "error");
+                    response.put("message", "If patient has allergies, please provide either allergy categories or details");
+                    return ResponseEntity.badRequest().body(response);
+                }
+                
+                // Log allergy information for debugging
+                System.out.println("Processing medical record with allergies:");
+                System.out.println("Has Allergies: " + medicalRecord.getHasAllergies());
+                System.out.println("Allergy Categories: " + medicalRecord.getAllergies());
+                System.out.println("Allergy Details: " + medicalRecord.getAllergyDetails());
+            } else {
+                // If no allergies, clear any existing allergy data
+                medicalRecord.setAllergies(null);
+                medicalRecord.setAllergyDetails(null);
             }
 
             // Save the medical record
@@ -315,6 +335,45 @@ public class MedicalRecordController {
         
         examination.put("examination", examinationDetails);
         
+        // Allergies
+        Map<String, Object> allergies = new HashMap<>();
+        boolean hasAllergies = Integer.parseInt(idSuffix) % 4 == 0; // 25% chance of having allergies
+        allergies.put("hasAllergies", hasAllergies ? "yes" : "no");
+        
+        if (hasAllergies) {
+            // Sample allergy categories based on ID
+            Map<String, Boolean> allergyCategories = new HashMap<>();
+            String[] possibleAllergies = {
+                "Food Allergies", "Drug/Medication Allergies", "Environmental Allergies", 
+                "Seasonal Allergies", "Insect Sting Allergies", "Latex Allergies"
+            };
+            
+            // Assign 1-3 random allergies based on ID
+            int numAllergies = (Integer.parseInt(idSuffix) % 3) + 1;
+            for (int i = 0; i < numAllergies && i < possibleAllergies.length; i++) {
+                int allergyIndex = (Integer.parseInt(idSuffix) + i) % possibleAllergies.length;
+                allergyCategories.put(possibleAllergies[allergyIndex], true);
+            }
+            
+            allergies.put("categories", allergyCategories);
+            
+            // Sample allergy details
+            String[] allergyDetailsSamples = {
+                "Mild reaction to shellfish - swelling and hives. Carries epinephrine.",
+                "Penicillin allergy - rash and difficulty breathing. Alternative antibiotics required.",
+                "Seasonal pollen allergies - sneezing and congestion during spring. Takes antihistamines.",
+                "Latex sensitivity - skin irritation with latex gloves. Uses nitrile alternatives.",
+                "Food allergies to peanuts - severe anaphylactic reactions. Strict avoidance required."
+            };
+            
+            allergies.put("details", allergyDetailsSamples[Integer.parseInt(idSuffix) % allergyDetailsSamples.length]);
+        } else {
+            allergies.put("categories", new HashMap<>());
+            allergies.put("details", "");
+        }
+        
+        examination.put("allergies", allergies);
+        
         // Assessment
         Map<String, Object> assessment = new HashMap<>();
         assessment.put("specialistReferral", Integer.parseInt(idSuffix) % 7 == 0 ? "yes" : "no");
@@ -328,9 +387,7 @@ public class MedicalRecordController {
         // Certification
         Map<String, Object> certification = new HashMap<>();
         certification.put("date1", new Date().toString());
-        certification.put("date2", new Date().toString());
         certification.put("medicalOfficerSignature", "Dr. Sarah Williams");
-        certification.put("itumMedicalOfficerSignature", "Dr. Michael Brown");
         examination.put("certification", certification);
         
         medicalRecord.put("examination", examination);
@@ -360,6 +417,73 @@ public class MedicalRecordController {
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", "Failed to delete medical record: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/with-allergies")
+    public ResponseEntity<List<MedicalRecord>> getMedicalRecordsWithAllergies() {
+        try {
+            List<MedicalRecord> records = medicalRecordRepository.findByHasAllergies("yes");
+            return ResponseEntity.ok(records);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ArrayList<>());
+        }
+    }
+
+    @GetMapping("/allergies-report")
+    public ResponseEntity<Map<String, Object>> getAllergiesReport() {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            List<MedicalRecord> allRecords = medicalRecordRepository.findAll();
+            List<MedicalRecord> recordsWithAllergies = medicalRecordRepository.findByHasAllergies("yes");
+            
+            response.put("totalRecords", allRecords.size());
+            response.put("recordsWithAllergies", recordsWithAllergies.size());
+            response.put("recordsWithoutAllergies", allRecords.size() - recordsWithAllergies.size());
+            response.put("allergyPercentage", allRecords.size() > 0 ? 
+                (recordsWithAllergies.size() * 100.0 / allRecords.size()) : 0);
+            
+            // Count common allergy categories
+            Map<String, Integer> categoryCounts = new HashMap<>();
+            for (MedicalRecord record : recordsWithAllergies) {
+                if (record.getAllergies() != null && !record.getAllergies().trim().isEmpty()) {
+                    try {
+                        // Parse JSON string to extract categories
+                        String allergiesJson = record.getAllergies();
+                        // Simple parsing - you might want to use a JSON library for production
+                        if (allergiesJson.contains("Food Allergies\":true")) {
+                            categoryCounts.merge("Food Allergies", 1, Integer::sum);
+                        }
+                        if (allergiesJson.contains("Drug/Medication Allergies\":true")) {
+                            categoryCounts.merge("Drug/Medication Allergies", 1, Integer::sum);
+                        }
+                        if (allergiesJson.contains("Environmental Allergies\":true")) {
+                            categoryCounts.merge("Environmental Allergies", 1, Integer::sum);
+                        }
+                        if (allergiesJson.contains("Seasonal Allergies\":true")) {
+                            categoryCounts.merge("Seasonal Allergies", 1, Integer::sum);
+                        }
+                        if (allergiesJson.contains("Insect Sting Allergies\":true")) {
+                            categoryCounts.merge("Insect Sting Allergies", 1, Integer::sum);
+                        }
+                        if (allergiesJson.contains("Latex Allergies\":true")) {
+                            categoryCounts.merge("Latex Allergies", 1, Integer::sum);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Error parsing allergies JSON: " + e.getMessage());
+                    }
+                }
+            }
+            
+            response.put("commonAllergies", categoryCounts);
+            response.put("status", "success");
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to generate allergies report: " + e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
     }

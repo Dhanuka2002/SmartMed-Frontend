@@ -593,6 +593,67 @@ const DoctorReport = () => {
           </>
         )}
 
+        {/* Allergies Section */}
+        {hospitalData && (
+          <div className="report-section allergies-section">
+            <h2 className="section-title">🚨 Allergies & Sensitivities</h2>
+            {hospitalData.hasAllergies === 'yes' ? (
+              <div className="allergies-content">
+                <div className="allergy-status confirmed">
+                  <strong>⚠️ PATIENT HAS KNOWN ALLERGIES</strong>
+                </div>
+                
+                {hospitalData.allergies && typeof hospitalData.allergies === 'object' && Object.keys(hospitalData.allergies).length > 0 && (
+                  <div className="allergy-categories">
+                    <h3>Allergy Categories:</h3>
+                    <div className="category-grid">
+                      {Object.entries(hospitalData.allergies).map(([category, hasAllergy]) => 
+                        hasAllergy && (
+                          <div key={category} className="allergy-category">
+                            <span className="category-icon">🚫</span>
+                            {category}
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {hospitalData.allergyDetails && (
+                  <div className="allergy-details">
+                    <h3>Detailed Information:</h3>
+                    <div className="details-text">
+                      {hospitalData.allergyDetails}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="allergy-warning">
+                  <strong>⚠️ MEDICAL ALERT:</strong> Please review allergy information before prescribing medications or treatments.
+                </div>
+              </div>
+            ) : hospitalData.hasAllergies === 'no' ? (
+              <div className="allergies-content">
+                <div className="allergy-status none">
+                  <strong>✅ NO KNOWN ALLERGIES REPORTED</strong>
+                </div>
+                <div className="no-allergies-note">
+                  Patient reports no known allergies to medications, foods, or environmental factors.
+                </div>
+              </div>
+            ) : (
+              <div className="allergies-content">
+                <div className="allergy-status unknown">
+                  <strong>❓ ALLERGY STATUS NOT DOCUMENTED</strong>
+                </div>
+                <div className="missing-info-note">
+                  Allergy information was not collected during this medical examination.
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Medical Officer Signatures */}
         {hospitalData && (
           <div className="report-section signatures">
@@ -606,16 +667,6 @@ const DoctorReport = () => {
                   <div className="signature-placeholder">Signature not available</div>
                 )}
                 <div className="signature-date">Date: {formatDate(hospitalData.date1)}</div>
-              </div>
-              
-              <div className="signature-box">
-                <div className="signature-label">ITUM Medical Officer</div>
-                {hospitalData.itumMedicalOfficerSignature ? (
-                  <img src={hospitalData.itumMedicalOfficerSignature} alt="ITUM Medical Officer Signature" className="signature-image" />
-                ) : (
-                  <div className="signature-placeholder">Signature not available</div>
-                )}
-                <div className="signature-date">Date: {formatDate(hospitalData.date2)}</div>
               </div>
             </div>
           </div>
