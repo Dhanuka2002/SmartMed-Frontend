@@ -12,13 +12,31 @@ function StudentTelemed() {
     setIsRequestSent(true);
     setIsWaitingResponse(true);
     
+    // Check if Jitsi API is available before proceeding
+    if (!window.JitsiMeetExternalAPI) {
+      alert('Video calling system is not ready. Please refresh the page and try again.');
+      setIsRequestSent(false);
+      setIsWaitingResponse(false);
+      return;
+    }
+    
+    // Create or get shared room name
+    let roomName = localStorage.getItem('smartmed_room_name');
+    if (!roomName) {
+      roomName = `SmartMed-${Date.now()}`;
+      localStorage.setItem('smartmed_room_name', roomName);
+    }
+    
     const notification = {
+      id: Date.now(),
       type: 'video_call_request',
       title: 'Video Conference Request',
       message: 'A student is requesting a video conference consultation',
       studentName: 'Student User', // In real app, get from auth context
       studentId: 'STU001', // In real app, get from auth context
-      status: 'pending'
+      roomName: roomName,
+      status: 'pending',
+      timestamp: new Date().toISOString()
     };
 
     const existingNotifications = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
@@ -27,29 +45,47 @@ function StudentTelemed() {
 
     console.log('Video call request sent to doctor');
 
+    let checkCount = 0;
+    const maxChecks = 30; // 30 seconds total
+    
     const checkForResponse = setInterval(() => {
-      const currentNotifications = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
-      const myRequest = currentNotifications.find(n => 
-        n.type === 'video_call_request' && 
-        n.studentId === 'STU001' && 
-        n.status === 'accepted'
-      );
+      checkCount++;
+      
+      try {
+        const currentNotifications = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
+        const myRequest = currentNotifications.find(n => 
+          n.id === notification.id && 
+          n.type === 'video_call_request' && 
+          n.studentId === 'STU001' && 
+          n.status === 'accepted'
+        );
 
-      if (myRequest) {
+        if (myRequest) {
+          clearInterval(checkForResponse);
+          setIsWaitingResponse(false);
+          // Add a small delay to ensure Jitsi API is ready
+          setTimeout(() => {
+            navigate('/student/telemed-call');
+          }, 500);
+        } else if (checkCount >= maxChecks) {
+          clearInterval(checkForResponse);
+          setIsWaitingResponse(false);
+          setIsRequestSent(false);
+          alert('No response from doctor. Please try again later.');
+        }
+      } catch (error) {
+        console.error('Error checking notifications:', error);
         clearInterval(checkForResponse);
         setIsWaitingResponse(false);
-        navigate('/student/telemed-call');
+        setIsRequestSent(false);
+        alert('Error processing request. Please try again.');
       }
     }, 1000);
 
-    setTimeout(() => {
+    // Cleanup timeout - this will run if component unmounts
+    return () => {
       clearInterval(checkForResponse);
-      if (isWaitingResponse) {
-        setIsWaitingResponse(false);
-        alert('No response from doctor. Please try again later.');
-        setIsRequestSent(false);
-      }
-    }, 30000);
+    };
   };
 
   return (
