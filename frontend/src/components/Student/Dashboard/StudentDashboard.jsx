@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./StudentDashboard.css";
 import qrCode from "../../../assets/qr.png";
 import studentAvatar from "../../../assets/student.jpg";
@@ -6,6 +7,7 @@ import doctorImage from "../../../assets/doctors.png";
 import Avatar from "../../common/Avatar/Avatar";
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [studentData, setStudentData] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [studentFormData, setStudentFormData] = useState(null);
@@ -129,6 +131,15 @@ function Dashboard() {
       setLoading(false);
     }
   };
+
+  // Navigation handlers
+  const handleViewReports = () => {
+    navigate('/student/reports');
+  };
+
+  const handleViewQRCode = () => {
+    navigate('/student/qrcode');
+  };
   return (
     <div className="dashboard-container">
       {/* Header Section */}
@@ -177,10 +188,57 @@ function Dashboard() {
 
       {/* Main Content */}
       <main className="dashboard-main">
-        {/* Student Information Card */}
+        {/* Quick Actions Section */}
+        <section className="quick-actions">
+          <div className="quick-actions-grid">
+            <div className="action-card">
+              <div className="action-icon health">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 14C19 18.4183 12 23 12 23C12 23 5 18.4183 5 14C5 9.58172 8.13401 6 12 6C15.866 6 19 9.58172 19 14Z" stroke="currentColor" strokeWidth="2"/>
+                  <circle cx="12" cy="11" r="3" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+              </div>
+              <h3 className="action-title">Medical Reports</h3>
+              <p className="action-description">View your health history</p>
+              <button className="action-btn" onClick={handleViewReports}>View Reports</button>
+            </div>
+
+
+            <div className="action-card">
+              <div className="action-icon profile">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" strokeWidth="2"/>
+                  <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+              </div>
+              <h3 className="action-title">Update Profile</h3>
+              <p className="action-description">Keep your information current and accurate</p>
+              <a href="/student/entering-details" className="action-btn">Update</a>
+            </div>
+
+            <div className="action-card">
+              <div className="action-icon qr">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                  <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                  <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                  <rect x="5" y="5" width="3" height="3" fill="currentColor"/>
+                  <rect x="16" y="5" width="3" height="3" fill="currentColor"/>
+                  <rect x="5" y="16" width="3" height="3" fill="currentColor"/>
+                  <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+              </div>
+              <h3 className="action-title">QR Code</h3>
+              <p className="action-description">Quick access ID for medical appointments</p>
+              <button className="action-btn" onClick={handleViewQRCode}>View QR</button>
+            </div>
+          </div>
+        </section>
+
+        {/* Student Information Card - Full Width */}
         <section className="info-card">
           <div className="card-header">
-            <h2 className="card-title">Student Information</h2>
+            <h2 className="card-title">Personal Information</h2>
             <div className="card-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" stroke="currentColor" strokeWidth="2"/>
@@ -191,82 +249,102 @@ function Dashboard() {
           
           {!currentUser ? (
             <div className="no-user-notice">
-              <p>Please log in to view your student information.</p>
-              <a href="/login" className="login-btn">
-                Login
+              <div className="notice-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+              </div>
+              <h3>Authentication Required</h3>
+              <p>Please log in to view your student information and access all features.</p>
+              <a href="/login" className="notice-btn">
+                Login to Continue
               </a>
             </div>
           ) : !studentData ? (
             <div className="incomplete-profile-notice">
-              <p>Complete your medical profile to access all features.</p>
-              <a href="/student/entering-details" className="complete-profile-btn">
+              <div className="notice-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+              </div>
+              <h3>Complete Your Profile</h3>
+              <p>Enhance your healthcare experience by completing your medical profile.</p>
+              <a href="/student/entering-details" className="notice-btn">
                 Complete Profile
               </a>
             </div>
-          ) : null}
-          <div className="student-details">
-            <div className="detail-row">
-              <span className="detail-label">Full Name</span>
-              <span className="detail-value">
-                {studentData?.fullName || currentUser?.name || 'Not provided'}
-              </span>
+          ) : (
+            <div className="student-details">
+              <div className="details-grid">
+                <div className="detail-group">
+                  <div className="detail-row">
+                    <span className="detail-label">Full Name</span>
+                    <span className="detail-value">
+                      {studentData?.fullName || currentUser?.name || 'Not provided'}
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Student ID</span>
+                    <span className="detail-value">
+                      {studentData?.studentRegistrationNumber || 'Not provided'}
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Email Address</span>
+                    <span className="detail-value">
+                      {studentData?.email || currentUser?.email || 'Not provided'}
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Academic Division</span>
+                    <span className="detail-value">
+                      {studentData?.academicDivision ? 
+                        studentData.academicDivision.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 
+                        'Not provided'
+                      }
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="detail-group">
+                  <div className="detail-row">
+                    <span className="detail-label">Age</span>
+                    <span className="detail-value">
+                      {studentData?.age || 'Not provided'}
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Gender</span>
+                    <span className="detail-value">
+                      {studentData?.gender ? 
+                        studentData.gender.charAt(0).toUpperCase() + studentData.gender.slice(1) : 
+                        'Not provided'
+                      }
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Contact Number</span>
+                    <span className="detail-value">
+                      {studentData?.telephoneNumber || 'Not provided'}
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Emergency Contact</span>
+                    <span className="detail-value">
+                      {studentData?.emergencyName ? 
+                        `${studentData.emergencyName} (${studentData.emergencyTelephone || 'No phone'})` : 
+                        'Not provided'
+                      }
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="detail-row">
-              <span className="detail-label">Student ID</span>
-              <span className="detail-value">
-                {studentData?.studentRegistrationNumber || 'Not provided'}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Email</span>
-              <span className="detail-value">
-                {studentData?.email || currentUser?.email || 'Not provided'}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Academic Division</span>
-              <span className="detail-value">
-                {studentData?.academicDivision ? 
-                  studentData.academicDivision.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 
-                  'Not provided'
-                }
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Age</span>
-              <span className="detail-value">
-                {studentData?.age || 'Not provided'}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Gender</span>
-              <span className="detail-value">
-                {studentData?.gender ? 
-                  studentData.gender.charAt(0).toUpperCase() + studentData.gender.slice(1) : 
-                  'Not provided'
-                }
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Contact Number</span>
-              <span className="detail-value">
-                {studentData?.telephoneNumber || 'Not provided'}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Emergency Contact</span>
-              <span className="detail-value">
-                {studentData?.emergencyName ? 
-                  `${studentData.emergencyName} (${studentData.emergencyTelephone || 'No phone'})` : 
-                  'Not provided'
-                }
-              </span>
-            </div>
-          </div>
+          )}
         </section>
-
-
-     
       </main>
     </div>
   );
