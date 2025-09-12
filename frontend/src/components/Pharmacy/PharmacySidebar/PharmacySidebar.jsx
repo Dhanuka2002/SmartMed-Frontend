@@ -12,21 +12,6 @@ function Sidebar() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Clear all session data
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('studentName');
-    localStorage.removeItem('studentEmail');
-    
-    // Clear any cached data
-    const allKeys = Object.keys(localStorage);
-    allKeys.forEach(key => {
-      if (key.startsWith('qrCodeData_') || key.startsWith('medicalRecordId_') || 
-          key.startsWith('studentData_') || key.startsWith('hospitalData_')) {
-        localStorage.removeItem(key);
-      }
-    });
-    
-    // Redirect to login
     navigate('/login');
   };
 
