@@ -1,0 +1,407 @@
+/* General container styling */
+.settings-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+}
+
+/* Header styling */
+.settings-header {
+  margin-bottom: 2rem;
+}
+
+.settings-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-icon {
+  font-size: 1.5rem;
+  color: #2c3e50;
+}
+
+.settings-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.settings-header p {
+  color: #6b7280;
+  margin: 0.5rem 0 0;
+}
+
+/* Content layout */
+.settings-content {
+  display: flex;
+  gap: 2rem;
+}
+
+/* Sidebar styling */
+.settings-sidebar {
+  flex: 0 0 250px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.settings-nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.settings-nav-item:hover {
+  background-color: #f1f5f9;
+}
+
+.settings-nav-item.active {
+  background-color: #e2e8f0;
+  font-weight: 500;
+}
+
+.nav-icon {
+  font-size: 1.25rem;
+  margin-right: 0.75rem;
+  color: #4b5563;
+}
+
+.nav-arrow {
+  margin-left: auto;
+  color: #6b7280;
+}
+
+/* Main content styling */
+.settings-main {
+  flex: 1;
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.settings-section {
+  max-width: 600px;
+}
+
+/* Section header */
+.section-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.section-header p {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+/* Profile card */
+.profile-card {
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.profile-avatar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.avatar-circle {
+  width: 48px;
+  height: 48px;
+  background-color: #2563eb;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.profile-info h3 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.profile-role {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.detail-icon {
+  font-size: 1.25rem;
+  color: #4b5563;
+}
+
+.detail-content {
+  flex: 1;
+}
+
+.detail-content label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  display: block;
+}
+
+.detail-content span {
+  font-size: 1rem;
+  color: #2c3e50;
+}
+
+.role-badge {
+  background-color: #e2e8f0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+/* Security card */
+.security-card {
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.password-section {
+  max-width: 400px;
+}
+
+.password-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.password-icon {
+  font-size: 1.5rem;
+  color: #4b5563;
+}
+
+.password-header h3 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.password-header p {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Message styling */
+.message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.message.success {
+  background-color: #dff0d8;
+  color: #2e7d32;
+}
+
+.message.error {
+  background-color: #f8d7da;
+  color: #d32f2f;
+}
+
+/* Form styling */
+.password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.form-group label {
+  font-size: 0.875rem;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-input-wrapper input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.password-input-wrapper input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 1.25rem;
+}
+
+/* Password strength */
+.password-strength {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.strength-bar {
+  flex: 1;
+  height: 4px;
+  background-color: #e5e7eb;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.strength-fill {
+  height: 100%;
+  transition: width 0.3s, background-color 0.3s;
+}
+
+.strength-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Password match */
+.password-match {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.password-match.match {
+  color: #2e7d32;
+}
+
+.password-match.no-match {
+  color: #d32f2f;
+}
+
+.match-icon {
+  font-size: 1rem;
+}
+
+/* Password requirements */
+.password-requirements {
+  margin: 1rem 0;
+}
+
+.password-requirements h4 {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.password-requirements ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.password-requirements li {
+  font-size: 0.875rem;
+  color: #6b7280;
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.password-requirements li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #6b7280;
+}
+
+.password-requirements li.met {
+  color: #2e7d32;
+}
+
+.password-requirements li.met::before {
+  content: '✓';
+  color: #2e7d32;
+}
+
+/* Change password button */
+.change-password-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.change-password-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.change-password-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>🏥 SmartMed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Add a global flag to track Jitsi API loading
+      window.jitsiAPILoaded = false;
+      window.addEventListener('load', function() {
+        console.log('Page loaded, checking for Jitsi API...');
+        if (window.JitsiMeetExternalAPI) {
+          window.jitsiAPILoaded = true;
+          console.log('Jitsi API is ready');
+        } else {
+          console.warn('Jitsi API not found after page load');
+        }
+      });
+    </script>
+    <script src="https://meet.jit.si/external_api.js" onload="window.jitsiAPILoaded = true; console.log('Jitsi API script loaded');" onerror="console.error('Failed to load Jitsi API script');"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
