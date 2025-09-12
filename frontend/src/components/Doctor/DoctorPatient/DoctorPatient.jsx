@@ -41,7 +41,7 @@ import { usePrescription } from "../../../contexts/PrescriptionContext";
 import { useMedicineInventory } from "../../../contexts/MedicineInventoryContext";
 import "./DoctorPatient.css";
 import qr from "../../../assets/qr.png";
-import patientAvatar from "../../../assets/student.jpg";
+
 import Avatar from "../../common/Avatar/Avatar";
 import DigitalSignature from "../../common/DigitalSignature/DigitalSignature";
 
