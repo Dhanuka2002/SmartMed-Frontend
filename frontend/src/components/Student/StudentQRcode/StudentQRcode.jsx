@@ -20,45 +20,65 @@ function StudentQRCode() {
   const [loadingAllergies, setLoadingAllergies] = useState(false);
 
   useEffect(() => {
-    // Load current user data
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    
-    if (currentUser.email) {
-      setStudentName(currentUser.name || "Student");
-      setStudentEmail(currentUser.email);
-      setInputEmail(currentUser.email);
+    const loadUserDataAndQR = async () => {
+      // Load current user data
+      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
       
-      // Check for existing QR code for this specific user
-      const userQRData = localStorage.getItem(`qrCodeData_${currentUser.email}`);
-      const userRecordId = localStorage.getItem(`medicalRecordId_${currentUser.email}`);
-      
-      if (userQRData && userRecordId) {
-        setQrCodeData(userQRData);
-        setMedicalRecordId(userRecordId);
-      }
-      
-      // Check forms completion status
-      const status = checkFormsCompletion(currentUser.email);
-      setFormsStatus(status);
-    } else {
-      // Fallback to old system
-      setStudentName(localStorage.getItem("studentName") || "Student");
-      const email = localStorage.getItem("studentEmail") || "No Email";
-      setStudentEmail(email);
-      setInputEmail(email !== "No Email" ? email : "");
-      setQrCodeData(localStorage.getItem("qrCodeData") || "");
-      setMedicalRecordId(localStorage.getItem("medicalRecordId") || "");
-      
-      // Check forms completion status for fallback email
-      if (email !== "No Email") {
-        const status = checkFormsCompletion(email);
+      if (currentUser.email) {
+        setStudentName(currentUser.name || "Student");
+        setStudentEmail(currentUser.email);
+        setInputEmail(currentUser.email);
+        
+        // Check for existing QR code for this specific user
+        const userQRData = localStorage.getItem(`qrCodeData_${currentUser.email}`);
+        const userRecordId = localStorage.getItem(`medicalRecordId_${currentUser.email}`);
+        
+        if (userQRData && userRecordId) {
+          setQrCodeData(userQRData);
+          setMedicalRecordId(userRecordId);
+        }
+        
+        // Check forms completion status
+        const status = checkFormsCompletion(currentUser.email);
         setFormsStatus(status);
+        
+        // If forms are complete but no QR code exists, auto-generate it
+        if (status.bothComplete && !userQRData) {
+          console.log('Forms are complete but QR code missing, auto-generating...');
+          try {
+            const result = await processCompleteMedicalRecordByEmail(currentUser.email);
+            if (result.success) {
+              setQrCodeData(result.qrCode);
+              setMedicalRecordId(result.recordId);
+              console.log('QR code auto-generated successfully');
+            }
+          } catch (error) {
+            console.error('Error auto-generating QR code:', error);
+          }
+        }
+      } else {
+        // Fallback to old system
+        setStudentName(localStorage.getItem("studentName") || "Student");
+        const email = localStorage.getItem("studentEmail") || "No Email";
+        setStudentEmail(email);
+        setInputEmail(email !== "No Email" ? email : "");
+        setQrCodeData(localStorage.getItem("qrCodeData") || "");
+        setMedicalRecordId(localStorage.getItem("medicalRecordId") || "");
+        
+        // Check forms completion status for fallback email
+        if (email !== "No Email") {
+          const status = checkFormsCompletion(email);
+          setFormsStatus(status);
+        }
       }
-    }
+    };
+
+    loadUserDataAndQR();
 
     // Listen for QR code generation events
     const handleQRGenerated = (event) => {
       const { email, recordId } = event.detail;
+      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
       if (email === currentUser.email || email === studentEmail) {
         // Reload QR code data
         const qrData = localStorage.getItem(`qrCodeData_${email}`);
