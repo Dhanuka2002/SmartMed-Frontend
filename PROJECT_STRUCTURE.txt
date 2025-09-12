@@ -1,0 +1,464 @@
+SmartMed Full Stack Project Structure
+======================================
+
+📁 SmartMed-Project/ (Root Directory)
+├── 📄 README.md
+├── 📄 .gitignore
+├── 📄 docker-compose.yml (for deployment)
+│
+├── 📁 backend/ (API Server - TO BE CREATED)
+│   ├── 📄 package.json
+│   ├── 📄 .env
+│   ├── 📄 .env.example
+│   ├── 📄 server.js (Entry point)
+│   │
+│   ├── 📁 src/
+│   │   ├── 📁 controllers/
+│   │   │   ├── 📄 authController.js
+│   │   │   ├── 📄 userController.js
+│   │   │   ├── 📄 doctorController.js
+│   │   │   ├── 📄 studentController.js
+│   │   │   ├── 📄 pharmacyController.js
+│   │   │   ├── 📄 receptionistController.js
+│   │   │   ├── 📄 prescriptionController.js
+│   │   │   ├── 📄 queueController.js
+│   │   │   ├── 📄 telemedController.js
+│   │   │   └── 📄 reportController.js
+│   │   │
+│   │   ├── 📁 models/
+│   │   │   ├── 📄 User.js
+│   │   │   ├── 📄 Doctor.js
+│   │   │   ├── 📄 Student.js
+│   │   │   ├── 📄 Pharmacist.js
+│   │   │   ├── 📄 Receptionist.js
+│   │   │   ├── 📄 Prescription.js
+│   │   │   ├── 📄 MedicalRecord.js
+│   │   │   ├── 📄 Queue.js
+│   │   │   ├── 📄 Medicine.js
+│   │   │   ├── 📄 Inventory.js
+│   │   │   └── 📄 TelemedSession.js
+│   │   │
+│   │   ├── 📁 routes/
+│   │   │   ├── 📄 auth.js
+│   │   │   ├── 📄 users.js
+│   │   │   ├── 📄 doctors.js
+│   │   │   ├── 📄 students.js
+│   │   │   ├── 📄 pharmacy.js
+│   │   │   ├── 📄 receptionists.js
+│   │   │   ├── 📄 prescriptions.js
+│   │   │   ├── 📄 queue.js
+│   │   │   ├── 📄 telemed.js
+│   │   │   └── 📄 reports.js
+│   │   │
+│   │   ├── 📁 middleware/
+│   │   │   ├── 📄 auth.js
+│   │   │   ├── 📄 roleCheck.js
+│   │   │   ├── 📄 validation.js
+│   │   │   ├── 📄 errorHandler.js
+│   │   │   └── 📄 cors.js
+│   │   │
+│   │   ├── 📁 services/
+│   │   │   ├── 📄 authService.js
+│   │   │   ├── 📄 emailService.js
+│   │   │   ├── 📄 qrService.js
+│   │   │   ├── 📄 telemedService.js
+│   │   │   ├── 📄 prescriptionService.js
+│   │   │   ├── 📄 inventoryService.js
+│   │   │   └── 📄 notificationService.js
+│   │   │
+│   │   ├── 📁 utils/
+│   │   │   ├── 📄 database.js
+│   │   │   ├── 📄 jwt.js
+│   │   │   ├── 📄 encryption.js
+│   │   │   ├── 📄 fileUpload.js
+│   │   │   └── 📄 validators.js
+│   │   │
+│   │   └── 📁 config/
+│   │       ├── 📄 database.js
+│   │       ├── 📄 twilio.js
+│   │       ├── 📄 jitsi.js
+│   │       └── 📄 constants.js
+│   │
+│   ├── 📁 uploads/ (File storage)
+│   │   ├── 📁 prescriptions/
+│   │   ├── 📁 reports/
+│   │   ├── 📁 signatures/
+│   │   └── 📁 avatars/
+│   │
+│   └── 📁 tests/
+│       ├── 📁 unit/
+│       ├── 📁 integration/
+│       └── 📄 setup.js
+│
+└── 📁 SmartMed-Frontend/ (Current Frontend)
+    ├── 📄 ROLE_BASED_ACCESS.md
+    ├── 📄 TWILIO_SETUP.md
+    └── 📁 frontend/
+    ├── 📄 .env
+    ├── 📄 .env.example
+    ├── 📄 package.json
+    ├── 📄 package-lock.json
+    ├── 📄 postcss.config.js
+    ├── 📄 tailwind.config.js
+    ├── 📄 vite.config.js
+    ├── 📄 index.html
+    │
+    ├── 🧪 Test Files:
+    │   ├── 📄 duplicate-scan-test.html
+    │   ├── 📄 qr-debug-test.html
+    │   ├── 📄 qr-scanner-fix-test.html
+    │   ├── 📄 test-admin-hospital-staff.html
+    │   ├── 📄 test-qr-generation.html
+    │   ├── 📄 test-qr-to-queue.html
+    │   └── 📄 test-receptionist-qr-scan.html
+    │
+    ├── 📁 dist/ (Build Output)
+    │   ├── 📄 index.html
+    │   └── 📁 assets/
+    │       ├── 📄 charts-e6656748.js
+    │       ├── 📄 comm-4ed993c7.js
+    │       ├── 📄 dates-29151d28.js
+    │       ├── 📄 icons-b504b7dc.js
+    │       ├── 📄 index-1f4deb05.css
+    │       ├── 📄 index-7a70f151.js
+    │       ├── 📄 qr-4c323613.js
+    │       ├── 📄 qr-scanner-worker.min-5f44a019.js
+    │       ├── 📄 router-701ec46f.js
+    │       └── 📄 vendor-95a394d3.js
+    │
+    └── 📁 src/
+        ├── 📄 main.jsx (Entry Point)
+        ├── 📄 App.jsx
+        ├── 📄 App.css
+        ├── 📄 index.css
+        │
+        ├── 📁 components/
+        │   │
+        │   ├── 🏥 Admin/
+        │   │   └── 📁 AdminDashboard/
+        │   │       ├── 📄 AdminDashboard.jsx
+        │   │       └── 📄 AdminDashboard.css
+        │   │
+        │   ├── 👨‍⚕️ Doctor/
+        │   │   ├── 📄 DIGITAL_PRESCRIPTION_INTEGRATION.md
+        │   │   ├── 📁 DoctorDashboard/
+        │   │   │   ├── 📄 DoctorDashboard.jsx
+        │   │   │   └── 📄 DoctorDashboard.css
+        │   │   ├── 📁 DoctorPatient/
+        │   │   │   ├── 📄 DoctorPatient.jsx
+        │   │   │   └── 📄 DoctorPatient.css
+        │   │   ├── 📁 DoctorPharmacy/
+        │   │   │   ├── 📄 DoctorPharmacy.jsx
+        │   │   │   └── 📄 DoctorPharmacy.css
+        │   │   ├── 📁 DoctorQueue/
+        │   │   │   ├── 📄 DoctorQueue.jsx
+        │   │   │   └── 📄 DoctorQueue.css
+        │   │   ├── 📁 DoctorReport/
+        │   │   │   ├── 📄 DoctorReport.jsx
+        │   │   │   └── 📄 DoctorReport.css
+        │   │   ├── 📁 DoctorSidebar/
+        │   │   │   ├── 📄 DoctorSidebar.jsx
+        │   │   │   └── 📄 DoctorSidebar.css
+        │   │   ├── 📁 DoctorTelemed/ (Video Conferencing)
+        │   │   │   ├── 📄 DoctorTelemed.jsx
+        │   │   │   └── 📄 DoctorTelemed.css
+        │   │   ├── 📁 DoctorTelemedCall/
+        │   │   │   └── 📄 DoctorTelemedCall.jsx
+        │   │   └── 📁 PrescriptionForm/
+        │   │       ├── 📄 PrescriptionForm.jsx
+        │   │       └── 📄 PrescriptionForm.css
+        │   │
+        │   ├── 🎓 Student/
+        │   │   ├── 📁 Dashboard/
+        │   │   │   ├── 📄 StudentDashboard.jsx
+        │   │   │   └── 📄 StudentDashboard.css
+        │   │   ├── 📁 StudentEnteringDetails/
+        │   │   │   ├── 📄 StudentEnteringDetails.jsx
+        │   │   │   └── 📄 StudentEnteringDetails.css
+        │   │   ├── 📁 StudentProfile/
+        │   │   │   └── 📄 StudentProfile.jsx
+        │   │   ├── 📁 StudentQRcode/
+        │   │   │   ├── 📄 StudentQRcode.jsx
+        │   │   │   └── 📄 StudentQRcode.css
+        │   │   ├── 📁 StudentReports/
+        │   │   │   ├── 📄 StudentReports.jsx
+        │   │   │   └── 📄 StudentReports.css
+        │   │   ├── 📁 StudentSidebar/
+        │   │   │   ├── 📄 StudentSidebar.jsx
+        │   │   │   └── 📄 StudentSidebar.css
+        │   │   ├── 📁 StudentTelemed/ (Video Conferencing)
+        │   │   │   ├── 📄 StudentTelemed.jsx
+        │   │   │   └── 📄 StudentTelemed.css
+        │   │   └── 📁 StudentTelemedCall/
+        │   │       └── 📄 StudentTelemedCall.jsx
+        │   │
+        │   ├── 💊 Pharmacy/
+        │   │   ├── 📁 inventory/
+        │   │   │   ├── 📄 InventoryManagement.jsx
+        │   │   │   └── 📄 InventoryManagement.css
+        │   │   ├── 📁 MedicineRequests/
+        │   │   │   ├── 📄 MedicineRequests.jsx
+        │   │   │   └── 📄 MedicineRequests.css
+        │   │   ├── 📁 PharmacySidebar/
+        │   │   │   ├── 📄 PharmacySidebar.jsx
+        │   │   │   └── 📄 PharmacySidebar.css
+        │   │   ├── 📁 PrescriptionQueue/
+        │   │   │   ├── 📄 PrescriptionQueue.jsx
+        │   │   │   └── 📄 PrescriptionQueue.css
+        │   │   └── 📁 Reports/
+        │   │       ├── 📄 Reports.jsx
+        │   │       ├── 📄 Reports.css
+        │   │       ├── 📄 BarChartComponent.jsx
+        │   │       ├── 📄 LineChartComponent.jsx
+        │   │       └── 📄 PieChartComponent.jsx
+        │   │
+        │   ├── 🏥 Hospital_Staff/
+        │   │   ├── 📄 Hospital_Staff.jsx
+        │   │   └── 📄 Hospital_Staff.css
+        │   │
+        │   ├── 📋 Receptionist/
+        │   │   ├── 📁 ReceptionistDashboard/
+        │   │   │   ├── 📄 ReceptionistDashboard.jsx
+        │   │   │   └── 📄 ReceptionistDashboard.css
+        │   │   ├── 📁 ReceptionistNotifications/
+        │   │   │   ├── 📄 ReceptionistNotifications.jsx
+        │   │   │   └── 📄 ReceptionistNotifications.css
+        │   │   ├── 📁 ReceptionistQueue/
+        │   │   │   ├── 📄 ReceptionistQueue.jsx
+        │   │   │   └── 📄 ReceptionistQueue.css
+        │   │   └── 📁 ReceptionistSidebar/
+        │   │       ├── 📄 ReceptionistSidebar.jsx
+        │   │       └── 📄 ReceptionistSidebar.css
+        │   │
+        │   ├── 🔐 Authentication/
+        │   │   ├── 📁 Login/
+        │   │   │   ├── 📄 login.jsx
+        │   │   │   └── 📄 login.css
+        │   │   ├── 📁 Register/
+        │   │   │   ├── 📄 Register.jsx
+        │   │   │   └── 📄 Register.css
+        │   │   └── 📁 ChangePassword/
+        │   │       ├── 📄 ChangePassword.jsx
+        │   │       └── 📄 ChangePassword.css
+        │   │
+        │   ├── 🛠️ Common Components/
+        │   │   ├── 📁 common/
+        │   │   │   ├── 📁 Avatar/
+        │   │   │   │   ├── 📄 Avatar.jsx
+        │   │   │   │   └── 📄 Avatar.css
+        │   │   │   ├── 📁 PrescriptionDisplay/
+        │   │   │   │   ├── 📄 PrescriptionDisplay.jsx
+        │   │   │   │   └── 📄 PrescriptionDisplay.css
+        │   │   │   ├── 📁 ProtectedRoute/
+        │   │   │   │   └── 📄 ProtectedRoute.jsx
+        │   │   │   └── 📁 SignatureDisplay/
+        │   │   │       ├── 📄 SignatureDisplay.jsx
+        │   │   │       └── 📄 SignatureDisplay.css
+        │   │   │
+        │   │   ├── 📁 shared/
+        │   │   │   └── 📁 TopBar/
+        │   │   │       ├── 📄 TopBar.jsx
+        │   │   │       └── 📄 TopBar.css
+        │   │   │
+        │   │   ├── 📁 Dashboard/
+        │   │   │   ├── 📄 AutomatedInventoryDashboard.jsx
+        │   │   │   └── 📄 AutomatedInventoryDashboard.css
+        │   │   │
+        │   │   ├── 📁 QRScanner/
+        │   │   │   ├── 📄 QRScanner.jsx
+        │   │   │   └── 📄 QRScanner.css
+        │   │   │
+        │   │   ├── 📁 Settings/
+        │   │   │   ├── 📄 Settings.jsx
+        │   │   │   └── 📄 Settings.css
+        │   │   │
+        │   │   ├── 📁 Intro/
+        │   │   │   ├── 📄 Intro.jsx
+        │   │   │   └── 📄 Intro.css
+        │   │   │
+        │   │   └── 📁 test/
+        │   │       └── 📄 SignatureTest.jsx
+        │   │
+        │   └── 📁 pages/
+        │       ├── 📄 Users.jsx
+        │       └── 📄 Users.css
+        │
+        ├── 📁 contexts/ (React Context Providers)
+        │   ├── 📄 MedicineInventoryContext.jsx
+        │   ├── 📄 NotificationContext.jsx
+        │   └── 📄 PrescriptionContext.jsx
+        │
+        ├── 📁 services/ (API Services & Business Logic)
+        │   ├── 📄 automatedInventoryService.js
+        │   ├── 📄 inventoryReportService.js
+        │   ├── 📄 medicalRecordService.js
+        │   ├── 📄 notificationSoundService.js
+        │   ├── 📄 prescriptionService.js
+        │   ├── 📄 queueService.js
+        │   └── 📄 twilioService.js
+        │
+        └── 📁 styles/ (Global Styles)
+            ├── 📄 mobile-sidebar-fix.css
+            ├── 📄 responsive-components.css
+            └── 📄 responsive-utilities.css
+
+📊 Project Statistics:
+======================
+- Total Components: 50+ React Components
+- User Roles: 6 (Student, Doctor, Pharmacist, Receptionist, Hospital Staff, Admin)
+- Main Features:
+  * 🏥 Multi-role healthcare management system
+  * 📱 QR code generation and scanning
+  * 🎥 Video conferencing (Jitsi Meet integration)
+  * 💊 Prescription management
+  * 📊 Inventory management with automated tracking
+  * 📋 Queue management system
+  * 📱 Responsive design with mobile support
+  * 🔔 Real-time notifications
+  * 📈 Analytics and reporting
+  * 🔐 Role-based access control
+
+🛠️ Full Stack Technology Stack:
+===============================
+
+🎨 FRONTEND (Current - Complete):
+- Framework: React 18 + Vite
+- Styling: Tailwind CSS + Custom CSS
+- State Management: React Context API
+- Routing: React Router DOM v7
+- Charts: Recharts
+- QR Codes: QR-Scanner, QRCode, React-QR-Code
+- Video Calls: Jitsi Meet External API
+- Icons: React Icons, Lucide React
+- PDF Generation: jsPDF + html2canvas
+- Date Handling: Date-fns, React-Datepicker
+- Communication: Twilio (backup/additional features)
+
+🚀 BACKEND (Recommended - To Be Created):
+- Runtime: Node.js with Express.js
+- Database: MongoDB (with Mongoose ODM) or PostgreSQL
+- Authentication: JWT + bcrypt
+- File Upload: Multer
+- Image Processing: Sharp
+- Email Service: Nodemailer + SendGrid/AWS SES
+- Real-time: Socket.io for notifications
+- Validation: Joi or express-validator
+- Security: Helmet, CORS, rate-limiting
+- API Documentation: Swagger/OpenAPI
+- Testing: Jest + Supertest
+- Process Management: PM2
+
+🗄️ DATABASE SCHEMA (Recommended):
+- Users Collection/Table
+- Medical Records
+- Prescriptions
+- Medicine Inventory
+- Queue Management
+- Telemed Sessions
+- Notifications
+- File Attachments
+- Audit Logs
+
+🔌 API ENDPOINTS (Backend Structure):
+====================================
+📁 /api/v1/
+├── 🔐 /auth
+│   ├── POST /login
+│   ├── POST /register
+│   ├── POST /logout
+│   ├── POST /refresh-token
+│   └── POST /change-password
+│
+├── 👥 /users
+│   ├── GET /profile
+│   ├── PUT /profile
+│   ├── POST /upload-avatar
+│   └── GET /roles
+│
+├── 👨‍⚕️ /doctors
+│   ├── GET / (all doctors)
+│   ├── GET /:id/patients
+│   ├── GET /:id/queue
+│   └── GET /:id/schedule
+│
+├── 🎓 /students
+│   ├── GET /profile
+│   ├── PUT /medical-info
+│   ├── POST /qr-generate
+│   └── GET /reports
+│
+├── 💊 /prescriptions
+│   ├── GET / (by role)
+│   ├── POST / (create)
+│   ├── PUT /:id (update)
+│   ├── DELETE /:id
+│   └── GET /:id/pdf
+│
+├── 📋 /queue
+│   ├── GET /current
+│   ├── POST /join
+│   ├── PUT /:id/status
+│   └── DELETE /:id
+│
+├── 🏥 /pharmacy
+│   ├── GET /inventory
+│   ├── POST /inventory/add
+│   ├── PUT /inventory/:id
+│   ├── GET /requests
+│   └── GET /reports
+│
+├── 🎥 /telemed
+│   ├── POST /create-room
+│   ├── GET /rooms/:id
+│   ├── POST /join-request
+│   └── PUT /session/:id/end
+│
+└── 📊 /reports
+    ├── GET /medical/:studentId
+    ├── GET /pharmacy/sales
+    ├── GET /analytics/dashboard
+    └── POST /generate/:type
+
+☁️ DEPLOYMENT (Recommended):
+- Frontend: Vercel/Netlify
+- Backend: Railway/Heroku/AWS EC2
+- Database: MongoDB Atlas/AWS RDS
+- File Storage: AWS S3/Cloudinary
+- CDN: Cloudflare
+- Monitoring: LogRocket/Sentry
+
+🎯 Key Features by Role:
+=======================
+👨‍⚕️ Doctor:
+- Patient queue management
+- Digital prescription writing
+- Medical report generation
+- Video consultations
+- Patient history review
+
+🎓 Student:
+- QR code generation for appointments
+- Medical report viewing
+- Video consultation requests
+- Dashboard with health metrics
+
+💊 Pharmacist:
+- Prescription queue processing
+- Inventory management
+- Medicine request handling
+- Sales analytics and reports
+
+📋 Receptionist:
+- Patient check-in via QR scanning
+- Queue management
+- Appointment scheduling
+- Notification handling
+
+🏥 Hospital Staff:
+- General administrative tasks
+- System oversight
+
+🏥 Admin:
+- System-wide management
+- User administration
+- Overall analytics

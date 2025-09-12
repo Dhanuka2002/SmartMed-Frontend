@@ -35,9 +35,12 @@ function DoctorTelemed() {
     try {
       // Check if Jitsi API is available
       if (!window.JitsiMeetExternalAPI) {
+        console.error('Jitsi API not available for call acceptance');
         alert('Video calling system is not ready. Please refresh the page and try again.');
         return;
       }
+      
+      console.log('Jitsi API is available, accepting call');
 
       // Find the request to get room name
       const notifications = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
@@ -83,9 +86,12 @@ function DoctorTelemed() {
   const handleJoinCall = () => {
     // Check if Jitsi API is available
     if (!window.JitsiMeetExternalAPI) {
+      console.error('Jitsi API not available for new call');
       alert('Video calling system is not ready. Please refresh the page and try again.');
       return;
     }
+    
+    console.log('Jitsi API is available, starting new call');
 
     setIsCallStarting(true);
 

@@ -13,10 +13,17 @@ function StudentTelemedCall() {
     let retryTimer;
 
     const waitForJitsiAPI = () => {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
+        let attempts = 0;
+        const maxAttempts = 100; // 10 seconds max wait time
+        
         const checkAPI = () => {
+          attempts++;
           if (window.JitsiMeetExternalAPI) {
+            console.log('Jitsi API loaded successfully');
             resolve(true);
+          } else if (attempts >= maxAttempts) {
+            reject(new Error('Jitsi API failed to load after 10 seconds'));
           } else {
             setTimeout(checkAPI, 100);
           }
@@ -78,6 +85,15 @@ function StudentTelemedCall() {
         console.log('Room name:', roomName);
         console.log('Jitsi API available:', !!window.JitsiMeetExternalAPI);
         
+        // Dispose of any existing API instance
+        if (apiRef.current) {
+          try {
+            apiRef.current.dispose();
+          } catch (e) {
+            console.warn('Error disposing previous Jitsi API:', e);
+          }
+        }
+        
         apiRef.current = new window.JitsiMeetExternalAPI(domain, options);
         
         // Add event listeners
@@ -104,12 +120,26 @@ function StudentTelemedCall() {
           console.log('Participant left:', participant);
         });
 
+        // Add error event listeners
+        apiRef.current.addEventListener('connectionFailed', () => {
+          console.error('Jitsi connection failed');
+          setError('Connection to video service failed. Please check your internet connection.');
+          setIsLoading(false);
+        });
+
+        apiRef.current.addEventListener('conferenceError', (error) => {
+          console.error('Conference error:', error);
+          setError('Video conference error occurred. Please try again.');
+          setIsLoading(false);
+        });
+
         // Timeout for loading
         setTimeout(() => {
           if (isLoading) {
+            console.warn('Jitsi took too long to load, showing interface anyway');
             setIsLoading(false);
           }
-        }, 10000);
+        }, 8000); // Reduced timeout to 8 seconds
 
       } catch (err) {
         console.error('Error initializing Jitsi:', err);

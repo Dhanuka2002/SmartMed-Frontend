@@ -1,0 +1,1126 @@
+SmartMed Healthcare Management System - Complete Test Cases
+==========================================================
+
+📋 TEST CASE OVERVIEW
+====================
+Total Test Cases: 150+
+Coverage Areas:
+- Authentication & Authorization
+- User Role Management (6 roles)
+- Core Features (QR, Video, Prescriptions, etc.)
+- Integration Testing
+- Security Testing
+- Performance Testing
+- Mobile Responsiveness
+- Error Handling
+
+🔐 AUTHENTICATION & AUTHORIZATION TEST CASES
+============================================
+
+TC_AUTH_001: User Registration
+------------------------------
+Objective: Verify user can register with valid credentials
+Preconditions: User is on registration page
+Test Steps:
+1. Navigate to registration page
+2. Enter valid username, email, password
+3. Select user role (Student/Doctor/Pharmacist/Receptionist/Hospital Staff/Admin)
+4. Click Register button
+Expected Result: User account created successfully, redirected to login page
+Priority: High
+Test Data: Valid email formats, strong passwords
+
+TC_AUTH_002: User Login - Valid Credentials
+-------------------------------------------
+Objective: Verify user can login with correct credentials
+Preconditions: User account exists in system
+Test Steps:
+1. Navigate to login page
+2. Enter valid username/email and password
+3. Click Login button
+Expected Result: User successfully logged in, redirected to role-specific dashboard
+Priority: High
+Test Data: Existing user credentials
+
+TC_AUTH_003: User Login - Invalid Credentials
+---------------------------------------------
+Objective: Verify system rejects invalid login attempts
+Preconditions: User is on login page
+Test Steps:
+1. Enter invalid username/email or password
+2. Click Login button
+Expected Result: Error message displayed, user remains on login page
+Priority: High
+Test Data: Invalid credentials, non-existent users
+
+TC_AUTH_004: Password Change
+----------------------------
+Objective: Verify user can change password successfully
+Preconditions: User is logged in
+Test Steps:
+1. Navigate to Change Password page
+2. Enter current password
+3. Enter new password and confirm
+4. Click Update Password button
+Expected Result: Password updated successfully, confirmation message shown
+Priority: Medium
+Test Data: Current password, new valid password
+
+TC_AUTH_005: Role-Based Access Control
+--------------------------------------
+Objective: Verify users can only access features for their assigned role
+Preconditions: Users with different roles exist
+Test Steps:
+1. Login as Student - verify access only to student features
+2. Login as Doctor - verify access only to doctor features
+3. Login as Pharmacist - verify access only to pharmacy features
+4. Attempt to access unauthorized routes
+Expected Result: Users see only role-appropriate features, unauthorized access blocked
+Priority: High
+Test Data: Different role accounts
+
+TC_AUTH_006: Session Timeout
+----------------------------
+Objective: Verify user session expires after inactivity
+Preconditions: User is logged in
+Test Steps:
+1. Login to system
+2. Leave application idle for configured timeout period
+3. Attempt to perform any action
+Expected Result: User redirected to login page, session expired message shown
+Priority: Medium
+Test Data: Session timeout configuration
+
+🎓 STUDENT MODULE TEST CASES
+============================
+
+TC_STU_001: Student Dashboard Display
+------------------------------------
+Objective: Verify student dashboard shows correct information
+Preconditions: Student is logged in
+Test Steps:
+1. Login as student
+2. Verify dashboard elements are displayed
+Expected Result: Dashboard shows student info, recent reports, QR code option, telemed option
+Priority: High
+
+TC_STU_002: Generate QR Code for Appointment
+--------------------------------------------
+Objective: Verify student can generate QR code for queue joining
+Preconditions: Student is logged in
+Test Steps:
+1. Navigate to QR Code generation page
+2. Fill in required details (symptoms, urgency level)
+3. Click Generate QR Code
+Expected Result: QR code generated successfully, can be downloaded/displayed
+Priority: High
+Test Data: Valid symptom descriptions, urgency levels
+
+TC_STU_003: View Medical Reports
+-------------------------------
+Objective: Verify student can view their medical history
+Preconditions: Student has medical records in system
+Test Steps:
+1. Navigate to Reports section
+2. View list of medical reports
+3. Click on specific report to view details
+Expected Result: All student's medical reports displayed, details viewable
+Priority: High
+Test Data: Existing medical records
+
+TC_STU_004: Request Video Consultation
+-------------------------------------
+Objective: Verify student can request telemed consultation
+Preconditions: Student is logged in, Jitsi API is loaded
+Test Steps:
+1. Navigate to Telemed section
+2. Click "Request Video Call" button
+3. Wait for doctor response
+Expected Result: Video call request sent, waiting status shown, call connects when accepted
+Priority: High
+Test Data: Available doctors
+
+TC_STU_005: Join Video Call
+---------------------------
+Objective: Verify student can join video consultation
+Preconditions: Doctor has accepted video call request
+Test Steps:
+1. Receive call acceptance notification
+2. Click to join video call
+3. Verify video/audio functionality
+4. End call properly
+Expected Result: Video call interface loads, audio/video works, call ends cleanly
+Priority: High
+Test Data: Working camera/microphone
+
+TC_STU_006: Update Profile Information
+-------------------------------------
+Objective: Verify student can update personal information
+Preconditions: Student is logged in
+Test Steps:
+1. Navigate to Profile section
+2. Update contact information, medical details
+3. Upload profile picture
+4. Save changes
+Expected Result: Profile information updated successfully
+Priority: Medium
+Test Data: Valid personal information
+
+👨‍⚕️ DOCTOR MODULE TEST CASES
+==============================
+
+TC_DOC_001: Doctor Dashboard Overview
+------------------------------------
+Objective: Verify doctor dashboard displays all necessary information
+Preconditions: Doctor is logged in
+Test Steps:
+1. Login as doctor
+2. Verify dashboard components
+Expected Result: Dashboard shows patient queue, appointments, prescription history, telemed requests
+Priority: High
+
+TC_DOC_002: View Patient Queue
+-----------------------------
+Objective: Verify doctor can see and manage patient queue
+Preconditions: Patients are in queue
+Test Steps:
+1. Navigate to Queue section
+2. View current patient queue
+3. Call next patient
+4. Mark patient as completed
+Expected Result: Queue displayed correctly, patient status updates work
+Priority: High
+Test Data: Patients in queue
+
+TC_DOC_003: Create Digital Prescription
+--------------------------------------
+Objective: Verify doctor can create and save prescriptions
+Preconditions: Doctor is logged in, patient selected
+Test Steps:
+1. Navigate to Prescription Form
+2. Select patient
+3. Add medicines with dosage and instructions
+4. Add doctor's digital signature
+5. Save prescription
+Expected Result: Prescription created successfully, saved to system
+Priority: High
+Test Data: Patient info, medicine database, signature
+
+TC_DOC_004: View Patient Medical History
+---------------------------------------
+Objective: Verify doctor can access patient's medical records
+Preconditions: Patient has existing medical history
+Test Steps:
+1. Select patient from list
+2. View medical history
+3. Review previous prescriptions
+4. Check allergies and conditions
+Expected Result: Complete patient medical history displayed
+Priority: High
+Test Data: Patient with medical history
+
+TC_DOC_005: Accept Video Call Request
+------------------------------------
+Objective: Verify doctor can accept and join telemed sessions
+Preconditions: Student has requested video consultation
+Test Steps:
+1. Receive video call notification
+2. Review request details
+3. Click Accept Call
+4. Join video session
+5. Conduct consultation
+6. End call
+Expected Result: Video call accepted, session works properly, call ends correctly
+Priority: High
+Test Data: Video call requests
+
+TC_DOC_006: Generate Medical Report
+----------------------------------
+Objective: Verify doctor can create medical reports for patients
+Preconditions: Patient consultation completed
+Test Steps:
+1. Select patient
+2. Create medical report
+3. Add diagnosis, recommendations
+4. Generate PDF report
+5. Save to patient record
+Expected Result: Medical report created, PDF generated, saved successfully
+Priority: High
+Test Data: Patient consultation data
+
+TC_DOC_007: Prescription Queue Management
+----------------------------------------
+Objective: Verify doctor can manage prescription workflow
+Preconditions: Prescriptions exist in system
+Test Steps:
+1. View prescription queue
+2. Review pending prescriptions
+3. Approve/modify prescriptions
+4. Send to pharmacy
+Expected Result: Prescription queue managed effectively, pharmacy notifications sent
+Priority: Medium
+Test Data: Pending prescriptions
+
+💊 PHARMACY MODULE TEST CASES
+=============================
+
+TC_PHAR_001: Pharmacy Dashboard Overview
+---------------------------------------
+Objective: Verify pharmacy dashboard shows relevant information
+Preconditions: Pharmacist is logged in
+Test Steps:
+1. Login as pharmacist
+2. View dashboard components
+Expected Result: Dashboard shows prescription queue, inventory status, low stock alerts
+Priority: High
+
+TC_PHAR_002: Process Prescription Queue
+--------------------------------------
+Objective: Verify pharmacist can process incoming prescriptions
+Preconditions: Prescriptions in queue
+Test Steps:
+1. View prescription queue
+2. Select prescription to process
+3. Check medicine availability
+4. Dispense medicines
+5. Mark prescription as completed
+Expected Result: Prescription processed, inventory updated, patient notified
+Priority: High
+Test Data: Valid prescriptions, available medicines
+
+TC_PHAR_003: Inventory Management - Add Medicine
+-----------------------------------------------
+Objective: Verify pharmacist can add new medicines to inventory
+Preconditions: Pharmacist has inventory access
+Test Steps:
+1. Navigate to Inventory Management
+2. Click Add New Medicine
+3. Enter medicine details (name, batch, expiry, quantity, price)
+4. Save medicine information
+Expected Result: Medicine added to inventory successfully
+Priority: High
+Test Data: Valid medicine information
+
+TC_PHAR_004: Inventory Management - Update Stock
+-----------------------------------------------
+Objective: Verify pharmacist can update existing medicine stock
+Preconditions: Medicines exist in inventory
+Test Steps:
+1. Search for existing medicine
+2. Update stock quantity
+3. Update expiry dates if needed
+4. Save changes
+Expected Result: Stock levels updated correctly, system reflects changes
+Priority: High
+Test Data: Existing medicine records
+
+TC_PHAR_005: Low Stock Alerts
+----------------------------
+Objective: Verify system generates alerts for low stock items
+Preconditions: Medicines with low stock levels
+Test Steps:
+1. Set low stock thresholds
+2. Monitor inventory levels
+3. Verify alerts appear when thresholds reached
+Expected Result: Low stock alerts generated automatically, visible on dashboard
+Priority: Medium
+Test Data: Medicine stock levels below threshold
+
+TC_PHAR_006: Generate Inventory Reports
+--------------------------------------
+Objective: Verify pharmacist can generate various inventory reports
+Preconditions: Inventory data exists
+Test Steps:
+1. Navigate to Reports section
+2. Select report type (sales, stock, expiry)
+3. Set date range
+4. Generate report
+5. Export to PDF/Excel
+Expected Result: Reports generated accurately, export functionality works
+Priority: Medium
+Test Data: Historical inventory data
+
+TC_PHAR_007: Medicine Search and Filter
+--------------------------------------
+Objective: Verify pharmacist can search and filter medicines efficiently
+Preconditions: Multiple medicines in inventory
+Test Steps:
+1. Use search functionality
+2. Apply various filters (category, expiry, stock level)
+3. Sort results
+Expected Result: Search and filter functions work correctly, results accurate
+Priority: Medium
+Test Data: Diverse medicine inventory
+
+📋 RECEPTIONIST MODULE TEST CASES
+=================================
+
+TC_REC_001: Receptionist Dashboard Display
+-----------------------------------------
+Objective: Verify receptionist dashboard shows necessary information
+Preconditions: Receptionist is logged in
+Test Steps:
+1. Login as receptionist
+2. View dashboard elements
+Expected Result: Dashboard shows patient queue, appointments, QR scanner access
+Priority: High
+
+TC_REC_002: QR Code Scanning for Patient Check-in
+------------------------------------------------
+Objective: Verify receptionist can scan student QR codes for check-in
+Preconditions: Student has generated QR code
+Test Steps:
+1. Open QR Scanner
+2. Scan student's QR code
+3. Verify patient information
+4. Add patient to queue
+Expected Result: QR code scanned successfully, patient added to doctor's queue
+Priority: High
+Test Data: Valid student QR codes
+
+TC_REC_003: Manual Patient Registration
+--------------------------------------
+Objective: Verify receptionist can manually register walk-in patients
+Preconditions: Walk-in patient without QR code
+Test Steps:
+1. Navigate to Manual Registration
+2. Enter patient details
+3. Select doctor/department
+4. Add to queue
+Expected Result: Patient registered and added to queue successfully
+Priority: High
+Test Data: Patient information
+
+TC_REC_004: Queue Management
+---------------------------
+Objective: Verify receptionist can manage patient queues
+Preconditions: Patients in various queues
+Test Steps:
+1. View all department queues
+2. Move patients between queues
+3. Update patient priority
+4. Remove patients if needed
+Expected Result: Queue management functions work correctly
+Priority: High
+Test Data: Multiple patients in queues
+
+TC_REC_005: Appointment Scheduling
+---------------------------------
+Objective: Verify receptionist can schedule patient appointments
+Preconditions: Doctors available for appointments
+Test Steps:
+1. Navigate to Appointment Scheduler
+2. Select patient
+3. Choose doctor and time slot
+4. Confirm appointment
+5. Send confirmation to patient
+Expected Result: Appointment scheduled successfully, confirmations sent
+Priority: Medium
+Test Data: Available time slots, patient contacts
+
+TC_REC_006: Generate Patient Reports
+-----------------------------------
+Objective: Verify receptionist can generate patient-related reports
+Preconditions: Patient visit data exists
+Test Steps:
+1. Navigate to Reports section
+2. Select report type (daily visits, queue statistics)
+3. Set parameters and generate
+Expected Result: Reports generated accurately showing patient statistics
+Priority: Medium
+Test Data: Historical patient visit data
+
+🏥 HOSPITAL STAFF MODULE TEST CASES
+===================================
+
+TC_STAFF_001: Hospital Staff Dashboard
+-------------------------------------
+Objective: Verify hospital staff can access general administrative functions
+Preconditions: Hospital staff is logged in
+Test Steps:
+1. Login as hospital staff
+2. View available administrative options
+Expected Result: Dashboard shows administrative functions appropriate for staff role
+Priority: Medium
+
+TC_STAFF_002: System Monitoring
+------------------------------
+Objective: Verify hospital staff can monitor system status
+Preconditions: System monitoring enabled
+Test Steps:
+1. View system status dashboard
+2. Check various system metrics
+3. Identify any issues or alerts
+Expected Result: System status clearly displayed, alerts visible when present
+Priority: Medium
+
+🏥 ADMIN MODULE TEST CASES
+==========================
+
+TC_ADMIN_001: Admin Dashboard Overview
+-------------------------------------
+Objective: Verify admin has access to all system functions
+Preconditions: Admin is logged in
+Test Steps:
+1. Login as admin
+2. View dashboard with all system metrics
+Expected Result: Comprehensive dashboard with all system areas accessible
+Priority: High
+
+TC_ADMIN_002: User Management
+----------------------------
+Objective: Verify admin can manage all user accounts
+Preconditions: Various user accounts exist
+Test Steps:
+1. View all users list
+2. Create new user account
+3. Edit existing user details
+4. Deactivate/activate user accounts
+5. Reset user passwords
+Expected Result: Complete user management functions work correctly
+Priority: High
+Test Data: User account information
+
+TC_ADMIN_003: System Configuration
+---------------------------------
+Objective: Verify admin can configure system settings
+Preconditions: Admin access to configuration
+Test Steps:
+1. Access system configuration
+2. Update various settings
+3. Configure user role permissions
+4. Set system parameters
+Expected Result: System configuration changes applied successfully
+Priority: High
+Test Data: Configuration parameters
+
+TC_ADMIN_004: Generate System Reports
+------------------------------------
+Objective: Verify admin can generate comprehensive system reports
+Preconditions: System usage data exists
+Test Steps:
+1. Navigate to System Reports
+2. Generate user activity reports
+3. Generate system performance reports
+4. Generate department-wise analytics
+Expected Result: Comprehensive reports generated with accurate data
+Priority: High
+Test Data: System usage data
+
+🎥 VIDEO CONFERENCING (TELEMED) TEST CASES
+==========================================
+
+TC_VIDEO_001: Jitsi API Loading
+------------------------------
+Objective: Verify Jitsi Meet API loads correctly
+Preconditions: Application is loaded
+Test Steps:
+1. Open application
+2. Check browser console for Jitsi API loading
+3. Verify window.JitsiMeetExternalAPI is available
+Expected Result: Jitsi API loads without errors, API object available
+Priority: High
+Test Data: Browser compatibility
+
+TC_VIDEO_002: Video Call Initialization - Student
+-------------------------------------------------
+Objective: Verify student can initialize video call properly
+Preconditions: Student logged in, Jitsi API loaded
+Test Steps:
+1. Navigate to Telemed section
+2. Click "Request Video Call"
+3. Wait for room creation
+4. Verify video container appears
+Expected Result: Video call interface initializes without errors
+Priority: High
+Test Data: Valid student session
+
+TC_VIDEO_003: Video Call Initialization - Doctor
+------------------------------------------------
+Objective: Verify doctor can accept and join video calls
+Preconditions: Student has requested video call
+Test Steps:
+1. Doctor receives call notification
+2. Doctor clicks "Accept Call"
+3. Video interface loads
+4. Both parties connected to same room
+Expected Result: Doctor successfully joins video call, both parties can communicate
+Priority: High
+Test Data: Active video call request
+
+TC_VIDEO_004: Video Call Features
+--------------------------------
+Objective: Verify all video call features work correctly
+Preconditions: Video call in progress
+Test Steps:
+1. Test microphone mute/unmute
+2. Test camera on/off
+3. Test chat functionality
+4. Test screen sharing (if available)
+5. Test participant list
+Expected Result: All video call features function properly
+Priority: High
+Test Data: Working audio/video devices
+
+TC_VIDEO_005: Video Call Termination
+-----------------------------------
+Objective: Verify video calls can be ended properly
+Preconditions: Video call in progress
+Test Steps:
+1. Click "End Call" button
+2. Verify call terminates for both parties
+3. Check proper cleanup of resources
+4. Verify navigation back to dashboard
+Expected Result: Call ends cleanly, resources freed, users redirected appropriately
+Priority: High
+Test Data: Active video session
+
+TC_VIDEO_006: Video Call Error Handling
+--------------------------------------
+Objective: Verify proper handling of video call errors
+Preconditions: Various error scenarios
+Test Steps:
+1. Test with no camera/microphone permissions
+2. Test with poor network connection
+3. Test with browser compatibility issues
+4. Test connection timeout scenarios
+Expected Result: Appropriate error messages shown, graceful degradation
+Priority: Medium
+Test Data: Error scenarios
+
+TC_VIDEO_007: Multiple Concurrent Calls
+--------------------------------------
+Objective: Verify system can handle multiple video calls
+Preconditions: Multiple doctors and students available
+Test Steps:
+1. Initiate multiple video calls simultaneously
+2. Verify each call has unique room
+3. Check system performance
+4. Verify no interference between calls
+Expected Result: Multiple calls work independently without interference
+Priority: Medium
+Test Data: Multiple user sessions
+
+📱 QR CODE FUNCTIONALITY TEST CASES
+===================================
+
+TC_QR_001: QR Code Generation - Student
+--------------------------------------
+Objective: Verify students can generate QR codes for appointments
+Preconditions: Student is logged in
+Test Steps:
+1. Navigate to QR Generation page
+2. Fill required information (symptoms, urgency)
+3. Click Generate QR Code
+4. Verify QR code appears
+5. Test QR code download/save functionality
+Expected Result: QR code generated successfully, contains correct information
+Priority: High
+Test Data: Valid symptom descriptions, urgency levels
+
+TC_QR_002: QR Code Scanning - Receptionist
+-----------------------------------------
+Objective: Verify receptionists can scan student QR codes
+Preconditions: Valid QR code generated by student
+Test Steps:
+1. Open QR Scanner interface
+2. Scan student's QR code
+3. Verify patient information extraction
+4. Confirm data accuracy
+Expected Result: QR code scanned successfully, patient data extracted correctly
+Priority: High
+Test Data: Valid QR codes from students
+
+TC_QR_003: QR Code Information Validation
+----------------------------------------
+Objective: Verify QR codes contain correct and complete information
+Preconditions: QR code generated
+Test Steps:
+1. Generate QR code with specific information
+2. Scan QR code
+3. Compare scanned data with original input
+4. Verify all fields are present and accurate
+Expected Result: QR code contains complete and accurate information
+Priority: High
+Test Data: Comprehensive patient information
+
+TC_QR_004: QR Code Expiration
+----------------------------
+Objective: Verify QR codes expire after appropriate time period
+Preconditions: QR code with expiration time
+Test Steps:
+1. Generate QR code
+2. Wait for expiration period
+3. Attempt to scan expired QR code
+4. Verify appropriate error message
+Expected Result: Expired QR codes rejected with clear error message
+Priority: Medium
+Test Data: QR codes with different expiration times
+
+TC_QR_005: Invalid QR Code Handling
+----------------------------------
+Objective: Verify system properly handles invalid QR codes
+Preconditions: Various invalid QR codes
+Test Steps:
+1. Scan non-SmartMed QR codes
+2. Scan corrupted QR codes
+3. Scan QR codes with missing data
+Expected Result: Invalid QR codes rejected with appropriate error messages
+Priority: Medium
+Test Data: Various invalid QR code formats
+
+📊 REPORTING SYSTEM TEST CASES
+==============================
+
+TC_REP_001: Medical Report Generation
+------------------------------------
+Objective: Verify doctors can generate comprehensive medical reports
+Preconditions: Patient consultation data available
+Test Steps:
+1. Select patient
+2. Create new medical report
+3. Add diagnosis, treatment, recommendations
+4. Generate PDF report
+5. Save to patient record
+Expected Result: Medical report created successfully, PDF generated, saved properly
+Priority: High
+Test Data: Patient consultation information
+
+TC_REP_002: Prescription Report Generation
+-----------------------------------------
+Objective: Verify prescription reports can be generated and exported
+Preconditions: Prescription data exists
+Test Steps:
+1. Navigate to Prescription Reports
+2. Set date range and filters
+3. Generate report
+4. Export to PDF/Excel
+Expected Result: Prescription reports generated accurately, export functions work
+Priority: High
+Test Data: Historical prescription data
+
+TC_REP_003: Inventory Reports
+----------------------------
+Objective: Verify pharmacy can generate inventory reports
+Preconditions: Inventory data available
+Test Steps:
+1. Access inventory reporting
+2. Generate stock level reports
+3. Generate sales reports
+4. Generate expiry reports
+5. Export reports in various formats
+Expected Result: All inventory reports generated correctly, exports work
+Priority: High
+Test Data: Inventory transaction history
+
+TC_REP_004: Analytics Dashboard
+------------------------------
+Objective: Verify analytics dashboard shows correct metrics
+Preconditions: System usage data available
+Test Steps:
+1. View analytics dashboard
+2. Check patient visit trends
+3. Check prescription trends
+4. Check department utilization
+5. Verify chart accuracy
+Expected Result: Analytics dashboard displays accurate data with proper visualizations
+Priority: Medium
+Test Data: Historical system usage data
+
+🔒 SECURITY TEST CASES
+======================
+
+TC_SEC_001: SQL Injection Protection
+-----------------------------------
+Objective: Verify system is protected against SQL injection attacks
+Preconditions: Input fields available
+Test Steps:
+1. Enter SQL injection payloads in input fields
+2. Submit forms with malicious SQL code
+3. Verify system rejection of malicious input
+Expected Result: SQL injection attempts blocked, no database compromise
+Priority: High
+Test Data: Common SQL injection payloads
+
+TC_SEC_002: Cross-Site Scripting (XSS) Protection
+------------------------------------------------
+Objective: Verify system protects against XSS attacks
+Preconditions: Input fields that display user content
+Test Steps:
+1. Enter JavaScript code in input fields
+2. Submit forms with XSS payloads
+3. Verify script execution is prevented
+Expected Result: XSS attempts blocked, no script execution in browser
+Priority: High
+Test Data: Common XSS payloads
+
+TC_SEC_003: Authentication Token Security
+----------------------------------------
+Objective: Verify JWT tokens are properly secured
+Preconditions: User authentication system
+Test Steps:
+1. Login and capture authentication token
+2. Analyze token structure and encryption
+3. Test token expiration
+4. Test token refresh mechanism
+Expected Result: Tokens properly encrypted, expire appropriately, refresh securely
+Priority: High
+Test Data: Authentication tokens
+
+TC_SEC_004: Password Security
+----------------------------
+Objective: Verify password handling meets security standards
+Preconditions: User registration/login system
+Test Steps:
+1. Test password complexity requirements
+2. Verify password hashing in database
+3. Test password reset functionality
+4. Check for password policy enforcement
+Expected Result: Passwords properly hashed, complexity enforced, secure reset process
+Priority: High
+Test Data: Various password formats
+
+TC_SEC_005: File Upload Security
+-------------------------------
+Objective: Verify file upload functionality is secure
+Preconditions: File upload features available
+Test Steps:
+1. Upload various file types
+2. Test file size limits
+3. Attempt to upload malicious files
+4. Verify file content validation
+Expected Result: Only allowed file types accepted, size limits enforced, malicious files blocked
+Priority: High
+Test Data: Various file types including malicious files
+
+📱 MOBILE RESPONSIVENESS TEST CASES
+===================================
+
+TC_MOB_001: Mobile Dashboard Display
+-----------------------------------
+Objective: Verify dashboards display correctly on mobile devices
+Preconditions: Access to mobile devices/emulation
+Test Steps:
+1. Open application on mobile device
+2. Login and view dashboard
+3. Check all elements are visible and accessible
+4. Test navigation menus
+Expected Result: Dashboard elements properly scaled and accessible on mobile
+Priority: High
+Test Data: Various mobile screen sizes
+
+TC_MOB_002: Mobile QR Code Scanning
+----------------------------------
+Objective: Verify QR code scanning works on mobile devices
+Preconditions: Mobile device with camera
+Test Steps:
+1. Open QR scanner on mobile
+2. Grant camera permissions
+3. Scan QR codes
+4. Verify scanning accuracy
+Expected Result: QR scanning works reliably on mobile devices
+Priority: High
+Test Data: Various QR codes
+
+TC_MOB_003: Mobile Video Calls
+-----------------------------
+Objective: Verify video calling works on mobile devices
+Preconditions: Mobile device with camera/microphone
+Test Steps:
+1. Initiate video call from mobile
+2. Test audio/video quality
+3. Test call controls on mobile interface
+4. Verify mobile-specific features
+Expected Result: Video calls work properly on mobile with good usability
+Priority: High
+Test Data: Mobile video call sessions
+
+TC_MOB_004: Touch Interface Navigation
+-------------------------------------
+Objective: Verify touch navigation works properly on mobile
+Preconditions: Touch-enabled mobile device
+Test Steps:
+1. Navigate through all application sections
+2. Test swipe gestures
+3. Test tap interactions
+4. Test scroll behavior
+Expected Result: All touch interactions work smoothly and intuitively
+Priority: Medium
+Test Data: Various mobile devices
+
+⚡ PERFORMANCE TEST CASES
+========================
+
+TC_PERF_001: Page Load Performance
+---------------------------------
+Objective: Verify pages load within acceptable time limits
+Preconditions: Application deployed
+Test Steps:
+1. Measure initial page load time
+2. Measure subsequent page navigation times
+3. Test with various network conditions
+4. Monitor resource usage
+Expected Result: Pages load within 3 seconds on normal connection
+Priority: Medium
+Test Data: Various network speeds
+
+TC_PERF_002: Video Call Performance
+----------------------------------
+Objective: Verify video calls maintain good quality under load
+Preconditions: Multiple concurrent video calls
+Test Steps:
+1. Initiate multiple video calls simultaneously
+2. Monitor video/audio quality
+3. Check for lag or connection drops
+4. Monitor server resource usage
+Expected Result: Video calls maintain quality with multiple concurrent sessions
+Priority: Medium
+Test Data: Multiple video sessions
+
+TC_PERF_003: Database Performance
+--------------------------------
+Objective: Verify database operations perform efficiently
+Preconditions: Large dataset in database
+Test Steps:
+1. Perform various database queries
+2. Test with large result sets
+3. Monitor query execution times
+4. Test concurrent database access
+Expected Result: Database operations complete within acceptable time limits
+Priority: Medium
+Test Data: Large datasets
+
+TC_PERF_004: File Upload Performance
+-----------------------------------
+Objective: Verify file uploads complete efficiently
+Preconditions: File upload functionality
+Test Steps:
+1. Upload files of various sizes
+2. Test multiple concurrent uploads
+3. Monitor upload progress and completion times
+4. Test with different file types
+Expected Result: File uploads complete within reasonable time based on file size
+Priority: Low
+Test Data: Various file sizes and types
+
+🔧 INTEGRATION TEST CASES
+=========================
+
+TC_INT_001: Frontend-Backend Integration
+---------------------------------------
+Objective: Verify frontend properly communicates with backend APIs
+Preconditions: Backend APIs available
+Test Steps:
+1. Test all API endpoints from frontend
+2. Verify data transfer accuracy
+3. Test error handling for API failures
+4. Verify authentication token handling
+Expected Result: All frontend-backend communications work correctly
+Priority: High
+Test Data: Various API requests and responses
+
+TC_INT_002: Database Integration
+-------------------------------
+Objective: Verify data persistence and retrieval works correctly
+Preconditions: Database connected
+Test Steps:
+1. Create, read, update, delete operations
+2. Test data relationships
+3. Verify data integrity constraints
+4. Test transaction handling
+Expected Result: All database operations maintain data integrity
+Priority: High
+Test Data: Various database records
+
+TC_INT_003: Third-Party Integration - Jitsi
+------------------------------------------
+Objective: Verify Jitsi Meet integration works reliably
+Preconditions: Jitsi Meet API available
+Test Steps:
+1. Test Jitsi API initialization
+2. Test room creation and joining
+3. Test various Jitsi features
+4. Test error handling for Jitsi failures
+Expected Result: Jitsi integration works smoothly with proper error handling
+Priority: High
+Test Data: Various video call scenarios
+
+TC_INT_004: Email/SMS Integration
+--------------------------------
+Objective: Verify notification systems work correctly
+Preconditions: Email/SMS services configured
+Test Steps:
+1. Test email notifications for various events
+2. Test SMS notifications where applicable
+3. Verify notification content accuracy
+4. Test notification delivery reliability
+Expected Result: Notifications sent reliably with correct content
+Priority: Medium
+Test Data: Various notification triggers
+
+💾 DATA MANAGEMENT TEST CASES
+=============================
+
+TC_DATA_001: Data Backup and Recovery
+------------------------------------
+Objective: Verify data backup and recovery procedures work correctly
+Preconditions: Backup system configured
+Test Steps:
+1. Perform system backup
+2. Simulate data loss scenario
+3. Restore from backup
+4. Verify data integrity after restoration
+Expected Result: Data successfully backed up and restored without loss
+Priority: High
+Test Data: Critical system data
+
+TC_DATA_002: Data Export/Import
+------------------------------
+Objective: Verify data can be exported and imported correctly
+Preconditions: Data export/import functionality
+Test Steps:
+1. Export data in various formats
+2. Verify export completeness and accuracy
+3. Import exported data
+4. Verify imported data integrity
+Expected Result: Data export/import maintains complete accuracy
+Priority: Medium
+Test Data: Various data types
+
+TC_DATA_003: Data Archival
+--------------------------
+Objective: Verify old data can be archived properly
+Preconditions: Archival system configured
+Test Steps:
+1. Identify data eligible for archival
+2. Perform archival process
+3. Verify archived data accessibility
+4. Verify system performance after archival
+Expected Result: Data archived successfully, system performance maintained
+Priority: Low
+Test Data: Historical data
+
+🚨 ERROR HANDLING TEST CASES
+============================
+
+TC_ERR_001: Network Connection Errors
+------------------------------------
+Objective: Verify proper handling of network connectivity issues
+Preconditions: Application running
+Test Steps:
+1. Disconnect network during various operations
+2. Reconnect network and verify recovery
+3. Test with slow/unstable connections
+4. Verify appropriate error messages
+Expected Result: Network errors handled gracefully with clear user feedback
+Priority: High
+Test Data: Various network conditions
+
+TC_ERR_002: Server Error Handling
+--------------------------------
+Objective: Verify proper handling of server-side errors
+Preconditions: Server error simulation capability
+Test Steps:
+1. Simulate various server errors (500, 503, etc.)
+2. Verify appropriate error messages displayed
+3. Test error recovery mechanisms
+4. Verify logging of errors
+Expected Result: Server errors handled gracefully with proper user feedback
+Priority: High
+Test Data: Various server error codes
+
+TC_ERR_003: Browser Compatibility Errors
+---------------------------------------
+Objective: Verify application works across different browsers
+Preconditions: Multiple browser environments
+Test Steps:
+1. Test on Chrome, Firefox, Safari, Edge
+2. Test on different browser versions
+3. Verify feature availability across browsers
+4. Test fallback mechanisms for unsupported features
+Expected Result: Application works consistently across supported browsers
+Priority: Medium
+Test Data: Multiple browser versions
+
+TC_ERR_004: Form Validation Errors
+---------------------------------
+Objective: Verify proper validation and error messages for forms
+Preconditions: Forms with validation rules
+Test Steps:
+1. Submit forms with invalid data
+2. Test various validation scenarios
+3. Verify error message clarity
+4. Test error message positioning
+Expected Result: Clear, helpful validation errors displayed appropriately
+Priority: Medium
+Test Data: Various invalid form inputs
+
+📋 TEST EXECUTION SUMMARY
+=========================
+
+🎯 Test Priorities:
+- High Priority: 85 test cases (Core functionality, Security, Integration)
+- Medium Priority: 45 test cases (Performance, Usability, Error Handling)
+- Low Priority: 20 test cases (Nice-to-have features, Advanced scenarios)
+
+🔄 Test Types:
+- Functional Testing: 60%
+- Security Testing: 15%
+- Performance Testing: 10%
+- Integration Testing: 10%
+- Usability Testing: 5%
+
+📊 Expected Test Coverage:
+- Code Coverage: > 80%
+- Feature Coverage: > 95%
+- User Journey Coverage: 100%
+- Security Coverage: 100%
+
+🚀 Test Environment Requirements:
+- Multiple browsers (Chrome, Firefox, Safari, Edge)
+- Mobile devices (iOS, Android)
+- Various screen resolutions
+- Network simulation tools
+- Load testing tools
+- Security testing tools
+
+📝 Test Data Requirements:
+- Sample user accounts for each role
+- Medical terminology database
+- Medicine inventory data
+- Sample QR codes
+- Test prescription data
+- Mock patient records
+- Video/audio test files
+
+⚠️ Risk Areas Requiring Extra Testing:
+1. Video conferencing functionality
+2. QR code generation/scanning
+3. Digital prescription workflow
+4. Role-based access control
+5. Data security and privacy
+6. Mobile responsiveness
+7. Integration points with third-party services
+
+✅ Success Criteria:
+- All High priority test cases pass: 100%
+- All Medium priority test cases pass: > 95%
+- No critical security vulnerabilities
+- Performance benchmarks met
+- Mobile usability acceptable
+- Cross-browser compatibility achieved
+
+📋 Test Reporting:
+- Daily test execution reports
+- Bug tracking and resolution
+- Test coverage reports
+- Performance metrics
+- Security assessment reports
+- Final test completion report
+
+END OF TEST CASES DOCUMENT
+==========================
+Total Test Cases: 150+
+Document Version: 1.0
+Last Updated: Current Date
+Prepared for: SmartMed Healthcare Management System
