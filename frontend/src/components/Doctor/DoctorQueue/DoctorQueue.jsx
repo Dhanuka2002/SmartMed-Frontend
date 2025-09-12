@@ -58,11 +58,20 @@ function DoctorQueue() {
         
         console.log('✅ Full patient data prepared:', fullPatientData);
         
-        // Navigate to Patients tab
-        navigate('/doctor/patients');
+        // Remove patient from doctor queue by changing stage to 'in-progress'
+        await updateQueueEntryStatus('doctor', patient.queueNo, { 
+          status: 'In Progress', 
+          stage: 'in-progress' 
+        });
+        
+        // Refresh queue to remove patient from UI immediately
+        loadQueueData();
+        
+        // Navigate to Patient tab
+        navigate('/doctor/patient');
         
         // Show success message
-        alert(`✅ Patient ${patient.studentName} (Queue #${patient.queueNo}) loaded successfully! Navigating to Patients tab...`);
+        alert(`✅ Patient ${patient.studentName} (Queue #${patient.queueNo}) loaded successfully! Navigating to Patient tab...`);
         
       } else {
         throw new Error(result.error || 'Failed to fetch medical record');

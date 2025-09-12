@@ -190,10 +190,10 @@ const DoctorReport = () => {
         </div>
 
         {/* Patient Information Summary */}
-        <div className="report-section patient-overview" style={{ display: 'block', visibility: 'visible' }}>
+        <div className="report-section patient-overview">
           <h2 className="section-title">Patient Information</h2>
-          <div className="patient-info-grid" style={{ display: 'grid', visibility: 'visible' }}>
-            <div className="info-card" style={{ display: 'block', visibility: 'visible' }}>
+          <div className="patient-info-grid">
+            <div className="info-card">
               <h3>Basic Details</h3>
               <div className="info-rows">
                 <div className="info-row">
@@ -249,64 +249,44 @@ const DoctorReport = () => {
               </div>
             </div>
             
-            <div className="info-card" style={{ 
-              display: 'block', 
-              visibility: 'visible',
-              backgroundColor: '#f8fafc',
-              border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              padding: '1.5rem',
-              minHeight: '200px'
-            }}>
-              <h3 style={{ color: '#3b82f6', fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>
-                Personal Details - TEST
-              </h3>
-              <div className="info-rows" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div className="info-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="label" style={{ fontWeight: '500', color: '#6b7280', minWidth: '120px' }}>Age:</span>
-                  <span className="value" style={{ fontWeight: '600', color: '#1f2937', textAlign: 'right' }}>
-                    {patientData?.age || selectedPatient?.age || '25 (TEST)'}
+            <div className="info-card">
+              <h3>Personal Details</h3>
+              <div className="info-rows">
+                <div className="info-row">
+                  <span className="label">Age:</span>
+                  <span className="value">
+                    {patientData?.age || selectedPatient?.age || calculateAge(patientData?.dateOfBirth || patientData?.dob || selectedPatient?.dateOfBirth) || 'N/A'}
                   </span>
                 </div>
-                <div className="info-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="label" style={{ fontWeight: '500', color: '#6b7280', minWidth: '120px' }}>Date of Birth:</span>
-                  <span className="value" style={{ fontWeight: '600', color: '#1f2937', textAlign: 'right' }}>
-                    {formatDate(patientData?.dateOfBirth || patientData?.dob || selectedPatient?.dateOfBirth) || 'January 1, 1999 (TEST)'}
+                <div className="info-row">
+                  <span className="label">Date of Birth:</span>
+                  <span className="value">
+                    {formatDate(patientData?.dateOfBirth || patientData?.dob || selectedPatient?.dateOfBirth)}
                   </span>
                 </div>
-                <div className="info-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="label" style={{ fontWeight: '500', color: '#6b7280', minWidth: '120px' }}>Gender:</span>
-                  <span className="value" style={{ fontWeight: '600', color: '#1f2937', textAlign: 'right' }}>
-                    {patientData?.gender || selectedPatient?.gender || 'Male (TEST)'}
+                <div className="info-row">
+                  <span className="label">Gender:</span>
+                  <span className="value">
+                    {patientData?.gender || selectedPatient?.gender || 'N/A'}
                   </span>
                 </div>
-                <div className="info-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="label" style={{ fontWeight: '500', color: '#6b7280', minWidth: '120px' }}>Nationality:</span>
-                  <span className="value" style={{ fontWeight: '600', color: '#1f2937', textAlign: 'right' }}>
-                    {patientData?.nationality || selectedPatient?.nationality || 'Sri Lankan (TEST)'}
+                <div className="info-row">
+                  <span className="label">Nationality:</span>
+                  <span className="value">
+                    {patientData?.nationality || selectedPatient?.nationality || 'N/A'}
                   </span>
                 </div>
-                <div className="info-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="label" style={{ fontWeight: '500', color: '#6b7280', minWidth: '120px' }}>Academic Division:</span>
-                  <span className="value" style={{ fontWeight: '600', color: '#1f2937', textAlign: 'right' }}>
+                <div className="info-row">
+                  <span className="label">Academic Division:</span>
+                  <span className="value">
                     {patientData?.academicDivision || 
                      patientData?.division ||
                      selectedPatient?.academicDivision ||
                      selectedPatient?.division ||
                      selectedPatient?.medicalData?.student?.academicDivision || 
-                     'Information Technology (TEST)'}
+                     'N/A'}
                   </span>
                 </div>
-              </div>
-              {/* Debug Info */}
-              <div style={{ marginTop: '1rem', padding: '0.5rem', backgroundColor: '#fff3cd', borderRadius: '4px', fontSize: '0.75rem' }}>
-                <div><strong>Debug Info:</strong></div>
-                <div>patientData exists: {patientData ? 'Yes' : 'No'}</div>
-                <div>selectedPatient exists: {selectedPatient ? 'Yes' : 'No'}</div>
-                <div>patientData fullName: {patientData?.fullName || 'None'}</div>
-                <div>selectedPatient studentName: {selectedPatient?.studentName || 'None'}</div>
-                <div>patientData age: {patientData?.age || 'None'}</div>
-                <div>patientData academicDivision: {patientData?.academicDivision || 'None'}</div>
               </div>
             </div>
 
