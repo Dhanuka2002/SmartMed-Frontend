@@ -14,11 +14,14 @@ function StudentTelemed() {
     
     // Check if Jitsi API is available before proceeding
     if (!window.JitsiMeetExternalAPI) {
+      console.error('Jitsi API not available');
       alert('Video calling system is not ready. Please refresh the page and try again.');
       setIsRequestSent(false);
       setIsWaitingResponse(false);
       return;
     }
+    
+    console.log('Jitsi API is available, proceeding with video call request');
     
     // Create or get shared room name
     let roomName = localStorage.getItem('smartmed_room_name');

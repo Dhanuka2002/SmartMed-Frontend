@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StudentDashboard.css";
-import qrCode from "../../../assets/qr.png";
-import studentAvatar from "../../../assets/student.jpg";
-import doctorImage from "../../../assets/doctors.png";
-import Avatar from "../../common/Avatar/Avatar";
+
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -53,9 +50,19 @@ function Dashboard() {
       clearOtherUsersData(user.email);
       
       // Get detailed student data if available for this specific user
-      const detailedData = localStorage.getItem(`studentData_${user.email}`);
+      let detailedData = localStorage.getItem(`studentData_${user.email}`);
       if (detailedData) {
         setStudentData(JSON.parse(detailedData));
+      } else {
+        // Check for old general studentFormData and migrate if it belongs to current user
+        const oldStudentData = localStorage.getItem('studentFormData');
+        if (oldStudentData) {
+          const parsedStudentData = JSON.parse(oldStudentData);
+          if (parsedStudentData.email === user.email) {
+            localStorage.setItem(`studentData_${user.email}`, oldStudentData);
+            setStudentData(parsedStudentData);
+          }
+        }
       }
       
       // Get student form data for profile image (only for current user)
