@@ -79,20 +79,7 @@ function DoctorPatient() {
         const previousPatient = selectedPatient;
         setSelectedPatient(patient);
         
-        // Show notification when a new patient is selected
-        if (previousPatient && previousPatient.queueNo !== patient.queueNo) {
-          setNotification({
-            type: 'info',
-            message: `New patient selected: ${patient.studentName} (Queue #${patient.queueNo})`
-          });
-          setTimeout(() => setNotification(null), 5000);
-        } else if (!previousPatient) {
-          setNotification({
-            type: 'success',
-            message: `Patient loaded: ${patient.studentName} (Queue #${patient.queueNo})`
-          });
-          setTimeout(() => setNotification(null), 3000);
-        }
+        
         
         // Load medical data if available
         if (patient.medicalData && patient.medicalData.examination) {

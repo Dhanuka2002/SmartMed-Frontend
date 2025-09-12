@@ -21,9 +21,6 @@ function ReceptionistSidebar() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('studentName');
-    localStorage.removeItem('studentEmail');
     navigate('/login');
   };
 
