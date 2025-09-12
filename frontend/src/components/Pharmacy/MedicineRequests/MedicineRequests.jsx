@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import AlertMessage from '../../Common/AlertMessage';
+import useAlert from '../../../hooks/useAlert';
 import "./MedicineRequests.css";
 
 function MedicineRequests() {
@@ -10,27 +12,28 @@ function MedicineRequests() {
   const [requestDate, setRequestDate] = useState(new Date());
   const [about, setAbout] = useState("");
   const [priority, setPriority] = useState("normal");
+  const { alertState, showSuccess, showError, hideAlert } = useAlert();
 
   const handleGeneratePDF = (e) => {
     e.preventDefault();
     // Validate form
     if (!pharmacy || !medicine || !quantity) {
-      alert("Please fill in all required fields");
+      showError('Please fill in all required fields', 'Form Validation Error');
       return;
     }
     // Add your PDF generation logic here
-    alert("PDF Generated Successfully!");
+    showSuccess('PDF Generated Successfully!', 'PDF Generated');
   };
 
   const handleEmailRequest = (e) => {
     e.preventDefault();
     // Validate form
     if (!pharmacy || !medicine || !quantity) {
-      alert("Please fill in all required fields");
+      showError('Please fill in all required fields', 'Form Validation Error');
       return;
     }
     // Add your email sending logic here
-    alert("Order Request Sent Successfully!");
+    showSuccess('Order Request Sent Successfully!', 'Request Sent');
   };
 
   const handleClearForm = () => {
@@ -44,6 +47,16 @@ function MedicineRequests() {
 
   return (
     <div className="medicine-requests-container">
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
       <div className="header-section">
         <h1 className="page-title">Medicine Request System</h1>
       

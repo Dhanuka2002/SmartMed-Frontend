@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Hospital_Staff.css';
+import AlertMessage from '../Common/AlertMessage';
+import useAlert from '../../hooks/useAlert';
 import { autoGenerateQRIfReady } from '../../services/medicalRecordService';
 
 const SignaturePad = ({ onSignatureChange, label, clearSignal, width = 300, height = 120 }) => {
@@ -138,6 +140,7 @@ const SignaturePad = ({ onSignatureChange, label, clearSignal, width = 300, heig
 const Hospital_Staff = () => {
   // Get current user email for tracking purposes
   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+  const { alertState, showSuccess, showError, hideAlert } = useAlert();
   
   // Predefined allergy categories
   const defaultAllergyCategories = [
@@ -274,19 +277,19 @@ const Hospital_Staff = () => {
   const handleSubmit = async () => {
     // Check if medical officer signature is present
     if (!formData.medicalOfficerSignature) {
-      alert('Please provide the medical officer digital signature before submitting.');
+      showError('Please provide the medical officer digital signature before submitting.', 'Signature Required');
       return;
     }
     
     // Check if student email is provided
     if (!formData.studentEmail || formData.studentEmail.trim() === '') {
-      alert('Please provide the student email address.');
+      showError('Please provide the student email address.', 'Email Required');
       return;
     }
     
     // Check if student name is provided
     if (!formData.studentName || formData.studentName.trim() === '') {
-      alert('Please provide the student name.');
+      showError('Please provide the student name.', 'Name Required');
       return;
     }
 
@@ -339,7 +342,7 @@ const Hospital_Staff = () => {
         localStorage.setItem('hospitalFormData', JSON.stringify(formData));
         localStorage.setItem(`hospitalData_${formData.studentEmail}`, JSON.stringify(formData));
         
-        alert('Medical record saved successfully to database!');
+        showSuccess('Medical record saved successfully to database!', 'Record Saved');
         console.log('Record ID:', result.recordId);
         
         // Auto-generate QR code if both forms are complete
@@ -348,9 +351,9 @@ const Hospital_Staff = () => {
           try {
             const qrResult = await autoGenerateQRIfReady(emailToCheck);
             if (qrResult.success && !qrResult.alreadyExists) {
-              alert('🎉 Both forms completed! The student\'s medical QR code has been automatically generated. The student can now view their QR code in the Student QR Code section.');
+              showSuccess('🎉 Both forms completed! The student\'s medical QR code has been automatically generated. The student can now view their QR code in the Student QR Code section.', 'QR Code Generated');
             } else if (qrResult.success && qrResult.alreadyExists) {
-              alert('✅ Medical record updated. The student\'s QR code was already generated and remains valid.');
+              showSuccess('✅ Medical record updated. The student\'s QR code was already generated and remains valid.', 'Record Updated');
             }
           } catch (error) {
             console.error('Error auto-generating QR code:', error);
@@ -360,11 +363,11 @@ const Hospital_Staff = () => {
         // Optionally reset the form
         // resetForm();
       } else {
-        alert('Error saving medical record: ' + (result.message || 'Unknown error'));
+        showError('Error saving medical record: ' + (result.message || 'Unknown error'), 'Save Failed');
       }
     } catch (error) {
       console.error('Error saving medical record:', error);
-      alert('Failed to save medical record. Please check your connection and try again.');
+      showError('Failed to save medical record. Please check your connection and try again.', 'Connection Error');
     }
   };
 
@@ -378,6 +381,16 @@ const Hospital_Staff = () => {
 
   return (
     <div className="hospital-container">
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
       <div className="form-container">
         <div className="form-header">
           <div className="header-content">

@@ -1,10 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { 
+  getReceptionQueue, 
+  getDoctorQueue, 
+  getPharmacyQueue, 
+  getQueueStats 
+} from '../../../services/queueService';
 import './ReceptionistDashboard.css';
 
 function ReceptionistDashboard() {
-  const [totalPatients] = useState(48);
-  const [currentQueue] = useState(7);
-  const [emergencyCases] = useState(2);
+  // Real-time statistics state
+  const [totalPatientsToday, setTotalPatientsToday] = useState(0);
+  const [currentQueue, setCurrentQueue] = useState(0);
+  const [emergencyCases, setEmergencyCases] = useState(0);
+  
+  // Additional detailed statistics
+  const [queueStats, setQueueStats] = useState({
+    reception: 0,
+    doctor: 0,
+    pharmacy: 0,
+    completed: 0,
+    total: 0
+  });
+  const [averageWaitTime, setAverageWaitTime] = useState('0 min');
+  const [todayCompletedPatients, setTodayCompletedPatients] = useState(0);
+  
+  // Other state variables
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isEmergencyDialogOpen, setIsEmergencyDialogOpen] = useState(false);
   const [isSendingSMS, setIsSendingSMS] = useState(false);
@@ -13,11 +33,116 @@ function ReceptionistDashboard() {
   const [emergencyType, setEmergencyType] = useState('critical');
   const [smsStatus, setSmsStatus] = useState('');
 
+  // Load queue data on component mount and set up refresh interval
+  useEffect(() => {
+    loadAllQueueData();
+    const interval = setInterval(loadAllQueueData, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadAllQueueData = async () => {
+    try {
+      // Load all queue data in parallel for better performance
+      const [receptionQueue, doctorQueue, pharmacyQueue, overallStats] = await Promise.all([
+        getReceptionQueue(),
+        getDoctorQueue(),
+        getPharmacyQueue(),
+        getQueueStats()
+      ]);
+      
+      // Calculate comprehensive statistics
+      calculateComprehensiveStatistics(receptionQueue, doctorQueue, pharmacyQueue, overallStats);
+    } catch (error) {
+      console.error('Error loading queue data:', error);
+      // Fallback to just reception queue if other calls fail
+      try {
+        const receptionQueue = await getReceptionQueue();
+        calculateBasicStatistics(receptionQueue);
+      } catch (fallbackError) {
+        console.error('Error loading fallback data:', fallbackError);
+      }
+    }
+  };
+
+  const calculateComprehensiveStatistics = (receptionQueue, doctorQueue, pharmacyQueue, overallStats) => {
+    const today = new Date().toDateString();
+    
+    // Combine all queue data for comprehensive analysis
+    const allQueues = [...receptionQueue, ...doctorQueue, ...pharmacyQueue];
+    
+    // Calculate total patients today (from all queues)
+    const todayPatients = allQueues.filter(patient => {
+      const patientDate = new Date(
+        patient.createdAt || 
+        patient.addedTime || 
+        patient.timestamp || 
+        Date.now()
+      ).toDateString();
+      return patientDate === today;
+    });
+    setTotalPatientsToday(todayPatients.length);
+
+    // Set current queue from reception queue (waiting to be seen)
+    setCurrentQueue(receptionQueue.length);
+
+    // Calculate emergency cases (from all active queues)
+    const emergencyPatients = allQueues.filter(patient => 
+      patient.priority === 'high' || 
+      patient.priority === 'emergency' || 
+      patient.status === 'emergency' ||
+      patient.urgency === 'high' ||
+      patient.emergencyCase === true
+    );
+    setEmergencyCases(emergencyPatients.length);
+    
+    // Set overall queue statistics
+    setQueueStats(overallStats || {
+      reception: receptionQueue.length,
+      doctor: doctorQueue.length,
+      pharmacy: pharmacyQueue.length,
+      completed: 0,
+      total: receptionQueue.length + doctorQueue.length + pharmacyQueue.length
+    });
+    
+    // Calculate average wait time from reception queue
+    if (receptionQueue.length > 0) {
+      const totalWaitMinutes = receptionQueue.reduce((total, patient) => {
+        const addedTime = new Date(patient.addedTime || patient.createdAt || Date.now());
+        const waitMinutes = Math.floor((new Date() - addedTime) / (1000 * 60));
+        return total + waitMinutes;
+      }, 0);
+      const avgWait = Math.floor(totalWaitMinutes / receptionQueue.length);
+      setAverageWaitTime(avgWait > 0 ? `${avgWait} min` : '0 min');
+    } else {
+      setAverageWaitTime('0 min');
+    }
+    
+    // Calculate today's completed patients (would need completed queue data)
+    const todayCompleted = overallStats?.completed || 0;
+    setTodayCompletedPatients(todayCompleted);
+  };
+  
+  const calculateBasicStatistics = (receptionQueue) => {
+    const today = new Date().toDateString();
+    const todayPatients = receptionQueue.filter(patient => {
+      const patientDate = new Date(patient.createdAt || patient.addedTime || Date.now()).toDateString();
+      return patientDate === today;
+    });
+    setTotalPatientsToday(todayPatients.length);
+    setCurrentQueue(receptionQueue.length);
+    
+    const emergencyPatients = receptionQueue.filter(patient => 
+      patient.priority === 'high' || patient.priority === 'emergency' || patient.urgency === 'high'
+    );
+    setEmergencyCases(emergencyPatients.length);
+  };
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
+    await loadAllQueueData(); // Load real data from all sources
     setTimeout(() => {
       setIsRefreshing(false);
-      console.log('Refreshing patient data...');
+      console.log('All queue data refreshed with comprehensive real-time statistics');
     }, 1000);
   };
 
@@ -141,38 +266,39 @@ Reply ACCEPT to confirm or call back immediately.`;
         <div className="stats-grid">
           <div className="stat-card">
             <div className="stat-content">
-              <div className="stat-icon patients">
-                👥
+              <div className="stat-icon queue">
+                👩‍⚕️
               </div>
               <div className="stat-info">
-                <h3>Total Patients Today</h3>
-                <p className="stat-number">{totalPatients}</p>
+                <h3>Doctor Queue</h3>
+                <p className="stat-number">{queueStats.doctor}</p>
+                <p className="stat-subtitle">With doctors</p>
               </div>
             </div>
           </div>
-
+          
           <div className="stat-card">
             <div className="stat-content">
               <div className="stat-icon queue">
-                ⏰
+                💊
               </div>
               <div className="stat-info">
-                <h3>Current Queue</h3>
-                <p className="stat-number">{currentQueue}</p>
-                <p className="stat-subtitle">Waiting patients</p>
+                <h3>Pharmacy Queue</h3>
+                <p className="stat-number">{queueStats.pharmacy}</p>
+                <p className="stat-subtitle">Getting medication</p>
               </div>
             </div>
           </div>
-
+          
           <div className="stat-card">
             <div className="stat-content">
-              <div className="stat-icon emergency">
-                ⚠️
+              <div className="stat-icon queue">
+                ✅
               </div>
               <div className="stat-info">
-                <h3>Emergency Cases</h3>
-                <p className="stat-number">{emergencyCases}</p>
-                <p className="stat-subtitle">Today</p>
+                <h3>Completed Today</h3>
+                <p className="stat-number">{todayCompletedPatients}</p>
+                <p className="stat-subtitle">Finished treatment</p>
               </div>
             </div>
           </div>
@@ -196,7 +322,7 @@ Reply ACCEPT to confirm or call back immediately.`;
                 onClick={handleViewQueue}
                 className="btn btn-success"
               >
-                👁️ View Queue
+                👁 View Queue
               </button>
 
               <button
@@ -238,7 +364,7 @@ Reply ACCEPT to confirm or call back immediately.`;
               }}>
                 <div className="warning-content">
                   <div className="warning-text">
-                    <h4>⚠️ Real SMS Alert System</h4>
+                    <h4>⚠ Real SMS Alert System</h4>
                     <p>
                       This will send a REAL SMS to 0770279136. Make sure your Twilio account has credit!
                     </p>
@@ -249,6 +375,51 @@ Reply ACCEPT to confirm or call back immediately.`;
           </div>
         </div>
 
+        {/* Real-time Queue Overview */}
+        <div className="queue-overview-section">
+          <h3>Live Queue Status</h3>
+          <div className="queue-flow">
+            <div className="queue-stage">
+              <div className="stage-header">
+                <h4>📝 Reception</h4>
+                <span className="count">{queueStats.reception}</span>
+              </div>
+              <p>Patients checking in</p>
+              <p className="wait-time">Avg wait: {averageWaitTime}</p>
+            </div>
+            
+            <div className="queue-arrow">→</div>
+            
+            <div className="queue-stage">
+              <div className="stage-header">
+                <h4>👩‍⚕️ Doctor</h4>
+                <span className="count">{queueStats.doctor}</span>
+              </div>
+              <p>With medical staff</p>
+            </div>
+            
+            <div className="queue-arrow">→</div>
+            
+            <div className="queue-stage">
+              <div className="stage-header">
+                <h4>💊 Pharmacy</h4>
+                <span className="count">{queueStats.pharmacy}</span>
+              </div>
+              <p>Getting medication</p>
+            </div>
+            
+            <div className="queue-arrow">→</div>
+            
+            <div className="queue-stage completed">
+              <div className="stage-header">
+                <h4>✅ Done</h4>
+                <span className="count">{todayCompletedPatients}</span>
+              </div>
+              <p>Completed today</p>
+            </div>
+          </div>
+        </div>
+        
         {/* Alerts Section */}
         <div className="alerts-section">
           <h3>Today's Alerts & Notifications</h3>
@@ -261,7 +432,7 @@ Reply ACCEPT to confirm or call back immediately.`;
               borderRadius: '8px'
             }}>
               <div className="alert-content">
-                <h4>⚠️ Doctor Unavailable</h4>
+                <h4>⚠ Doctor Unavailable</h4>
                 <p>
                   Dr. Mrs. Fernando will not be available from 12:00 PM - 1:00 PM today.
                 </p>
@@ -279,7 +450,7 @@ Reply ACCEPT to confirm or call back immediately.`;
               borderRadius: '8px'
             }}>
               <div className="alert-content">
-                <h4>ℹ️ System Update</h4>
+                <h4>ℹ System Update</h4>
                 <p>
                   Patient management system will be updated tonight at 11:00 PM.
                 </p>
@@ -344,7 +515,7 @@ Reply ACCEPT to confirm or call back immediately.`;
               
               <div className="form-group">
                 <label>
-                  ⚠️ Emergency Type
+                  ⚠ Emergency Type
                 </label>
                 <select
                   value={emergencyType}

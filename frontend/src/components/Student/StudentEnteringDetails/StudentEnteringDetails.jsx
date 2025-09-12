@@ -1,11 +1,14 @@
 import React, { useState, useRef } from "react";
 import "./StudentEnteringDetails.css";
 import Avatar from "../../common/Avatar/Avatar";
+import AlertMessage from '../../Common/AlertMessage';
+import useAlert from '../../../hooks/useAlert';
 import { autoGenerateQRIfReady } from '../../../services/medicalRecordService';
 
 function StudentEnteringDetails() {
   // Get current user data and auto-populate
   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+  const { alertState, showSuccess, showError, hideAlert } = useAlert();
   
   const [formData, setFormData] = useState({
     // Basic Information - auto-populate from registration
@@ -196,7 +199,7 @@ function StudentEnteringDetails() {
           localStorage.setItem(`studentData_${formData.email}`, JSON.stringify(formData));
         }
         
-        alert('Student details saved successfully!');
+        showSuccess('Student details saved successfully!', 'Form Submitted');
         console.log('Saved with ID:', result.studentId);
         
         // Auto-generate QR code if both forms are complete
@@ -205,7 +208,7 @@ function StudentEnteringDetails() {
           try {
             const qrResult = await autoGenerateQRIfReady(emailToCheck);
             if (qrResult.success && !qrResult.alreadyExists) {
-              alert('🎉 Both forms completed! Your medical QR code has been automatically generated. You can view it in the QR Code section.');
+              showSuccess('🎉 Both forms completed! Your medical QR code has been automatically generated. You can view it in the QR Code section.', 'QR Code Generated');
             }
           } catch (error) {
             console.error('Error auto-generating QR code:', error);
@@ -215,16 +218,26 @@ function StudentEnteringDetails() {
         // Trigger refresh event for dashboard
         window.dispatchEvent(new CustomEvent('studentDataUpdated'));
       } else {
-        alert('Error: ' + result.message);
+        showError('Error: ' + result.message, 'Submission Error');
       }
     } catch (error) {
       console.error('Error saving student details:', error);
-      alert('Failed to save student details. Please try again.');
+      showError('Failed to save student details. Please try again.', 'Save Failed');
     }
   };
 
   return (
     <div className="entering-details-container">
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
       <div className="form-header">
         <div className="header-content">
           <h1>Student</h1>
