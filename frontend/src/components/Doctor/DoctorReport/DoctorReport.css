@@ -201,22 +201,24 @@
 }
 
 /* Patient Overview */
+.patient-overview {
+  background: #f8fafc;
+}
+
 .patient-info-grid {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.5rem;
-  visibility: visible !important;
+  margin-top: 1rem;
 }
 
 .info-card {
-  background: #f8fafc !important;
+  background: white;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 1.5rem;
   transition: all 0.2s ease;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .info-card:hover {
@@ -241,6 +243,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.info-row:last-child {
+  border-bottom: none;
 }
 
 .info-row .label {
@@ -721,6 +729,11 @@
   .conditions-grid,
   .vaccination-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .info-card {
+    margin-bottom: 1rem;
   }
   
   .report-header {

@@ -41,7 +41,7 @@ import { usePrescription } from "../../../contexts/PrescriptionContext";
 import { useMedicineInventory } from "../../../contexts/MedicineInventoryContext";
 import "./DoctorPatient.css";
 import qr from "../../../assets/qr.png";
-
+import patientAvatar from "../../../assets/student.jpg";
 import Avatar from "../../common/Avatar/Avatar";
 import DigitalSignature from "../../common/DigitalSignature/DigitalSignature";
 
@@ -79,20 +79,7 @@ function DoctorPatient() {
         const previousPatient = selectedPatient;
         setSelectedPatient(patient);
         
-        // Show notification when a new patient is selected
-        if (previousPatient && previousPatient.queueNo !== patient.queueNo) {
-          setNotification({
-            type: 'info',
-            message: `New patient selected: ${patient.studentName} (Queue #${patient.queueNo})`
-          });
-          setTimeout(() => setNotification(null), 5000);
-        } else if (!previousPatient) {
-          setNotification({
-            type: 'success',
-            message: `Patient loaded: ${patient.studentName} (Queue #${patient.queueNo})`
-          });
-          setTimeout(() => setNotification(null), 3000);
-        }
+        
         
         // Load medical data if available
         if (patient.medicalData && patient.medicalData.examination) {
