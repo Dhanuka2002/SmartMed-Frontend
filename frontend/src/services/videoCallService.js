@@ -52,27 +52,44 @@ class VideoCallService {
       console.error('Error sending video call request:', error);
 
       // Fallback to localStorage for offline functionality
+      console.log('Using localStorage fallback mode');
+
+      const roomName = `SmartMed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const requestId = Date.now();
+
       const fallbackData = {
-        id: Date.now(),
+        id: requestId,
         type: 'video_call_request',
         studentId: this.currentUser?.id || 'STU001',
         studentName: this.currentUser?.name || 'Student User',
-        roomName: `SmartMed-${Date.now()}`,
+        studentEmail: this.currentUser?.email || 'student@example.com',
+        roomName: roomName,
         status: 'pending',
-        timestamp: new Date().toISOString()
-      };
-
-      const existingRequests = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
-      existingRequests.push(fallbackData);
-      localStorage.setItem('telemed_notifications', JSON.stringify(existingRequests));
-
-      return {
-        success: true,
-        requestId: fallbackData.id,
-        roomName: fallbackData.roomName,
-        message: 'Video call request sent (offline mode)',
+        timestamp: new Date().toISOString(),
         isOffline: true
       };
+
+      try {
+        const existingRequests = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
+        existingRequests.push(fallbackData);
+        localStorage.setItem('telemed_notifications', JSON.stringify(existingRequests));
+
+        console.log('Video call request stored in localStorage:', fallbackData);
+
+        return {
+          success: true,
+          requestId: requestId,
+          roomName: roomName,
+          message: 'Video call request sent (offline mode)',
+          isOffline: true
+        };
+      } catch (storageError) {
+        console.error('Error storing in localStorage:', storageError);
+        return {
+          success: false,
+          error: 'Failed to store video call request'
+        };
+      }
     }
   }
 
@@ -116,7 +133,7 @@ class VideoCallService {
           try {
             const notifications = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
             const myRequest = notifications.find(n =>
-              n.id === requestId && n.status === 'accepted'
+              (n.id === requestId || n.id == requestId) && n.status === 'accepted'
             );
 
             if (myRequest) {
@@ -125,7 +142,23 @@ class VideoCallService {
                 success: true,
                 status: 'accepted',
                 roomName: myRequest.roomName,
-                isOffline: true
+                isOffline: true,
+                doctorInfo: myRequest.doctorInfo || { name: 'Doctor' }
+              });
+              return;
+            }
+
+            // Also check if request was declined
+            const declinedRequest = notifications.find(n =>
+              (n.id === requestId || n.id == requestId) && n.status === 'declined'
+            );
+
+            if (declinedRequest) {
+              clearInterval(this.activePolling);
+              resolve({
+                success: false,
+                status: 'declined',
+                message: 'Doctor declined the call'
               });
               return;
             }
@@ -226,18 +259,25 @@ class VideoCallService {
       try {
         const notifications = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
         const updatedNotifications = notifications.map(n =>
-          n.id === requestId ? { ...n, status: 'accepted', doctorInfo: this.currentUser } : n
+          (n.id === requestId || n.id == requestId) ? {
+            ...n,
+            status: 'accepted',
+            doctorInfo: this.currentUser || { name: 'Dr. SmartMed', id: 'DOC001' }
+          } : n
         );
         localStorage.setItem('telemed_notifications', JSON.stringify(updatedNotifications));
 
-        const acceptedRequest = updatedNotifications.find(n => n.id === requestId);
+        const acceptedRequest = updatedNotifications.find(n => (n.id === requestId || n.id == requestId));
+
+        console.log('Video call accepted in localStorage:', acceptedRequest);
 
         return {
           success: true,
           roomName: acceptedRequest?.roomName || `SmartMed-${Date.now()}`,
           studentInfo: {
-            name: acceptedRequest?.studentName,
-            id: acceptedRequest?.studentId
+            name: acceptedRequest?.studentName || 'Student',
+            id: acceptedRequest?.studentId || 'STU001',
+            email: acceptedRequest?.studentEmail
           },
           isOffline: true
         };
@@ -272,9 +312,11 @@ class VideoCallService {
       try {
         const notifications = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
         const updatedNotifications = notifications.map(n =>
-          n.id === requestId ? { ...n, status: 'declined' } : n
+          (n.id === requestId || n.id == requestId) ? { ...n, status: 'declined' } : n
         );
         localStorage.setItem('telemed_notifications', JSON.stringify(updatedNotifications));
+
+        console.log('Video call declined in localStorage:', requestId);
 
         return { success: true, isOffline: true };
       } catch (localError) {
