@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import { FiCalendar, FiUser, FiClock, FiCheck, FiEye } from "react-icons/fi";
 import { usePrescription } from "../../../contexts/PrescriptionContext";
 import PrescriptionDisplay from "../../common/PrescriptionDisplay/PrescriptionDisplay";
+import AlertMessage from '../../Common/AlertMessage';
+import useAlert from '../../../hooks/useAlert';
 import "./PrescriptionQueue.css";
 
 function PrescriptionQueue() {
@@ -11,6 +13,7 @@ function PrescriptionQueue() {
   const [searchTerm, setSearchTerm] = useState("");
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [loading, setLoading] = useState(false);
+  const { alertState, showSuccess, showError, hideAlert } = useAlert();
   
   // Get prescription context for dispensed history
   const { dispensedPrescriptions } = usePrescription();
@@ -174,7 +177,7 @@ function PrescriptionQueue() {
               localStorage.setItem('contextDispensedPrescriptions', JSON.stringify(updatedDispensed));
             }
             
-            alert('Prescription dispensed successfully!');
+            showSuccess('Prescription dispensed successfully!', 'Prescription Dispensed');
             loadDatabasePrescriptions(); // Reload to get updated status
             return true; // Return success
           } else {
@@ -188,7 +191,7 @@ function PrescriptionQueue() {
       }
     } catch (error) {
       console.error('Error dispensing prescription:', error);
-      alert(`Error dispensing prescription: ${error.message}`);
+      showError(`Error dispensing prescription: ${error.message}`, 'Dispense Failed');
       return false; // Return failure
     }
   };
@@ -229,7 +232,7 @@ function PrescriptionQueue() {
       }
     } catch (error) {
       console.error('Error updating status:', error);
-      alert(`Error updating prescription status: ${error.message}`);
+      showError(`Error updating prescription status: ${error.message}`, 'Status Update Failed');
     }
   };
 
@@ -270,6 +273,16 @@ function PrescriptionQueue() {
 
   return (
     <div className="queue-container">
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
       {/* Header */}
       <div className="queue-header">
         <div>

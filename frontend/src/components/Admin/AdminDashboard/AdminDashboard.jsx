@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './AdminDashboard.css';
 import { FaUsers, FaUserPlus, FaUserCheck, FaTrash } from 'react-icons/fa';
+import AlertMessage from '../../Common/AlertMessage';
+import useAlert from '../../../hooks/useAlert';
 
 const AdminDashboard = () => {
+  const { alertState, showSuccess, showError, showWarning, showInfo, hideAlert } = useAlert();
   const [activeTab, setActiveTab] = useState('overview');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -53,7 +56,7 @@ const AdminDashboard = () => {
     try {
       const user = JSON.parse(localStorage.getItem('currentUser'));
       if (!user || !user.email) {
-        alert('Admin user session invalid. Please login again.');
+        showError('Admin user session invalid. Please login again.', 'Session Error');
         setLoading(false);
         return;
       }
@@ -70,15 +73,15 @@ const AdminDashboard = () => {
       const result = await response.json();
 
       if (response.ok) {
-        alert(result.message);
+        showSuccess(result.message, 'User Created');
         setNewUserForm({ firstName: '', lastName: '', email: '', password: '', role: '' });
         fetchAllUsers();
       } else {
-        alert(result.message || 'Error creating user');
+        showError(result.message || 'Error creating user', 'Creation Error');
       }
     } catch (error) {
       console.error('Error creating user:', error);
-      alert('Error occurred while creating user');
+      showError('Error occurred while creating user', 'System Error');
     }
     setLoading(false);
   };
@@ -129,13 +132,13 @@ const AdminDashboard = () => {
           headers: { 'Content-Type': 'application/json' }
         });
         const result = await response.json();
-        alert(result.message);
+        showInfo(result.message, 'Admin Creation');
         if (result.status === 'success') {
-          alert('Admin created! Now try logging in with admin@smartmed.com / admin123');
+          showSuccess('Admin created! Now try logging in with admin@smartmed.com / admin123', 'Admin Ready');
         }
       } catch (error) {
         console.error('Error creating admin:', error);
-        alert('Error creating admin');
+        showError('Error creating admin', 'Admin Creation Error');
       }
     };
 
@@ -385,6 +388,17 @@ const AdminDashboard = () => {
           </div>
         )}
       </div>
+
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
     </div>
   );
 };

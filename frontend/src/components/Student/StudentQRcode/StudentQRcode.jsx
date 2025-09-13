@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
 import QRScanner from '../../QRScanner/QRScanner';
+import AlertMessage from '../../Common/AlertMessage';
+import useAlert from '../../../hooks/useAlert';
 import { processCompleteMedicalRecordByEmail, checkFormsCompletion } from '../../../services/medicalRecordService';
 import './StudentQRcode.css';
 
@@ -18,6 +20,7 @@ function StudentQRCode() {
   const [formsStatus, setFormsStatus] = useState({ hasStudentData: false, hasHospitalData: false, bothComplete: false });
   const [allergiesData, setAllergiesData] = useState(null);
   const [loadingAllergies, setLoadingAllergies] = useState(false);
+  const { alertState, showSuccess, showInfo, hideAlert } = useAlert();
 
   useEffect(() => {
     const loadUserDataAndQR = async () => {
@@ -162,7 +165,7 @@ function StudentQRCode() {
         setMedicalRecordId(result.recordId);
         setStudentName(result.studentName);
         setStudentEmail(result.studentEmail);
-        alert('Medical QR code generated successfully!');
+        showSuccess('Medical QR code generated successfully!', 'QR Code Generated');
       } else {
         throw new Error(result.error || 'Failed to generate QR code');
       }
@@ -217,12 +220,22 @@ function StudentQRCode() {
   const handleScanResult = (medicalData) => {
     console.log('Scanned medical data:', medicalData);
     // You can handle the scanned data here (e.g., display in a modal)
-    alert(`Scanned medical record for: ${medicalData.student.fullName}`);
+    showInfo(`Scanned medical record for: ${medicalData.student.fullName}`, 'Medical Record Scanned');
     setShowScanner(false);
   };
 
   return (
     <div className="qr-main-container">
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
       <div className="qr-card-wrapper">
         {/* Header */}
         <div className="qr-header">
