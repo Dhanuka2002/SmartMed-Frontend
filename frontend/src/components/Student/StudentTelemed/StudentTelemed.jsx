@@ -1,20 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AlertMessage from '../../Common/AlertMessage';
 import useAlert from '../../../hooks/useAlert';
+import videoCallService from '../../../services/videoCallService.js';
 import './StudentTelemed.css';
 import telemeddoctor from '../../../assets/telemeddoctor.png';
 
 function StudentTelemed() {
   const [isRequestSent, setIsRequestSent] = useState(false);
   const [isWaitingResponse, setIsWaitingResponse] = useState(false);
+  const [currentRequestId, setCurrentRequestId] = useState(null);
   const navigate = useNavigate();
-  const { alertState, showError, showWarning, hideAlert } = useAlert();
+  const { alertState, showError, showWarning, showSuccess, hideAlert } = useAlert();
 
-  const sendVideoCallRequest = () => {
+  // Initialize video call service with current user info
+  useEffect(() => {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    videoCallService.init(currentUser);
+
+    // Cleanup polling on component unmount
+    return () => {
+      videoCallService.stopPolling();
+    };
+  }, []);
+
+  const sendVideoCallRequest = async () => {
     setIsRequestSent(true);
     setIsWaitingResponse(true);
-    
+
     // Check if Jitsi API is available before proceeding
     if (!window.JitsiMeetExternalAPI) {
       console.error('Jitsi API not available');
@@ -23,75 +36,70 @@ function StudentTelemed() {
       setIsWaitingResponse(false);
       return;
     }
-    
-    console.log('Jitsi API is available, proceeding with video call request');
-    
-    // Create or get shared room name
-    let roomName = localStorage.getItem('smartmed_room_name');
-    if (!roomName) {
-      roomName = `SmartMed-${Date.now()}`;
-      localStorage.setItem('smartmed_room_name', roomName);
-    }
-    
-    const notification = {
-      id: Date.now(),
-      type: 'video_call_request',
-      title: 'Video Conference Request',
-      message: 'A student is requesting a video conference consultation',
-      studentName: 'Student User', // In real app, get from auth context
-      studentId: 'STU001', // In real app, get from auth context
-      roomName: roomName,
-      status: 'pending',
-      timestamp: new Date().toISOString()
-    };
 
-    const existingNotifications = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
-    existingNotifications.push(notification);
-    localStorage.setItem('telemed_notifications', JSON.stringify(existingNotifications));
+    try {
+      console.log('Sending video call request to doctor...');
 
-    console.log('Video call request sent to doctor');
+      // Send video call request using the new service
+      const requestResult = await videoCallService.sendVideoCallRequest();
 
-    let checkCount = 0;
-    const maxChecks = 30; // 30 seconds total
-    
-    const checkForResponse = setInterval(() => {
-      checkCount++;
-      
-      try {
-        const currentNotifications = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
-        const myRequest = currentNotifications.find(n => 
-          n.id === notification.id && 
-          n.type === 'video_call_request' && 
-          n.studentId === 'STU001' && 
-          n.status === 'accepted'
-        );
+      if (requestResult.success) {
+        setCurrentRequestId(requestResult.requestId);
 
-        if (myRequest) {
-          clearInterval(checkForResponse);
+        if (requestResult.isOffline) {
+          showWarning('Request sent in offline mode. Doctor will see it when back online.', 'Offline Mode');
+        } else {
+          showSuccess('Video call request sent to doctor. Waiting for response...', 'Request Sent');
+        }
+
+        // Store room name for later use
+        localStorage.setItem('smartmed_room_name', requestResult.roomName);
+
+        console.log('Waiting for doctor response...');
+
+        // Wait for doctor response (30 seconds timeout)
+        const responseResult = await videoCallService.waitForDoctorResponse(requestResult.requestId, 30000);
+
+        if (responseResult.success && responseResult.status === 'accepted') {
           setIsWaitingResponse(false);
-          // Add a small delay to ensure Jitsi API is ready
+
+          if (responseResult.isOffline) {
+            showSuccess('Doctor accepted the call! Starting video conference...', 'Call Accepted');
+          } else {
+            showSuccess(`Dr. ${responseResult.doctorInfo?.name || 'Doctor'} accepted the call! Starting video conference...`, 'Call Accepted');
+          }
+
+          // Store room name and navigate to video call
+          localStorage.setItem('smartmed_room_name', responseResult.roomName);
+
           setTimeout(() => {
             navigate('/student/telemed-call');
-          }, 500);
-        } else if (checkCount >= maxChecks) {
-          clearInterval(checkForResponse);
+          }, 1500);
+
+        } else if (responseResult.status === 'declined') {
           setIsWaitingResponse(false);
           setIsRequestSent(false);
-          showWarning('No response from doctor. Please try again later.', 'No Response Received');
-        }
-      } catch (error) {
-        console.error('Error checking notifications:', error);
-        clearInterval(checkForResponse);
-        setIsWaitingResponse(false);
-        setIsRequestSent(false);
-        showError('Error processing request. Please try again.', 'Request Processing Error');
-      }
-    }, 1000);
+          setCurrentRequestId(null);
+          showWarning('Doctor declined the video call request. Please try again later.', 'Call Declined');
 
-    // Cleanup timeout - this will run if component unmounts
-    return () => {
-      clearInterval(checkForResponse);
-    };
+        } else if (responseResult.status === 'timeout') {
+          setIsWaitingResponse(false);
+          setIsRequestSent(false);
+          setCurrentRequestId(null);
+          showWarning('No response from doctor within 30 seconds. Please try again later.', 'No Response');
+        }
+
+      } else {
+        throw new Error(requestResult.error || 'Failed to send video call request');
+      }
+
+    } catch (error) {
+      console.error('Error sending video call request:', error);
+      setIsRequestSent(false);
+      setIsWaitingResponse(false);
+      setCurrentRequestId(null);
+      showError('Error sending video call request. Please check your connection and try again.', 'Request Error');
+    }
   };
 
   return (
