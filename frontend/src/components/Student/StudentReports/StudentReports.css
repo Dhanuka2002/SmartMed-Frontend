@@ -210,19 +210,20 @@
   transition: all 0.3s ease;
 }
 .stats-grid .stat-label {
-  font-size: 0.875rem;
-  color: #718096;
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-  margin-left: -60px;
+	font-size: 0.875rem;
+	color: #718096;
+	font-weight: 500;
+	margin-bottom: 0.25rem;
+	margin-left: -5px;
 }
 
 .stats-grid .stat-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #2d3748;
-  margin-left: -100px;
+	font-size: 1.25rem;
+	font-weight: 700;
+	color: #2d3748;
+	margin-left: -60px;
 }
+
 .stat-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);

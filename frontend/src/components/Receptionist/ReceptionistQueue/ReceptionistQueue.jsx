@@ -8,6 +8,10 @@ const ReceptionistQueue = () => {
   const [queueList, setQueueList] = useState([]);
   const [showScanner, setShowScanner] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  
+  // Statistics state
+  const [totalPatientsToday, setTotalPatientsToday] = useState(0);
+  const [emergencyCases, setEmergencyCases] = useState(0);
 
   // Load queue data on component mount and set up refresh interval
   useEffect(() => {
@@ -20,10 +24,30 @@ const ReceptionistQueue = () => {
     try {
       const receptionQueue = await getReceptionQueue();
       setQueueList(receptionQueue);
+      calculateStatistics(receptionQueue);
     } catch (error) {
       console.error('Error loading reception queue:', error);
       setQueueList([]);
     }
+  };
+
+  const calculateStatistics = (queueData) => {
+    // Calculate total patients today (all entries regardless of status)
+    const today = new Date().toDateString();
+    const todayPatients = queueData.filter(patient => {
+      const patientDate = new Date(patient.createdAt || patient.timestamp || Date.now()).toDateString();
+      return patientDate === today;
+    });
+    setTotalPatientsToday(todayPatients.length);
+
+    // Calculate emergency cases (patients with high priority or emergency status)
+    const emergencyPatients = queueData.filter(patient => 
+      patient.priority === 'high' || 
+      patient.priority === 'emergency' || 
+      patient.status === 'emergency' ||
+      patient.urgency === 'high'
+    );
+    setEmergencyCases(emergencyPatients.length);
   };
 
   const handleSearchChange = (e) => {
@@ -82,7 +106,6 @@ const ReceptionistQueue = () => {
     setSelectedStudent(student);
   };
 
-
   const getActionButtonClass = (action) => {
     switch (action.toLowerCase()) {
       case 'call now': return 'action-call';
@@ -109,10 +132,43 @@ const ReceptionistQueue = () => {
           <p>Manage student appointments and queue efficiently</p>
         </div>
         
-        <div className="queue-stats">
+        <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-number">{totalWaiting}</div>
-            <div className="stat-label">Total Students</div>
+            <div className="stat-content">
+              <div className="stat-icon patients">
+                👥
+              </div>
+              <div className="stat-info">
+                <h3>Total Patients Today</h3>
+                <p className="stat-number">{totalPatientsToday}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-content">
+              <div className="stat-icon queue">
+                ⏰
+              </div>
+              <div className="stat-info">
+                <h3>Current Queue</h3>
+                <p className="stat-number">{totalWaiting}</p>
+                <p className="stat-subtitle">Waiting patients</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-content">
+              <div className="stat-icon emergency">
+                ⚠
+              </div>
+              <div className="stat-info">
+                <h3>Emergency Cases</h3>
+                <p className="stat-number">{emergencyCases}</p>
+                <p className="stat-subtitle">Today</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -161,6 +217,7 @@ const ReceptionistQueue = () => {
               <th>Queue No.</th>
               <th>Student Name</th>
               <th>Student ID</th>
+              <th>Email</th>
               <th>Action</th>
               <th>Details</th>
             </tr>
@@ -168,21 +225,21 @@ const ReceptionistQueue = () => {
           <tbody>
             {filteredList.map((entry) => (
               <tr key={entry.queueNo} className="table-row">
-                <td>
-                  <div className="queue-number">{entry.queueNo}</div>
+                <td className="queue-number">
+                  <span className="queue-badge">{entry.queueNo}</span>
                 </td>
-                <td>
+                <td className="student-name-cell">
                   <div className="student-info">
-                    <div className="student-name">{entry.studentName}</div>
-                    <div className="student-details" style={{fontSize: '0.8rem', color: '#666'}}>
-                      {entry.email}
-                    </div>
+                    <div className="name">{entry.studentName}</div>
                   </div>
                 </td>
-                <td>
-                  <div className="student-id">{entry.studentId || 'N/A'}</div>
+                <td className="student-id-cell">
+                  <span className="id-badge">{entry.studentId || 'N/A'}</span>
                 </td>
-                <td>
+                <td className="email-cell">
+                  <span className="email-text">{entry.email || 'N/A'}</span>
+                </td>
+                <td className="action-cell">
                   <select
                     className={`action-select ${getActionButtonClass(entry.action)}`}
                     value={entry.action}
@@ -194,7 +251,7 @@ const ReceptionistQueue = () => {
                     <option value="Send to Doctor">Send to Doctor</option>
                   </select>
                 </td>
-                <td>
+                <td className="details-cell">
                   <button 
                     className="btn btn-sm btn-info"
                     onClick={() => handleViewDetails(entry)}

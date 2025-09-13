@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
-import { FaEnvelope, FaLock, FaCheckCircle } from "react-icons/fa";
+import { FaEnvelope, FaLock } from "react-icons/fa";
+import AlertMessage from "../Common/AlertMessage";
+import useAlert from "../../hooks/useAlert";
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-  const [showSuccess, setShowSuccess] = useState(false);
+  const { alertState, showSuccess, showError, hideAlert } = useAlert();
   const [userData, setUserData] = useState(null);
 
   const navigate = useNavigate();
@@ -45,11 +47,16 @@ const Login = () => {
         
         localStorage.setItem('currentUser', JSON.stringify(userInfo));
         setUserData(userInfo);
-        setShowSuccess(true);
-
+        
         // Show success message for 3 seconds then navigate
+        showSuccess(
+          `Welcome back, ${userInfo.name}! Redirecting to your dashboard....`, 
+          "Login Successful!", 
+          userInfo.name, 
+          3000
+        );
+
         setTimeout(() => {
-          setShowSuccess(false);
           
           // Store role-specific data and navigate based on role
           if (result.role === "Student") {
@@ -69,40 +76,31 @@ const Login = () => {
           } else if (result.role === "Admin") {
             navigate("/admin/dashboard");
           } else {
-            alert("Unknown role!");
+            showError("Unknown role!", "Authentication Error");
           }
         }, 3000);
       } else {
-        alert(result.message || "Login failed!");
+        showError(result.message || "Login failed!", "Login Failed");
       }
     } catch (error) {
       console.error(error);
-      alert("Error occurred!");
+      showError("An unexpected error occurred. Please try again.", "Connection Error");
     }
   };
 
   return (
     <div className="login-wrapper">
-      {/* Beautiful Success Message Overlay */}
-      {showSuccess && (
-        <div className="success-overlay">
-          <div className="success-message">
-            <div className="success-icon-container">
-              <FaCheckCircle className="success-icon" />
-            </div>
-            <h2 className="success-title">Login Successful!</h2>
-            <p className="success-subtitle">Welcome back, {userData?.name}!</p>
-            <div className="success-loading">
-              <div className="loading-dots">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <p>Redirecting to your dashboard....</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Alert Message */}
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
 
       <div className="login-card">
         <div className="login-header">

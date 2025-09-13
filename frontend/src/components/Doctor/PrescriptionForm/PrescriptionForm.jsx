@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import DigitalSignature from '../../common/DigitalSignature/DigitalSignature';
+import AlertMessage from '../../Common/AlertMessage';
+import useAlert from '../../../hooks/useAlert';
 import './PrescriptionForm.css';
 
 const PrescriptionForm = ({ patient, onClose, onSubmit }) => {
+  const { alertState, showSuccess, showError, hideAlert } = useAlert();
   const [formData, setFormData] = useState({
     patientId: patient?.id || '',
     patientName: patient?.name || '',
@@ -147,12 +150,12 @@ const PrescriptionForm = ({ patient, onClose, onSubmit }) => {
       await onSubmit(prescriptionData);
       
       // Show success message
-      alert('Prescription sent to pharmacy successfully!');
+      showSuccess('Prescription sent to pharmacy successfully!', 'Prescription Sent');
       onClose();
       
     } catch (error) {
       console.error('Error submitting prescription:', error);
-      alert('Error submitting prescription. Please try again.');
+      showError('Error submitting prescription. Please try again.', 'Submission Failed');
     } finally {
       setIsSubmitting(false);
     }
@@ -160,6 +163,16 @@ const PrescriptionForm = ({ patient, onClose, onSubmit }) => {
 
   return (
     <div className="prescription-form-overlay">
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
       <div className="prescription-form-container">
         <div className="prescription-form-header">
           <h2>Digital Prescription</h2>

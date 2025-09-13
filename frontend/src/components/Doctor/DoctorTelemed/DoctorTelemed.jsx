@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DoctorTelemed.css'; // optional, match your style
 import telemeddoctor from '../../../assets/telemeddoctor.png';
+import AlertMessage from '../../Common/AlertMessage';
+import useAlert from '../../../hooks/useAlert';
 
 function DoctorTelemed() {
+  const { alertState, showSuccess, showError, showWarning, showInfo, hideAlert } = useAlert();
   const [isCallStarting, setIsCallStarting] = useState(false);
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -36,7 +39,7 @@ function DoctorTelemed() {
       // Check if Jitsi API is available
       if (!window.JitsiMeetExternalAPI) {
         console.error('Jitsi API not available for call acceptance');
-        alert('Video calling system is not ready. Please refresh the page and try again.');
+        showError('Video calling system is not ready. Please refresh the page and try again.', 'System Error');
         return;
       }
       
@@ -63,7 +66,7 @@ function DoctorTelemed() {
       navigate('/doctor/telemed-call');
     } catch (error) {
       console.error('Error accepting call:', error);
-      alert('Error accepting call. Please try again.');
+      showError('Error accepting call. Please try again.', 'Call Error');
     }
   };
 
@@ -87,7 +90,7 @@ function DoctorTelemed() {
     // Check if Jitsi API is available
     if (!window.JitsiMeetExternalAPI) {
       console.error('Jitsi API not available for new call');
-      alert('Video calling system is not ready. Please refresh the page and try again.');
+      showError('Video calling system is not ready. Please refresh the page and try again.', 'System Error');
       return;
     }
     
@@ -259,6 +262,17 @@ function DoctorTelemed() {
           </button>
         </div>
       )}
+
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
     </div>
   );
 }

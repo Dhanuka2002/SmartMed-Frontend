@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AlertMessage from '../../Common/AlertMessage';
+import useAlert from '../../../hooks/useAlert';
 import './StudentTelemed.css';
 import telemeddoctor from '../../../assets/telemeddoctor.png';
 
@@ -7,6 +9,7 @@ function StudentTelemed() {
   const [isRequestSent, setIsRequestSent] = useState(false);
   const [isWaitingResponse, setIsWaitingResponse] = useState(false);
   const navigate = useNavigate();
+  const { alertState, showError, showWarning, hideAlert } = useAlert();
 
   const sendVideoCallRequest = () => {
     setIsRequestSent(true);
@@ -15,7 +18,7 @@ function StudentTelemed() {
     // Check if Jitsi API is available before proceeding
     if (!window.JitsiMeetExternalAPI) {
       console.error('Jitsi API not available');
-      alert('Video calling system is not ready. Please refresh the page and try again.');
+      showError('Video calling system is not ready. Please refresh the page and try again.', 'Video System Error');
       setIsRequestSent(false);
       setIsWaitingResponse(false);
       return;
@@ -74,14 +77,14 @@ function StudentTelemed() {
           clearInterval(checkForResponse);
           setIsWaitingResponse(false);
           setIsRequestSent(false);
-          alert('No response from doctor. Please try again later.');
+          showWarning('No response from doctor. Please try again later.', 'No Response Received');
         }
       } catch (error) {
         console.error('Error checking notifications:', error);
         clearInterval(checkForResponse);
         setIsWaitingResponse(false);
         setIsRequestSent(false);
-        alert('Error processing request. Please try again.');
+        showError('Error processing request. Please try again.', 'Request Processing Error');
       }
     }, 1000);
 
@@ -93,6 +96,16 @@ function StudentTelemed() {
 
   return (
     <div className="telemed-container">
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
       <div className="telemed-content">
         {/* Text & Action */}
         <div className="telemed-left">

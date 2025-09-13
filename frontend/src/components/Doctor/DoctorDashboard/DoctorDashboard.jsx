@@ -2,9 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDoctorQueue, updateQueueEntryStatus } from "../../../services/queueService";
 import notificationSoundService from "../../../services/notificationSoundService";
+import AlertMessage from '../../Common/AlertMessage';
+import useAlert from '../../../hooks/useAlert';
 import "./DoctorDashboard.css";
 
 function DoctorDashboard() {
+  const { alertState, showSuccess, showError, showWarning, showInfo, hideAlert } = useAlert();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedPatient, setSelectedPatient] = useState(0);
   const [activeTab, setActiveTab] = useState('overview');
@@ -95,7 +98,7 @@ function DoctorDashboard() {
       loadQueueData();
     } catch (error) {
       console.error('Error updating patient status:', error);
-      alert('Error updating patient status');
+      showError('Error updating patient status', 'Update Error');
     }
   };
 
@@ -111,7 +114,7 @@ function DoctorDashboard() {
   const handleSelectPatient = (patient) => {
     // Store selected patient for DoctorPatient component
     localStorage.setItem('selectedPatient', JSON.stringify(patient));
-    alert(`Selected patient: ${patient.studentName} (Queue #${patient.queueNo}). Navigate to Patients page to view details.`);
+    showInfo(`Selected patient: ${patient.studentName} (Queue #${patient.queueNo}). Navigate to Patients page to view details.`, 'Patient Selected');
   };
 
   // Handle video call request
@@ -359,7 +362,7 @@ function DoctorDashboard() {
                 >
                   🔄 {loading ? 'Refreshing...' : 'Refresh'}
                 </button>
-                <button className="control-btn info-btn" onClick={() => alert('Patients are added from Reception queue')}>
+                <button className="control-btn info-btn" onClick={() => showInfo('Patients are added from Reception queue', 'Queue Information')}>
                   ℹ️ Info
                 </button>
               </div>
@@ -548,6 +551,17 @@ function DoctorDashboard() {
       
         
       </div>
+
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
     </div>
   );
 }
