@@ -4,37 +4,56 @@ import './DoctorTelemed.css'; // optional, match your style
 import telemeddoctor from '../../../assets/telemeddoctor.png';
 import AlertMessage from '../../Common/AlertMessage';
 import useAlert from '../../../hooks/useAlert';
+import videoCallService from '../../../services/videoCallService.js';
+import notificationSoundService from '../../../services/notificationSoundService.js';
 
 function DoctorTelemed() {
   const { alertState, showSuccess, showError, showWarning, showInfo, hideAlert } = useAlert();
   const [isCallStarting, setIsCallStarting] = useState(false);
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [pendingRequests, setPendingRequests] = useState([]);
+  const [isOnline, setIsOnline] = useState(true);
+  const [previousRequestCount, setPreviousRequestCount] = useState(0);
   const navigate = useNavigate();
 
-  // Check for pending video call requests
+  // Initialize video call service and check for pending requests
   useEffect(() => {
-    const checkForRequests = () => {
-      try {
-        const notifications = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
-        const pending = notifications.filter(n => 
-          n.type === 'video_call_request' && 
-          n.status === 'pending'
-        );
-        setPendingRequests(pending);
-      } catch (error) {
-        console.error('Error checking notifications:', error);
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    videoCallService.init(currentUser);
+
+    // Initialize notification sound service
+    notificationSoundService.initAudioContext();
+
+    // Start polling for video call requests
+    const stopPolling = videoCallService.startPollingForRequests((requests, isOffline) => {
+      setPendingRequests(requests);
+      setIsOnline(!isOffline);
+
+      // Play notification sound for new requests
+      if (requests.length > previousRequestCount && requests.length > 0) {
+        console.log(`New video call request received! Total: ${requests.length}`);
+
+        // Play notification sound
+        notificationSoundService.playNotificationSound('video_call_request');
+
+        // Show browser notification if possible
+        if (requests.length > 0) {
+          const latestRequest = requests[requests.length - 1];
+          showInfo(`New video call request from ${latestRequest.studentName}`, 'Incoming Call');
+        }
       }
+
+      setPreviousRequestCount(requests.length);
+    }, 3000); // Poll every 3 seconds
+
+    // Cleanup polling on component unmount
+    return () => {
+      stopPolling();
+      videoCallService.stopPolling();
     };
-
-    // Check immediately and then every 2 seconds
-    checkForRequests();
-    const interval = setInterval(checkForRequests, 2000);
-
-    return () => clearInterval(interval);
   }, []);
 
-  const handleAcceptCall = (requestId) => {
+  const handleAcceptCall = async (requestId) => {
     try {
       // Check if Jitsi API is available
       if (!window.JitsiMeetExternalAPI) {
@@ -42,47 +61,63 @@ function DoctorTelemed() {
         showError('Video calling system is not ready. Please refresh the page and try again.', 'System Error');
         return;
       }
-      
-      console.log('Jitsi API is available, accepting call');
 
-      // Find the request to get room name
-      const notifications = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
-      const request = notifications.find(n => n.id === requestId);
-      
-      if (request && request.roomName) {
-        // Use the room name from the request
-        localStorage.setItem('smartmed_room_name', request.roomName);
+      console.log('Accepting video call request:', requestId);
+
+      // Accept the call using the new service
+      const result = await videoCallService.acceptVideoCallRequest(requestId);
+
+      if (result.success) {
+        // Store room name for the video call
+        localStorage.setItem('smartmed_room_name', result.roomName);
+
+        if (result.isOffline) {
+          showSuccess('Call accepted! Starting video conference...', 'Call Accepted');
+        } else {
+          showSuccess(`Accepted call from ${result.studentInfo?.name || 'Student'}! Starting video conference...`, 'Call Accepted');
+        }
+
+        console.log('Navigating to video call with room:', result.roomName);
+
+        // Navigate to video call
+        setTimeout(() => {
+          navigate('/doctor/telemed-call');
+        }, 1500);
+
+      } else {
+        throw new Error(result.error || 'Failed to accept video call');
       }
 
-      // Update the notification status
-      const updatedNotifications = notifications.map(n => 
-        n.id === requestId ? { ...n, status: 'accepted' } : n
-      );
-      localStorage.setItem('telemed_notifications', JSON.stringify(updatedNotifications));
-
-      console.log('Accepting call for room:', request?.roomName);
-
-      // Navigate to video call
-      navigate('/doctor/telemed-call');
     } catch (error) {
       console.error('Error accepting call:', error);
       showError('Error accepting call. Please try again.', 'Call Error');
     }
   };
 
-  const handleDeclineCall = (requestId) => {
+  const handleDeclineCall = async (requestId) => {
     try {
-      // Update the notification status
-      const notifications = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
-      const updatedNotifications = notifications.map(n => 
-        n.id === requestId ? { ...n, status: 'declined' } : n
-      );
-      localStorage.setItem('telemed_notifications', JSON.stringify(updatedNotifications));
+      console.log('Declining video call request:', requestId);
 
-      // Remove from pending requests
-      setPendingRequests(prev => prev.filter(req => req.id !== requestId));
+      // Decline the call using the new service
+      const result = await videoCallService.declineVideoCallRequest(requestId);
+
+      if (result.success) {
+        // Remove from pending requests
+        setPendingRequests(prev => prev.filter(req => req.id !== requestId));
+
+        if (result.isOffline) {
+          showInfo('Call declined (offline mode)', 'Call Declined');
+        } else {
+          showInfo('Video call request declined', 'Call Declined');
+        }
+
+      } else {
+        throw new Error(result.error || 'Failed to decline video call');
+      }
+
     } catch (error) {
       console.error('Error declining call:', error);
+      showError('Error declining call. Please try again.', 'Decline Error');
     }
   };
 
@@ -142,6 +177,31 @@ function DoctorTelemed() {
             <h1 className="telemed-heading">
               Telemedicine <span className="gradient-text">Video Calls</span>
             </h1>
+
+            {/* Connection Status Indicator */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              marginBottom: '20px',
+              padding: '10px',
+              backgroundColor: isOnline ? '#d4edda' : '#fff3cd',
+              borderRadius: '8px',
+              border: `1px solid ${isOnline ? '#c3e6cb' : '#ffeaa7'}`
+            }}>
+              <span style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                backgroundColor: isOnline ? '#28a745' : '#ffc107',
+                marginRight: '8px'
+              }}></span>
+              <span style={{
+                fontSize: '14px',
+                color: isOnline ? '#155724' : '#856404'
+              }}>
+                {isOnline ? 'Online - Real-time notifications active' : 'Offline - Using local storage fallback'}
+              </span>
+            </div>
             
             {/* Pending Call Requests */}
             {pendingRequests.length > 0 && (

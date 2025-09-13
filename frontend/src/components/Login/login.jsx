@@ -4,6 +4,7 @@ import "./Login.css";
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import AlertMessage from "../Common/AlertMessage";
 import useAlert from "../../hooks/useAlert";
+import authService from "../../services/authService.js";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -27,60 +28,25 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:8081/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const result = await authService.login(formData);
 
-      // ✅ Use json() to parse the response
-      const result = await response.json();
-      
-      if (result.status === "success") {
-        // Store user session data
-        const userInfo = {
-          role: result.role,
-          name: result.name,
-          email: result.email,
-          userId: result.userId
-        };
-        
-        localStorage.setItem('currentUser', JSON.stringify(userInfo));
-        setUserData(userInfo);
-        
+      if (result.success) {
+        setUserData(result.user);
+
         // Show success message for 3 seconds then navigate
         showSuccess(
-          `Welcome back, ${userInfo.name}! Redirecting to your dashboard....`, 
-          "Login Successful!", 
-          userInfo.name, 
+          `Welcome back, ${result.user.name}! Redirecting to your dashboard....`,
+          "Login Successful!",
+          result.user.name,
           3000
         );
 
         setTimeout(() => {
-          
-          // Store role-specific data and navigate based on role
-          if (result.role === "Student") {
-            localStorage.setItem('studentName', result.name);
-            localStorage.setItem('studentEmail', result.email);
-            
-            // Always redirect students to dashboard
-            navigate("/student/dashboard");
-          } else if (result.role === "Doctor") {
-            navigate("/doctor/dashboard");
-          } else if (result.role === "Pharmacy") {
-            navigate("/inventory");
-          } else if (result.role === "Hospital Staff") {
-            navigate("/hospital-staff");
-          } else if (result.role === "Receptionist") {
-            navigate("/receptionist/dashboard");
-          } else if (result.role === "Admin") {
-            navigate("/admin/dashboard");
-          } else {
-            showError("Unknown role!", "Authentication Error");
-          }
+          const route = authService.getDashboardRoute();
+          navigate(route);
         }, 3000);
       } else {
-        showError(result.message || "Login failed!", "Login Failed");
+        showError(result.error, "Login Failed");
       }
     } catch (error) {
       console.error(error);
