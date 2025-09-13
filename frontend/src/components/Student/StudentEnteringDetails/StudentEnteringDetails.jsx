@@ -797,7 +797,7 @@ function StudentEnteringDetails() {
                 />
               </div>
               <div className="signature-field">
-                <label>Staff Member Name</label>
+                <label>Student Name</label>
                 <input 
                   type="text" 
                   name="signature"
