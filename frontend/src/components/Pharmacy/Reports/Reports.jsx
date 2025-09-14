@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useMedicineInventory } from '../../../contexts/MedicineInventoryContext';
 import { usePrescription } from '../../../contexts/PrescriptionContext';
+import AlertMessage from '../../Common/AlertMessage';
+import useAlert from '../../../hooks/useAlert';
 import './Reports.css';
 import BarChartComponent from './BarChartComponent';
 import LineChartComponent from './LineChartComponent';
@@ -9,6 +11,7 @@ import PieChartComponent from './PieChartComponent';
 const Reports = () => {
   const medicineContext = useMedicineInventory();
   const prescriptionContext = usePrescription();
+  const { alertState, showSuccess, hideAlert } = useAlert();
   
   const {
     medicines = [],
@@ -201,7 +204,7 @@ const Reports = () => {
   const handleExportReport = (reportType) => {
     // Implement CSV export functionality
     console.log(`Exporting ${reportType} report...`);
-    alert(`${reportType} report exported successfully!`);
+    showSuccess(`${reportType} report exported successfully!`, 'Export Complete');
   };
 
   if (!medicineContext || !prescriptionContext) {
@@ -217,6 +220,16 @@ const Reports = () => {
 
   return (
     <div className="reports-container">
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
       <div className="reports-header">
         <div className="header-content">
           <h1 className="reports-title">

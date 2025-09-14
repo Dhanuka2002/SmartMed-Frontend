@@ -10,9 +10,12 @@ import {
   formatAutomationStatus,
   getStatusColor
 } from '../../services/automatedInventoryService';
+import AlertMessage from '../Common/AlertMessage';
+import useAlert from '../../hooks/useAlert';
 import './AutomatedInventoryDashboard.css';
 
 const AutomatedInventoryDashboard = () => {
+  const { alertState, showSuccess, showError, showWarning, showInfo, hideAlert } = useAlert();
   const [inventoryStatus, setInventoryStatus] = useState(null);
   const [activeAlerts, setActiveAlerts] = useState(null);
   const [analytics, setAnalytics] = useState(null);
@@ -86,13 +89,13 @@ const AutomatedInventoryDashboard = () => {
     try {
       const result = await triggerInventoryMonitoring();
       if (result.success) {
-        alert('✅ Inventory monitoring triggered successfully!');
+        showSuccess('Inventory monitoring triggered successfully!', 'Monitoring Triggered');
         await loadDashboardData();
       } else {
-        alert('❌ Failed to trigger monitoring: ' + result.error);
+        showError('Failed to trigger monitoring: ' + result.error, 'Monitoring Error');
       }
     } catch (error) {
-      alert('❌ Error: ' + error.message);
+      showError('Error: ' + error.message, 'System Error');
     }
   };
 
@@ -100,13 +103,13 @@ const AutomatedInventoryDashboard = () => {
     try {
       const result = await acknowledgeAlert(alertId, 'Pharmacist');
       if (result.success) {
-        alert('✅ Alert acknowledged successfully!');
+        showSuccess('Alert acknowledged successfully!', 'Alert Acknowledged');
         await loadDashboardData();
       } else {
-        alert('❌ Failed to acknowledge alert: ' + result.error);
+        showError('Failed to acknowledge alert: ' + result.error, 'Acknowledgment Error');
       }
     } catch (error) {
-      alert('❌ Error: ' + error.message);
+      showError('Error: ' + error.message, 'System Error');
     }
   };
 
@@ -336,6 +339,17 @@ const AutomatedInventoryDashboard = () => {
           <span>🔄 Auto-refresh: Every 30 seconds</span>
         </div>
       </div>
+
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
     </div>
   );
 };

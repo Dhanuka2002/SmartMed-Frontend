@@ -311,6 +311,11 @@ public class QueueController {
             if (updates.containsKey("priority")) {
                 entry.setPriority(updates.get("priority"));
             }
+            
+            // Update stage if provided
+            if (updates.containsKey("stage")) {
+                entry.setStage(updates.get("stage"));
+            }
 
             QueueEntry updatedEntry = queueEntryRepository.save(entry);
 

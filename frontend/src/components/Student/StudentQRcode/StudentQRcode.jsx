@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
 import QRScanner from '../../QRScanner/QRScanner';
+import AlertMessage from '../../Common/AlertMessage';
+import useAlert from '../../../hooks/useAlert';
 import { processCompleteMedicalRecordByEmail, checkFormsCompletion } from '../../../services/medicalRecordService';
 import './StudentQRcode.css';
 
@@ -16,47 +18,70 @@ function StudentQRCode() {
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [inputEmail, setInputEmail] = useState("");
   const [formsStatus, setFormsStatus] = useState({ hasStudentData: false, hasHospitalData: false, bothComplete: false });
+  const [allergiesData, setAllergiesData] = useState(null);
+  const [loadingAllergies, setLoadingAllergies] = useState(false);
+  const { alertState, showSuccess, showInfo, hideAlert } = useAlert();
 
   useEffect(() => {
-    // Load current user data
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    
-    if (currentUser.email) {
-      setStudentName(currentUser.name || "Student");
-      setStudentEmail(currentUser.email);
-      setInputEmail(currentUser.email);
+    const loadUserDataAndQR = async () => {
+      // Load current user data
+      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
       
-      // Check for existing QR code for this specific user
-      const userQRData = localStorage.getItem(`qrCodeData_${currentUser.email}`);
-      const userRecordId = localStorage.getItem(`medicalRecordId_${currentUser.email}`);
-      
-      if (userQRData && userRecordId) {
-        setQrCodeData(userQRData);
-        setMedicalRecordId(userRecordId);
-      }
-      
-      // Check forms completion status
-      const status = checkFormsCompletion(currentUser.email);
-      setFormsStatus(status);
-    } else {
-      // Fallback to old system
-      setStudentName(localStorage.getItem("studentName") || "Student");
-      const email = localStorage.getItem("studentEmail") || "No Email";
-      setStudentEmail(email);
-      setInputEmail(email !== "No Email" ? email : "");
-      setQrCodeData(localStorage.getItem("qrCodeData") || "");
-      setMedicalRecordId(localStorage.getItem("medicalRecordId") || "");
-      
-      // Check forms completion status for fallback email
-      if (email !== "No Email") {
-        const status = checkFormsCompletion(email);
+      if (currentUser.email) {
+        setStudentName(currentUser.name || "Student");
+        setStudentEmail(currentUser.email);
+        setInputEmail(currentUser.email);
+        
+        // Check for existing QR code for this specific user
+        const userQRData = localStorage.getItem(`qrCodeData_${currentUser.email}`);
+        const userRecordId = localStorage.getItem(`medicalRecordId_${currentUser.email}`);
+        
+        if (userQRData && userRecordId) {
+          setQrCodeData(userQRData);
+          setMedicalRecordId(userRecordId);
+        }
+        
+        // Check forms completion status
+        const status = checkFormsCompletion(currentUser.email);
         setFormsStatus(status);
+        
+        // If forms are complete but no QR code exists, auto-generate it
+        if (status.bothComplete && !userQRData) {
+          console.log('Forms are complete but QR code missing, auto-generating...');
+          try {
+            const result = await processCompleteMedicalRecordByEmail(currentUser.email);
+            if (result.success) {
+              setQrCodeData(result.qrCode);
+              setMedicalRecordId(result.recordId);
+              console.log('QR code auto-generated successfully');
+            }
+          } catch (error) {
+            console.error('Error auto-generating QR code:', error);
+          }
+        }
+      } else {
+        // Fallback to old system
+        setStudentName(localStorage.getItem("studentName") || "Student");
+        const email = localStorage.getItem("studentEmail") || "No Email";
+        setStudentEmail(email);
+        setInputEmail(email !== "No Email" ? email : "");
+        setQrCodeData(localStorage.getItem("qrCodeData") || "");
+        setMedicalRecordId(localStorage.getItem("medicalRecordId") || "");
+        
+        // Check forms completion status for fallback email
+        if (email !== "No Email") {
+          const status = checkFormsCompletion(email);
+          setFormsStatus(status);
+        }
       }
-    }
+    };
+
+    loadUserDataAndQR();
 
     // Listen for QR code generation events
     const handleQRGenerated = (event) => {
       const { email, recordId } = event.detail;
+      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
       if (email === currentUser.email || email === studentEmail) {
         // Reload QR code data
         const qrData = localStorage.getItem(`qrCodeData_${email}`);
@@ -79,6 +104,49 @@ function StudentQRCode() {
     };
   }, []);
 
+  // Fetch allergies data from hospital form data
+  const fetchAllergiesData = async (email) => {
+    setLoadingAllergies(true);
+    try {
+      // Try to get hospital data from localStorage
+      const hospitalData = JSON.parse(localStorage.getItem(`hospitalData_${email}`) || '{}');
+      
+      if (hospitalData.hasAllergies) {
+        const allergiesInfo = {
+          hasAllergies: hospitalData.hasAllergies,
+          allergies: hospitalData.allergies || {},
+          allergyDetails: hospitalData.allergyDetails || ''
+        };
+        setAllergiesData(allergiesInfo);
+      } else {
+        // Fallback to general hospital form data
+        const generalHospitalData = JSON.parse(localStorage.getItem('hospitalFormData') || '{}');
+        if (generalHospitalData.hasAllergies && generalHospitalData.studentEmail === email) {
+          const allergiesInfo = {
+            hasAllergies: generalHospitalData.hasAllergies,
+            allergies: generalHospitalData.allergies || {},
+            allergyDetails: generalHospitalData.allergyDetails || ''
+          };
+          setAllergiesData(allergiesInfo);
+        } else {
+          setAllergiesData({ hasAllergies: 'no', allergies: {}, allergyDetails: '' });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching allergies data:', error);
+      setAllergiesData({ hasAllergies: 'unknown', allergies: {}, allergyDetails: '' });
+    } finally {
+      setLoadingAllergies(false);
+    }
+  };
+
+  // Load allergies data when email changes
+  useEffect(() => {
+    if (studentEmail && studentEmail !== 'No Email') {
+      fetchAllergiesData(studentEmail);
+    }
+  }, [studentEmail]);
+
   // Generate QR code from medical data using email
   const generateMedicalQR = async () => {
     setIsGenerating(true);
@@ -97,7 +165,7 @@ function StudentQRCode() {
         setMedicalRecordId(result.recordId);
         setStudentName(result.studentName);
         setStudentEmail(result.studentEmail);
-        alert('Medical QR code generated successfully!');
+        showSuccess('Medical QR code generated successfully!', 'QR Code Generated');
       } else {
         throw new Error(result.error || 'Failed to generate QR code');
       }
@@ -152,12 +220,22 @@ function StudentQRCode() {
   const handleScanResult = (medicalData) => {
     console.log('Scanned medical data:', medicalData);
     // You can handle the scanned data here (e.g., display in a modal)
-    alert(`Scanned medical record for: ${medicalData.student.fullName}`);
+    showInfo(`Scanned medical record for: ${medicalData.student.fullName}`, 'Medical Record Scanned');
     setShowScanner(false);
   };
 
   return (
     <div className="qr-main-container">
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
       <div className="qr-card-wrapper">
         {/* Header */}
         <div className="qr-header">
@@ -370,6 +448,8 @@ function StudentQRCode() {
               </div>
             </div>
           )}
+
+       
         </div>
 
         <div className="qr-footer">

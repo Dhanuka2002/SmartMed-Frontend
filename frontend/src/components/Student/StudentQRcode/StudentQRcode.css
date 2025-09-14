@@ -311,6 +311,52 @@
   }
 }
 
+
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .allergies-info-section {
+    margin-top: 1.5rem;
+    border-radius: 12px;
+  }
+  
+  .allergies-title {
+    padding: 1rem;
+    font-size: 1.1rem;
+  }
+  
+  .allergies-content {
+    padding: 1rem;
+  }
+  
+  .allergies-alert {
+    padding: 1rem;
+  }
+  
+  .allergy-status {
+    font-size: 1rem;
+  }
+  
+  .category-list {
+    gap: 0.5rem;
+  }
+  
+  .allergy-category-tag {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+  
+  .details-box {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .allergy-warning {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+}
+
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   .qr-btn {

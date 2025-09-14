@@ -41,32 +41,105 @@ function StudentReports() {
     }
   }, []);
 
-  // Extract allergies from medical history
+  // Extract allergies from medical history and hospital staff form
   const getAllergies = () => {
-    if (!studentData?.medicalHistory?.allergicHistory) return [];
-    
-    const allergicHistory = studentData.medicalHistory.allergicHistory;
-    if (allergicHistory.status === "yes" && allergicHistory.details) {
-      return allergicHistory.details.split(',').map(item => item.trim()).filter(item => item.length > 0);
+    try {
+      const allergies = [];
+      
+      // Get allergies from student medical history (original source)
+      if (studentData?.medicalHistory?.allergicHistory) {
+        const allergicHistory = studentData.medicalHistory.allergicHistory;
+        if (allergicHistory.status === "yes" && allergicHistory.details) {
+          // Ensure details is a string before splitting
+          const details = String(allergicHistory.details);
+          const studentAllergies = details.split(',').map(item => item.trim()).filter(item => item.length > 0);
+          allergies.push(...studentAllergies);
+        }
+      }
+      
+      // Get allergies from hospital staff form data
+      if (hospitalData && hospitalData.hasAllergies === 'yes') {
+        // Handle allergies object (might be JSON string or object)
+        let hospitalAllergies = {};
+        if (typeof hospitalData.allergies === 'string') {
+          try {
+            hospitalAllergies = JSON.parse(hospitalData.allergies);
+          } catch (e) {
+            console.warn('Error parsing hospital allergies JSON:', e);
+            hospitalAllergies = {};
+          }
+        } else if (typeof hospitalData.allergies === 'object' && hospitalData.allergies !== null) {
+          hospitalAllergies = hospitalData.allergies;
+        }
+        
+        // Extract selected allergy categories
+        Object.keys(hospitalAllergies).forEach(category => {
+          if (hospitalAllergies[category] === true) {
+            allergies.push(category);
+          }
+        });
+        
+        // Add allergy details if available
+        if (hospitalData.allergyDetails && hospitalData.allergyDetails.trim()) {
+          const detailAllergies = hospitalData.allergyDetails.split(',').map(item => item.trim()).filter(item => item.length > 0);
+          allergies.push(...detailAllergies);
+        }
+      }
+      
+      // Remove duplicates and return
+      return [...new Set(allergies)];
+    } catch (error) {
+      console.error('Error getting allergies:', error);
+      return [];
     }
-    return [];
   };
 
   // Extract vaccination data
   const getVaccinations = () => {
-    if (!studentData?.vaccinations) return [];
-    
-    const vaccinations = [];
-    Object.entries(studentData.vaccinations).forEach(([vaccine, date]) => {
-      if (date) {
-        vaccinations.push({
-          name: vaccine.toUpperCase(),
-          date: date,
-          status: "Complete"
-        });
-      }
-    });
-    return vaccinations.sort((a, b) => new Date(b.date) - new Date(a.date));
+    try {
+      if (!studentData?.vaccinations) return [];
+      
+      const vaccinations = [];
+      Object.entries(studentData.vaccinations).forEach(([vaccine, dateValue]) => {
+        if (dateValue) {
+          // Handle both string dates and object dates {taken, date}
+          let actualDate = dateValue;
+          let status = "Complete";
+          
+          if (typeof dateValue === 'object' && dateValue !== null) {
+            // If dateValue is an object with taken and date properties
+            if (dateValue.date) {
+              actualDate = dateValue.date;
+            } else if (dateValue.taken) {
+              actualDate = dateValue.taken;
+            } else {
+              // If it's an object but doesn't have expected properties
+              actualDate = "Date not available";
+            }
+            
+            // Determine status based on taken property
+            status = dateValue.taken ? "Complete" : "Pending";
+          }
+          
+          vaccinations.push({
+            name: vaccine.toUpperCase(),
+            date: String(actualDate), // Ensure it's always a string
+            status: status
+          });
+        }
+      });
+      
+      return vaccinations.sort((a, b) => {
+        try {
+          return new Date(b.date) - new Date(a.date);
+        } catch (error) {
+          return 0; // If date parsing fails, maintain order
+        }
+      });
+    } catch (error) {
+      console.error('Error getting vaccinations:', error);
+      return [];
+    }
   };
 
   // Calculate age from date of birth
@@ -102,9 +175,13 @@ function StudentReports() {
     return { total: totalConditions, conditions };
   };
 
-  const allergies = getAllergies();
-  const vaccinations = getVaccinations();
-  const medicalConditions = getMedicalConditionsData();
+  // Recalculate allergies whenever studentData or hospitalData changes
+  const allergies = React.useMemo(() => {
+    return getAllergies() || [];
+  }, [studentData, hospitalData]);
+  
+  const vaccinations = getVaccinations() || [];
+  const medicalConditions = getMedicalConditionsData() || { total: 0, conditions: [] };
 
   return (
     <div className="student-reports">
@@ -158,7 +235,7 @@ function StudentReports() {
             <div className="stat-icon">⚠️</div>
             <div className="stat-content">
               <span className="stat-label">Known Allergies</span>
-              <span className="stat-value">{allergies.length}</span>
+              <span className="stat-value">{allergies ? allergies.length : 0}</span>
             </div>
           </div>
           <div className="stat-card age">
@@ -211,9 +288,9 @@ function StudentReports() {
                 <div className="health-metric">
                   <div className="metric-circle">
                     <div className="circle-progress" style={{
-                      background: `conic-gradient(${allergies.length > 0 ? '#FF9800' : '#4CAF50'} ${allergies.length > 3 ? 270 : allergies.length * 90}deg, #e0e0e0 0deg)`
+                      background: `conic-gradient(${(allergies && allergies.length > 0) ? '#FF9800' : '#4CAF50'} ${(allergies && allergies.length > 3) ? 270 : (allergies ? allergies.length * 90 : 0)}deg, #e0e0e0 0deg)`
                     }}>
-                      <span className="metric-value">{allergies.length}</span>
+                      <span className="metric-value">{allergies ? allergies.length : 0}</span>
                     </div>
                     <span className="metric-label">Allergies</span>
                   </div>
@@ -243,8 +320,8 @@ function StudentReports() {
                   <div className="timeline-marker"></div>
                   <div className="timeline-content-item">
                     <div className="timeline-header">
-                      <span className="vaccine-name">{vaccination.name}</span>
-                      <span className="vaccine-date">{vaccination.date}</span>
+                      <span className="vaccine-name">{vaccination.name || 'Unknown Vaccine'}</span>
+                      <span className="vaccine-date">{typeof vaccination.date === 'string' ? vaccination.date : 'Date not available'}</span>
                     </div>
                     <div className="timeline-bar">
                       <div className="bar-fill" style={{width: '100%'}}></div>
@@ -255,7 +332,7 @@ function StudentReports() {
             </div>
           </div>
         )}
-      </div>
+        </div>
 
       {/* Hospital Staff Examination Results */}
       {hospitalData && (
@@ -468,14 +545,24 @@ function StudentReports() {
             <h3 className="card-title">Known Allergies</h3>
           </div>
           <div className="card-content">
-            {allergies.length > 0 ? (
-              <div className="allergies-list">
-                {allergies.map((allergy, index) => (
-                  <div key={index} className="allergy-item">
-                    <span className="allergy-dot"></span>
-                    <span className="allergy-name">{allergy}</span>
+            {allergies && allergies.length > 0 ? (
+              <div>
+                <div className="allergies-list">
+                  {allergies.map((allergy, index) => (
+                    <div key={index} className="allergy-item">
+                      <span className="allergy-dot"></span>
+                      <span className="allergy-name">{allergy || 'Unknown allergy'}</span>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Show hospital staff allergy details if available */}
+                {hospitalData && hospitalData.hasAllergies === 'yes' && hospitalData.allergyDetails && (
+                  <div className="allergy-details-section">
+                    <h4 className="allergy-details-title">Medical Staff Assessment:</h4>
+                    <p className="allergy-details-text">{hospitalData.allergyDetails}</p>
                   </div>
-                ))}
+                )}
               </div>
             ) : (
               <p className="no-data">No known allergies</p>
@@ -498,10 +585,10 @@ function StudentReports() {
               </div>
               {vaccinations.map((vaccination, index) => (
                 <div key={index} className="table-row">
-                  <span className="vaccination-name">{vaccination.name}</span>
-                  <span className="vaccination-date">{vaccination.date}</span>
-                  <span className={`vaccination-status status-${vaccination.status.toLowerCase()}`}>
-                    {vaccination.status}
+                  <span className="vaccination-name">{vaccination.name || 'Unknown Vaccine'}</span>
+                  <span className="vaccination-date">{typeof vaccination.date === 'string' ? vaccination.date : 'Date not available'}</span>
+                  <span className={`vaccination-status status-${(vaccination.status || 'unknown').toLowerCase()}`}>
+                    {vaccination.status || 'Unknown'}
                   </span>
                 </div>
               ))}
@@ -558,26 +645,6 @@ function StudentReports() {
         </div>
       </div>
 
-      {/* Medical Conditions Summary */}
-      {medicalConditions.total > 0 && (
-        <div className="conditions-summary">
-          <div className="card-header">
-            <div className="card-icon conditions-icon">📋</div>
-            <h3 className="card-title">Medical Conditions Summary</h3>
-          </div>
-          <div className="conditions-content">
-            {medicalConditions.conditions.map((condition, index) => (
-              <div key={index} className="condition-item">
-                <div className="condition-header">
-                  <span className="condition-name">{condition.name}</span>
-                  <span className="condition-status">Active</span>
-                </div>
-                <p className="condition-details">{condition.details}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {!studentData && (
         <div className="incomplete-profile-notice">

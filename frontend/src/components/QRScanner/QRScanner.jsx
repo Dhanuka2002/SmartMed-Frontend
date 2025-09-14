@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import QrScanner from 'qr-scanner';
+import AlertMessage from '../Common/AlertMessage';
+import useAlert from '../../hooks/useAlert';
 import { getMedicalRecordById } from '../../services/medicalRecordService';
 import { addStudentToReceptionQueue } from '../../services/queueService';
 import './QRScanner.css';
@@ -17,6 +19,7 @@ const QRScanner = ({ onScanResult, onClose }) => {
   const [showManualInput, setShowManualInput] = useState(false);
   const [manualInput, setManualInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const { alertState, showSuccess, showError, showWarning, hideAlert } = useAlert();
 
   useEffect(() => {
     startScanner();
@@ -255,15 +258,15 @@ const QRScanner = ({ onScanResult, onClose }) => {
               queueProcessed = true; // Mark as processed
               
               if (queueEntry.isDuplicate) {
-                alert(`⚠️ DUPLICATE DETECTED\n\n${queueEntry.message}\n\nThe student is already in the reception queue and does not need to be added again.`);
+                showWarning(`The student is already in the reception queue and does not need to be added again.\n\n${queueEntry.message}`, 'Duplicate Detected');
                 console.log('🔄 Duplicate detected, not adding to queue');
               } else {
-                alert(`✅ SUCCESS!\n\nStudent: ${medicalData.student.fullName}\nQueue Number: ${queueEntry.queueNo}\nStatus: Added to reception queue\n\n${queueEntry.message || 'Student is now waiting in reception queue.'}`);
+                showSuccess(`Student: ${medicalData.student.fullName}\nQueue Number: ${queueEntry.queueNo}\nStatus: Added to reception queue\n\n${queueEntry.message || 'Student is now waiting in reception queue.'}`, 'Student Added Successfully');
                 console.log('✅ Student successfully added to reception queue');
               }
             } catch (queueError) {
               console.error('❌ Error adding to queue:', queueError);
-              alert('❌ ERROR\n\nMedical data was loaded successfully, but failed to add student to reception queue.\n\nPlease add the student manually or try scanning again.');
+              showError('Medical data was loaded successfully, but failed to add student to reception queue.\n\nPlease add the student manually or try scanning again.', 'Queue Addition Failed');
               queueProcessed = true; // Mark as processed even on error
             }
             
@@ -330,15 +333,15 @@ const QRScanner = ({ onScanResult, onClose }) => {
             queueProcessed = true; // Mark as processed
             
             if (queueEntry.isDuplicate) {
-              alert(`⚠️ DUPLICATE DETECTED\n\n${queueEntry.message}\n\nThe test student is already in the reception queue.`);
+              showWarning(`The test student is already in the reception queue.\n\n${queueEntry.message}`, 'Test Duplicate Detected');
               console.log('🔄 Test duplicate detected, not adding to queue');
             } else {
-              alert(`✅ TEST SUCCESS!\n\nStudent: ${mockMedicalData.student.fullName}\nQueue Number: ${queueEntry.queueNo}\nStatus: Added to reception queue\n\nThis was a test QR code scan.`);
+              showSuccess(`Student: ${mockMedicalData.student.fullName}\nQueue Number: ${queueEntry.queueNo}\nStatus: Added to reception queue\n\nThis was a test QR code scan.`, 'Test Student Added Successfully');
               console.log('✅ Test student successfully added to reception queue');
             }
           } catch (queueError) {
             console.error('❌ Error adding test student to queue:', queueError);
-            alert('❌ TEST ERROR\n\nTest medical data was created, but failed to add to reception queue.\n\nPlease try scanning again.');
+            showError('Test medical data was created, but failed to add to reception queue.\n\nPlease try scanning again.', 'Test Queue Addition Failed');
             queueProcessed = true; // Mark as processed even on error
           }
           
@@ -405,6 +408,16 @@ const QRScanner = ({ onScanResult, onClose }) => {
 
   return (
     <div className="qr-scanner-overlay">
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
       <div className="qr-scanner-container">
         <div className="qr-scanner-header">
           <h2>Scan Medical QR Code</h2>
