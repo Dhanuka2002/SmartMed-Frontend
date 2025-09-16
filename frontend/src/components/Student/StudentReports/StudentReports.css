@@ -1,0 +1,1495 @@
+/* StudentReports.css - Professional Design */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.student-reports {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #2d3748;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Header Section */
+.reports-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.header-content {
+  flex: 1;
+}
+
+.reports-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
+}
+
+.reports-subtitle {
+  font-size: 1.1rem;
+  color: #718096;
+  margin: 0;
+  font-weight: 400;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.btn-primary, .btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: white;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+  background: #f7fafc;
+  transform: translateY(-1px);
+}
+
+.btn-icon {
+  font-size: 1rem;
+}
+
+/* Main Profile Card */
+.profile-card {
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: 2rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.profile-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.profile-avatar-wrapper {
+  position: relative;
+}
+
+.profile-avatar-wrapper .avatar-container {
+  width: 100px;
+  height: 100px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.profile-avatar-wrapper .avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-status {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: #48bb78;
+  border: 3px solid white;
+  border-radius: 50%;
+}
+
+.student-name {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: white;
+}
+
+.student-id {
+  font-size: 1.1rem;
+  margin: 0 0 0.25rem 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
+.student-division {
+  font-size: 1rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.qr-section {
+  text-align: center;
+}
+
+.qr-container {
+  background: white;
+  padding: 1rem;
+  border-radius: 1rem;
+  display: inline-block;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.qr-code {
+  width: 4rem;
+  height: 4rem;
+  display: block;
+}
+
+.qr-label {
+  margin: 0.75rem 0 0 0;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.stats-grid .stat-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+}
+.stats-grid .stat-label {
+	font-size: 0.875rem;
+	color: #718096;
+	font-weight: 500;
+	margin-bottom: 0.25rem;
+	margin-left: -5px;
+}
+
+.stats-grid .stat-value {
+	font-size: 1.25rem;
+	font-weight: 700;
+	color: #2d3748;
+	margin-left: -60px;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card.blood-group {
+  border-left: 4px solid #e53e3e;
+}
+
+.stat-card.age {
+  border-left: 4px solid #3182ce;
+}
+
+.stat-card.gender {
+  border-left: 4px solid #38a169;
+}
+
+.stat-card.dob {
+  border-left: 4px solid #805ad5;
+}
+
+.stat-icon {
+  font-size: 1.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 0.75rem;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #718096;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+/* Physical Stats */
+.physical-stats {
+  padding: 0 2rem 2rem 2rem;
+}
+
+.physical-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 1.5rem 0;
+}
+
+.physical-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1.5rem;
+}
+
+.physical-item {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.physical-label {
+  font-size: 0.875rem;
+  color: #718096;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.physical-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.bmi-normal {
+  color: #38a169;
+}
+
+.status-healthy {
+  color: #38a169;
+}
+
+/* Medical Grid */
+.medical-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.medical-card {
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.card-icon {
+  font-size: 1.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+}
+
+.allergies-icon {
+  background: rgba(245, 101, 101, 0.1);
+}
+
+.vaccination-icon {
+  background: rgba(72, 187, 120, 0.1);
+}
+
+.card-content {
+  padding: 2rem;
+}
+
+/* Allergies */
+.allergies-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.allergy-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #fef5e7;
+  border: 1px solid #f6e05e;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.allergy-item:hover {
+  background: #fed7d7;
+  border-color: #fc8181;
+}
+
+.allergy-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  background: #e53e3e;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.allergy-name {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* Allergy Details Section */
+.allergy-details-section {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+  border: 1px solid #fbb6ce;
+  border-radius: 12px;
+  border-left: 4px solid #e53e3e;
+}
+
+.allergy-details-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #742a2a;
+  margin: 0 0 0.75rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.allergy-details-text {
+  font-size: 0.95rem;
+  color: #2d3748;
+  line-height: 1.6;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Vaccination Table */
+.vaccination-table {
+  display: grid;
+  gap: 1rem;
+}
+.vaccination-table .table-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  background: #374151;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  color: wheat;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.vaccination-table .table-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.table-row:hover {
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.vaccination-name {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.vaccination-date {
+  color: #718096;
+  font-size: 0.875rem;
+}
+
+.vaccination-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-complete {
+  background: #c6f6d5;
+  color: #276749;
+}
+
+.no-data {
+  text-align: center;
+  color: #a0aec0;
+  font-style: italic;
+  padding: 2rem;
+}
+
+/* Emergency Contact */
+.emergency-card {
+  background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+  border: 1px solid #fc8181;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.emergency-icon {
+  background: rgba(229, 62, 62, 0.2);
+}
+
+.emergency-content {
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.emergency-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.emergency-label {
+  font-size: 0.875rem;
+  color: #742a2a;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.emergency-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .student-reports {
+    padding: 1rem;
+  }
+
+  .reports-title {
+    font-size: 2rem;
+  }
+
+  .reports-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .header-actions {
+    align-self: stretch;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 2rem;
+  }
+
+  .profile-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    padding: 1.5rem;
+  }
+
+  .medical-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .table-header span,
+  .table-row span {
+    text-align: left;
+  }
+
+  .emergency-content {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* Health Overview Charts */
+.health-charts {
+  padding: 0 2rem 2rem 2rem;
+}
+
+.chart-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.chart-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-align: center;
+  margin: 0 0 2rem 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+}
+
+.chart-content {
+  position: relative;
+  z-index: 1;
+}
+
+.health-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  justify-items: center;
+}
+
+.health-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.metric-circle {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.circle-progress {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.circle-progress:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+.circle-progress::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.metric-value {
+  position: relative;
+  z-index: 2;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #2d3748;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.metric-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* ========================================
+   VACCINATION TIMELINE - PROFESSIONAL DESIGN
+   ======================================== */
+
+/* Main Container */
+.timeline-chart {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Chart Title */
+.chart-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1f2937;
+  text-align: center;
+  margin: 0 0 2.5rem 0;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f3f4f6;
+  position: relative;
+}
+
+.chart-title::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: #3b82f6;
+  border-radius: 1px;
+}
+
+/* Timeline Container */
+.timeline-content {
+  position: relative;
+  padding-left: 2rem;
+}
+
+/* Vertical Line */
+.timeline-content::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 1rem;
+  bottom: 1rem;
+  width: 2px;
+  background: #e5e7eb;
+  border-radius: 1px;
+}
+
+/* Timeline Items */
+.timeline-item {
+  position: relative;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: flex-start;
+  transition: all 0.3s ease;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-item:hover {
+  transform: translateX(4px);
+}
+
+/* Timeline Markers */
+.timeline-marker {
+  width: 14px;
+  height: 14px;
+  background: #3b82f6;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  position: absolute;
+  left: -23px;
+  top: 1.25rem;
+  z-index: 2;
+  box-shadow: 0 0 0 4px #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.timeline-item:hover .timeline-marker {
+  background: #1d4ed8;
+  box-shadow: 0 0 0 6px #dbeafe;
+  transform: scale(1.2);
+}
+
+/* Content Cards */
+.timeline-content-item {
+  flex: 1;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-left: 1rem;
+  transition: all 0.3s ease;
+}
+
+.timeline-content-item:hover {
+  background: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+/* Header Section */
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Vaccine Name */
+.vaccine-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vaccine-name::before {
+  content: '💉';
+  font-size: 1rem;
+}
+
+/* Date Badge */
+.vaccine-date {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+/* Progress Bar */
+.timeline-bar {
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 3px;
+  width: 100%;
+  position: relative;
+  animation: fillProgress 1.5s ease-out;
+}
+
+/* Animations */
+@keyframes fillProgress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .timeline-chart {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .chart-title {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .timeline-content {
+    padding-left: 1.5rem;
+  }
+  
+  .timeline-marker {
+    left: -19px;
+  }
+  
+  .timeline-content-item {
+    padding: 1.25rem;
+    margin-left: 0.75rem;
+  }
+  
+  .timeline-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .vaccine-name {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .timeline-chart {
+    padding: 1rem;
+  }
+  
+  .timeline-content-item {
+    padding: 1rem;
+  }
+  
+  .vaccine-name {
+    font-size: 0.95rem;
+  }
+  
+  .vaccine-date {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.6rem;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .timeline-chart {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+  
+  .timeline-item:hover {
+    transform: none;
+  }
+  
+  .timeline-marker {
+    box-shadow: none;
+  }
+  
+  .timeline-content-item:hover {
+    box-shadow: none;
+  }
+}
+
+/* Hospital Staff Examination Styles */
+.hospital-examination-section {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+}
+
+.section-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.section-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 0.5rem 0;
+}
+
+.section-subtitle {
+  font-size: 1rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+.subsection-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* Physical Measurements */
+.measurements-overview {
+  margin-bottom: 2.5rem;
+}
+
+.measurements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.measurement-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.measurement-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.measurement-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.measurement-value {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.measurement-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+/* Clinical Results */
+.clinical-results {
+  margin-bottom: 2.5rem;
+}
+
+.clinical-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.clinical-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.2s ease;
+}
+
+.clinical-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.clinical-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.clinical-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.clinical-label {
+  font-size: 0.9rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+.clinical-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* Medical Assessment */
+.medical-assessment {
+  margin-bottom: 2.5rem;
+}
+
+.assessment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.assessment-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.assessment-header {
+  margin-bottom: 1rem;
+}
+
+.assessment-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.assessment-status {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.assessment-status.fit {
+  background: #c6f6d5;
+  color: #22543d;
+  border: 1px solid #9ae6b4;
+}
+
+.assessment-status.not-fit {
+  background: #fed7d7;
+  color: #742a2a;
+  border: 1px solid #fc8181;
+}
+
+.assessment-status.required {
+  background: #feebc8;
+  color: #7b341e;
+  border: 1px solid #f6ad55;
+}
+
+.assessment-status.not-required {
+  background: #c6f6d5;
+  color: #22543d;
+  border: 1px solid #9ae6b4;
+}
+
+.assessment-status.pending {
+  background: #e2e8f0;
+  color: #4a5568;
+  border: 1px solid #cbd5e0;
+}
+
+.assessment-reason {
+  background: #f7fafc;
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #4a5568;
+  line-height: 1.4;
+}
+
+/* System Examinations */
+.system-examinations {
+  margin-bottom: 2.5rem;
+}
+
+.systems-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.system-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.system-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.system-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.system-icon {
+  font-size: 1.5rem;
+}
+
+.system-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.system-findings {
+  padding: 1.5rem;
+}
+
+.finding-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.finding-item:last-child {
+  border-bottom: none;
+}
+
+.finding-label {
+  font-size: 0.9rem;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.finding-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.finding-value.positive {
+  color: #e53e3e;
+}
+
+.finding-value.negative {
+  color: #38a169;
+}
+
+.finding-value.normal {
+  color: #38a169;
+}
+
+.finding-value.abnormal {
+  color: #e53e3e;
+}
+
+@media (max-width: 480px) {
+  .physical-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  .measurements-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .clinical-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .assessment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .systems-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .health-charts {
+    padding: 0 1rem 2rem 1rem;
+  }
+
+  .chart-card {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+
+  .chart-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .health-summary {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .circle-progress {
+    width: 100px;
+    height: 100px;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+  }
+
+  .timeline-chart {
+    padding: 0 1rem 2rem 1rem;
+    border-radius: 16px;
+  }
+
+  .timeline-chart .chart-title {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    padding-top: 1.5rem;
+  }
+
+  .timeline-content {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+
+  .timeline-content::before {
+    left: 20px;
+    top: 1.5rem;
+    bottom: 1.5rem;
+    width: 3px;
+  }
+
+  .timeline-marker {
+    width: 20px;
+    height: 20px;
+    margin-right: 1.5rem;
+    box-shadow: 
+      0 0 0 4px rgba(102, 126, 234, 0.15),
+      0 0 0 8px rgba(102, 126, 234, 0.05),
+      0 3px 8px rgba(102, 126, 234, 0.3);
+  }
+
+  .timeline-marker:hover {
+    transform: scale(1.1);
+  }
+
+  .timeline-marker::after {
+    font-size: 10px;
+  }
+
+  .timeline-content-item {
+    padding: 1.5rem;
+    border-radius: 12px;
+  }
+
+  .timeline-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .vaccine-name {
+    font-size: 1.1rem;
+  }
+
+  .vaccine-name::before {
+    font-size: 1rem;
+  }
+
+  .vaccine-date {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .timeline-bar {
+    height: 6px;
+  }
+}
+
+/* Login/No User Notice */
+.no-user-notice {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 3rem;
+  text-align: center;
+  max-width: 500px;
+  margin: 2rem auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.no-user-notice h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0 0 1rem 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.login-btn {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.875rem 2rem;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  text-decoration: none;
+  color: white;
+}
+
+/* Incomplete Profile Notice */
+.incomplete-profile-notice {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 3rem;
+  text-align: center;
+  max-width: 600px;
+  margin: 2rem auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.incomplete-profile-notice h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0 0 1rem 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.incomplete-profile-notice p {
+  color: #718096;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+}
+
+.complete-profile-btn {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.875rem 2rem;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+}
+
+.complete-profile-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  text-decoration: none;
+  color: white;
+}
+
+/* No Emergency Data */
+.no-emergency-data {
+  text-align: center;
+  padding: 2rem;
+}
+
+.no-emergency-data p {
+  color: #742a2a;
+  font-size: 1rem;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.5;
+}
+

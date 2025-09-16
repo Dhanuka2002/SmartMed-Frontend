@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Duplicate Scan Prevention Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 900px; 
+            margin: 20px auto; 
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 25px; 
+            border: 1px solid #ddd; 
+            border-radius: 10px; 
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 10px;
+        }
+        button { 
+            padding: 12px 20px; 
+            margin: 8px; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 6px; 
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        
+        .status { margin: 15px 0; padding: 15px; border-radius: 6px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        
+        .queue-display {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .queue-entry {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .queue-info {
+            font-weight: bold;
+        }
+        .queue-details {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .test-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .result-card {
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #ddd;
+        }
+        .result-card.pass {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .result-card.fail {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        
+        pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚫 Duplicate Scan Prevention Test</h1>
+        <p>Test the improved duplicate prevention system for QR scanning</p>
+    </div>
+
+    <!-- Test Setup -->
+    <div class="test-section">
+        <h2>🔧 Test Setup</h2>
+        <p>Setup test data and simulate the duplicate scanning scenarios:</p>
+        
+        <button onclick="setupTestData()" class="btn-success">Setup Test Data</button>
+        <button onclick="clearAllData()" class="btn-warning">Clear All Data</button>
+        <button onclick="checkCurrentQueue()" class="btn-info">Check Current Queue</button>
+        
+        <div id="setup-status"></div>
+    </div>
+
+    <!-- Duplicate Prevention Tests -->
+    <div class="test-section">
+        <h2>🔄 Duplicate Prevention Tests</h2>
+        <p>Test various duplicate scenarios:</p>
+        
+        <button onclick="testSingleScan()" class="btn-success">Test Single Scan</button>
+        <button onclick="testDuplicateEmail()" class="btn-warning">Test Duplicate Email</button>
+        <button onclick="testDuplicateNIC()" class="btn-warning">Test Duplicate NIC</button>
+        <button onclick="testDuplicateRecordID()" class="btn-warning">Test Duplicate Record ID</button>
+        <button onclick="testRapidScans()" class="btn-danger">Test Rapid Multiple Scans</button>
+        
+        <div id="test-results"></div>
+    </div>
+
+    <!-- Queue Status -->
+    <div class="test-section">
+        <h2>📋 Current Queue Status</h2>
+        <div id="queue-display">
+            <p><em>Click "Check Current Queue" to view queue status</em></p>
+        </div>
+    </div>
+
+    <!-- Test Results Summary -->
+    <div class="test-section">
+        <h2>📊 Test Results</h2>
+        <div class="test-results" id="results-summary">
+            <div class="result-card" id="single-scan-result">
+                <h4>Single Scan</h4>
+                <p>Not tested</p>
+            </div>
+            <div class="result-card" id="duplicate-email-result">
+                <h4>Duplicate Email</h4>
+                <p>Not tested</p>
+            </div>
+            <div class="result-card" id="duplicate-nic-result">
+                <h4>Duplicate NIC</h4>
+                <p>Not tested</p>
+            </div>
+            <div class="result-card" id="rapid-scan-result">
+                <h4>Rapid Scans</h4>
+                <p>Not tested</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debug Console -->
+    <div class="test-section">
+        <h2>🛠️ Debug Console</h2>
+        <button onclick="clearConsole()" class="btn-secondary">Clear Console</button>
+        <pre id="console">Console ready...</pre>
+    </div>
+
+    <script>
+        // Import the queue service functions (simulate the actual implementation)
+        let queueCounter = 100;
+
+        function generateQueueNumber() {
+            return String(queueCounter++).padStart(3, '0');
+        }
+
+        // Simulated addStudentToReceptionQueue function with duplicate prevention
+        function addStudentToReceptionQueue(medicalData) {
+            try {
+                // Get existing reception queue
+                const existingQueue = JSON.parse(localStorage.getItem('receptionQueue') || '[]');
+                
+                // Check for duplicates by email, NIC, or medical record ID
+                const isDuplicate = existingQueue.some(entry => 
+                    entry.email === medicalData.student.email ||
+                    entry.nic === medicalData.student.nic ||
+                    entry.medicalRecordId === medicalData.id
+                );
+                
+                if (isDuplicate) {
+                    const existingEntry = existingQueue.find(entry => 
+                        entry.email === medicalData.student.email ||
+                        entry.nic === medicalData.student.nic ||
+                        entry.medicalRecordId === medicalData.id
+                    );
+                    
+                    console.log('Student already in queue:', existingEntry);
+                    return {
+                        ...existingEntry,
+                        isDuplicate: true,
+                        message: `Student ${medicalData.student.fullName} is already in the queue (Queue #${existingEntry.queueNo})`
+                    };
+                }
+                
+                const queueNumber = generateQueueNumber();
+                const currentTime = new Date().toISOString();
+                
+                const queueEntry = {
+                    queueNo: queueNumber,
+                    studentName: medicalData.student.fullName,
+                    studentId: medicalData.student.studentRegistrationNumber,
+                    email: medicalData.student.email,
+                    nic: medicalData.student.nic,
+                    phone: medicalData.student.telephoneNumber,
+                    medicalRecordId: medicalData.id,
+                    medicalData: medicalData,
+                    status: 'Waiting',
+                    priority: 'Normal',
+                    addedTime: currentTime,
+                    waitTime: '0 min',
+                    action: 'Call Now',
+                    stage: 'reception'
+                };
+                
+                // Add new entry
+                existingQueue.push(queueEntry);
+                
+                // Save updated queue
+                localStorage.setItem('receptionQueue', JSON.stringify(existingQueue));
+                
+                console.log('Student added to reception queue:', queueEntry);
+                return queueEntry;
+            } catch (error) {
+                console.error('Error adding student to reception queue:', error);
+                throw error;
+            }
+        }
+
+        // Console logging
+        function log(message, type = 'info') {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            console.innerHTML += `<div>[${timestamp}] ${icon} ${message}</div>`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function clearConsole() {
+            document.getElementById('console').innerHTML = 'Console cleared...<br/>';
+        }
+
+        function updateStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = `<div class="${type}">${message}</div>`;
+            }
+        }
+
+        function updateTestResult(testId, result, message) {
+            const element = document.getElementById(`${testId}-result`);
+            if (element) {
+                element.className = `result-card ${result}`;
+                element.querySelector('p').textContent = message;
+            }
+        }
+
+        // Setup test data
+        function setupTestData() {
+            log('Setting up test data...', 'info');
+            
+            const testStudents = [
+                {
+                    id: 'MED-TEST-001',
+                    student: {
+                        fullName: 'John Test Student',
+                        email: 'john.test@student.edu',
+                        nic: '199501011234V',
+                        studentRegistrationNumber: 'MED/2024/TEST001',
+                        telephoneNumber: '0771234567'
+                    }
+                },
+                {
+                    id: 'MED-TEST-002',
+                    student: {
+                        fullName: 'Jane Test Student',
+                        email: 'jane.test@student.edu',
+                        nic: '199602022345V',
+                        studentRegistrationNumber: 'MED/2024/TEST002',
+                        telephoneNumber: '0775678901'
+                    }
+                }
+            ];
+
+            // Store test data
+            testStudents.forEach(student => {
+                localStorage.setItem(`medicalRecord_${student.id}`, JSON.stringify(student));
+            });
+
+            updateStatus('setup-status', `✅ Created ${testStudents.length} test medical records`, 'success');
+            log(`Setup completed: ${testStudents.length} test records created`, 'success');
+        }
+
+        function clearAllData() {
+            localStorage.removeItem('receptionQueue');
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('medicalRecord_MED-TEST-')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            queueCounter = 100;
+            
+            updateStatus('setup-status', '🗑️ All test data cleared', 'warning');
+            updateStatus('queue-display', '<p><em>Queue cleared</em></p>', 'warning');
+            log('All test data cleared', 'warning');
+        }
+
+        function checkCurrentQueue() {
+            const queue = JSON.parse(localStorage.getItem('receptionQueue') || '[]');
+            
+            let display = `<h4>📋 Reception Queue (${queue.length} students)</h4>`;
+            
+            if (queue.length === 0) {
+                display += '<p>No students in queue</p>';
+            } else {
+                queue.forEach(entry => {
+                    display += `
+                        <div class="queue-entry">
+                            <div>
+                                <div class="queue-info">Queue #${entry.queueNo}: ${entry.studentName}</div>
+                                <div class="queue-details">Email: ${entry.email} | NIC: ${entry.nic}</div>
+                            </div>
+                            <div>
+                                <span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em;">
+                                    ${entry.status}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            updateStatus('queue-display', display, 'info');
+            log(`Queue check: ${queue.length} students found`, 'info');
+        }
+
+        // Test functions
+        function testSingleScan() {
+            log('Testing single scan...', 'info');
+            
+            const testStudent = JSON.parse(localStorage.getItem('medicalRecord_MED-TEST-001'));
+            if (!testStudent) {
+                updateStatus('test-results', '❌ Test data not found. Setup test data first.', 'error');
+                return;
+            }
+
+            try {
+                const result = addStudentToReceptionQueue(testStudent);
+                
+                if (result.isDuplicate) {
+                    updateTestResult('single-scan', 'fail', 'Unexpected duplicate detected');
+                    log('Single scan test failed: Unexpected duplicate', 'error');
+                } else {
+                    updateTestResult('single-scan', 'pass', `Added Queue #${result.queueNo}`);
+                    log(`Single scan test passed: Queue #${result.queueNo}`, 'success');
+                    updateStatus('test-results', `✅ Single scan successful! Queue #${result.queueNo}`, 'success');
+                }
+            } catch (error) {
+                updateTestResult('single-scan', 'fail', 'Error occurred');
+                log(`Single scan test error: ${error.message}`, 'error');
+            }
+            
+            checkCurrentQueue();
+        }
+
+        function testDuplicateEmail() {
+            log('Testing duplicate email prevention...', 'info');
+            
+            const testStudent = JSON.parse(localStorage.getItem('medicalRecord_MED-TEST-001'));
+            if (!testStudent) {
+                updateStatus('test-results', '❌ Test data not found. Setup test data first.', 'error');
+                return;
+            }
+
+            try {
+                const result = addStudentToReceptionQueue(testStudent);
+                
+                if (result.isDuplicate) {
+                    updateTestResult('duplicate-email', 'pass', 'Duplicate prevented');
+                    log('Duplicate email test passed: Duplicate prevented', 'success');
+                    updateStatus('test-results', `✅ Duplicate email prevented: ${result.message}`, 'success');
+                } else {
+                    updateTestResult('duplicate-email', 'fail', 'Duplicate not detected');
+                    log('Duplicate email test failed: Duplicate not detected', 'error');
+                }
+            } catch (error) {
+                updateTestResult('duplicate-email', 'fail', 'Error occurred');
+                log(`Duplicate email test error: ${error.message}`, 'error');
+            }
+            
+            checkCurrentQueue();
+        }
+
+        function testDuplicateNIC() {
+            log('Testing duplicate NIC prevention...', 'info');
+            
+            // Create a new record with same NIC but different email
+            const testStudent = {
+                id: 'MED-TEST-003',
+                student: {
+                    fullName: 'John Different Email',
+                    email: 'different.email@student.edu',
+                    nic: '199501011234V', // Same NIC as first student
+                    studentRegistrationNumber: 'MED/2024/TEST003',
+                    telephoneNumber: '0779876543'
+                }
+            };
+
+            try {
+                const result = addStudentToReceptionQueue(testStudent);
+                
+                if (result.isDuplicate) {
+                    updateTestResult('duplicate-nic', 'pass', 'Duplicate prevented');
+                    log('Duplicate NIC test passed: Duplicate prevented', 'success');
+                    updateStatus('test-results', `✅ Duplicate NIC prevented: ${result.message}`, 'success');
+                } else {
+                    updateTestResult('duplicate-nic', 'fail', 'Duplicate not detected');
+                    log('Duplicate NIC test failed: Duplicate not detected', 'error');
+                }
+            } catch (error) {
+                updateTestResult('duplicate-nic', 'fail', 'Error occurred');
+                log(`Duplicate NIC test error: ${error.message}`, 'error');
+            }
+            
+            checkCurrentQueue();
+        }
+
+        function testDuplicateRecordID() {
+            log('Testing duplicate Record ID prevention...', 'info');
+            
+            const testStudent = JSON.parse(localStorage.getItem('medicalRecord_MED-TEST-001'));
+            if (!testStudent) {
+                updateStatus('test-results', '❌ Test data not found. Setup test data first.', 'error');
+                return;
+            }
+
+            try {
+                const result = addStudentToReceptionQueue(testStudent);
+                
+                if (result.isDuplicate) {
+                    log('Duplicate Record ID test passed: Duplicate prevented', 'success');
+                    updateStatus('test-results', `✅ Duplicate Record ID prevented: ${result.message}`, 'success');
+                } else {
+                    log('Duplicate Record ID test failed: Duplicate not detected', 'error');
+                }
+            } catch (error) {
+                log(`Duplicate Record ID test error: ${error.message}`, 'error');
+            }
+            
+            checkCurrentQueue();
+        }
+
+        function testRapidScans() {
+            log('Testing rapid multiple scans...', 'info');
+            
+            const testStudent = JSON.parse(localStorage.getItem('medicalRecord_MED-TEST-002'));
+            if (!testStudent) {
+                updateStatus('test-results', '❌ Test data not found. Setup test data first.', 'error');
+                return;
+            }
+
+            let successCount = 0;
+            let duplicateCount = 0;
+
+            // Simulate 5 rapid scans
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const result = addStudentToReceptionQueue(testStudent);
+                    
+                    if (result.isDuplicate) {
+                        duplicateCount++;
+                        log(`Rapid scan ${i + 1}: Duplicate prevented`, 'warning');
+                    } else {
+                        successCount++;
+                        log(`Rapid scan ${i + 1}: Added to queue #${result.queueNo}`, 'info');
+                    }
+                } catch (error) {
+                    log(`Rapid scan ${i + 1}: Error - ${error.message}`, 'error');
+                }
+            }
+
+            if (successCount === 1 && duplicateCount === 4) {
+                updateTestResult('rapid-scan', 'pass', '1 added, 4 prevented');
+                log('Rapid scan test passed: 1 added, 4 duplicates prevented', 'success');
+                updateStatus('test-results', `✅ Rapid scan test passed: ${successCount} added, ${duplicateCount} duplicates prevented`, 'success');
+            } else {
+                updateTestResult('rapid-scan', 'fail', `${successCount} added, ${duplicateCount} prevented`);
+                log(`Rapid scan test failed: ${successCount} added, ${duplicateCount} prevented`, 'error');
+            }
+            
+            checkCurrentQueue();
+        }
+
+        // Initialize
+        window.onload = function() {
+            log('Duplicate Scan Prevention Test loaded', 'success');
+            log('Click "Setup Test Data" to begin testing', 'info');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 QR Scanner Fix & Test</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 1000px; 
+            margin: 20px auto; 
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 25px; 
+            border: 1px solid #ddd; 
+            border-radius: 10px; 
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        button { 
+            padding: 12px 20px; 
+            margin: 8px; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 6px; 
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        
+        .status { margin: 15px 0; padding: 15px; border-radius: 6px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        
+        .qr-display {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .qr-card {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            background: white;
+            min-width: 250px;
+        }
+        .qr-card h4 {
+            margin-top: 0;
+            color: #333;
+        }
+        .qr-canvas {
+            border: 1px solid #ccc;
+            margin: 10px 0;
+        }
+        
+        .instructions {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .instructions h4 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        .instructions ol li {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+        
+        .console-log {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+        }
+        .step {
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            flex: 1;
+            margin: 0 5px;
+            background: white;
+            border: 2px solid #e0e0e0;
+        }
+        .step.active {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .step.completed {
+            border-color: #17a2b8;
+            background: #d1ecf1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 QR Scanner Fix & Complete Test</h1>
+        <p>Test the improved QR scanner functionality with real medical QR codes</p>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="step-indicator">
+        <div class="step" id="step-1">
+            <strong>1. Setup</strong><br>
+            <small>Generate test data</small>
+        </div>
+        <div class="step" id="step-2">
+            <strong>2. QR Codes</strong><br>
+            <small>Create medical QRs</small>
+        </div>
+        <div class="step" id="step-3">
+            <strong>3. Scanner Test</strong><br>
+            <small>Test scanning</small>
+        </div>
+        <div class="step" id="step-4">
+            <strong>4. Queue Check</strong><br>
+            <small>Verify queue addition</small>
+        </div>
+    </div>
+
+    <!-- Step 1: Setup Medical Records -->
+    <div class="test-section">
+        <h2>📋 Step 1: Setup Test Medical Records</h2>
+        <p>First, let's create complete medical records that can be scanned:</p>
+        
+        <button onclick="createTestMedicalRecords()" class="btn-success">Create Medical Records</button>
+        <button onclick="checkExistingRecords()" class="btn-info">Check Existing Records</button>
+        <button onclick="clearAllRecords()" class="btn-warning">Clear All Records</button>
+        
+        <div id="records-status"></div>
+    </div>
+
+    <!-- Step 2: Generate QR Codes -->
+    <div class="test-section">
+        <h2>📱 Step 2: Generate Medical QR Codes</h2>
+        <p>Generate QR codes from the medical records:</p>
+        
+        <button onclick="generateMedicalQRCodes()" class="btn-primary">Generate QR Codes</button>
+        <button onclick="generateTestQR()" class="btn-secondary">Generate Simple Test QR</button>
+        
+        <div class="qr-display" id="qr-codes"></div>
+        <div id="qr-status"></div>
+    </div>
+
+    <!-- Step 3: Scanner Instructions -->
+    <div class="test-section">
+        <h2>🔍 Step 3: Test QR Scanner</h2>
+        
+        <div class="instructions">
+            <h4>📱 How to test the QR scanner:</h4>
+            <ol>
+                <li><strong>Open the main application:</strong> Go to <code>http://localhost:5173</code></li>
+                <li><strong>Login as receptionist:</strong> Use receptionist credentials</li>
+                <li><strong>Access scanner:</strong> Click "Scan QR Code" button in receptionist queue</li>
+                <li><strong>Allow camera:</strong> Click "Allow" when browser asks for camera permission</li>
+                <li><strong>Scan QR code:</strong> Point camera at one of the QR codes generated above</li>
+                <li><strong>Check console:</strong> Open browser dev tools (F12) to see detailed logs</li>
+                <li><strong>Verify result:</strong> Check if student is added to reception queue</li>
+            </ol>
+        </div>
+        
+        <button onclick="openMainApp()" class="btn-primary">🚀 Open Main Application</button>
+        <button onclick="showDebugConsole()" class="btn-info">📊 Show Debug Tips</button>
+        
+        <div id="scanner-instructions"></div>
+    </div>
+
+    <!-- Step 4: Queue Verification -->
+    <div class="test-section">
+        <h2>📋 Step 4: Verify Queue Integration</h2>
+        <p>Check if scanned students are properly added to the reception queue:</p>
+        
+        <button onclick="checkReceptionQueue()" class="btn-success">Check Reception Queue</button>
+        <button onclick="simulateQRScan()" class="btn-warning">Simulate QR Scan</button>
+        <button onclick="clearQueue()" class="btn-danger">Clear Queue</button>
+        
+        <div id="queue-status"></div>
+    </div>
+
+    <!-- Debug Console -->
+    <div class="test-section">
+        <h2>🛠️ Debug Console</h2>
+        <button onclick="clearConsole()" class="btn-secondary">Clear Console</button>
+        <div id="console" class="console-log">Console ready...</div>
+    </div>
+
+    <!-- Load Required Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+
+    <script>
+        // Console logging
+        function log(message, type = 'info') {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            console.innerHTML += `<div>[${timestamp}] ${icon} ${message}</div>`;
+            console.scrollTop = console.scrollHeight;
+            
+            // Also log to browser console
+            if (type === 'error') {
+                console.error(message);
+            } else {
+                console.log(message);
+            }
+        }
+
+        function clearConsole() {
+            document.getElementById('console').innerHTML = 'Console cleared...<br/>';
+        }
+
+        function updateStep(stepNum, status = 'active') {
+            const step = document.getElementById(`step-${stepNum}`);
+            if (step) {
+                step.className = `step ${status}`;
+            }
+        }
+
+        // Step 1: Create test medical records
+        function createTestMedicalRecords() {
+            updateStep(1, 'active');
+            log('Creating test medical records...', 'info');
+            
+            const records = [
+                {
+                    id: 'MED-' + Date.now() + '-001',
+                    timestamp: new Date().toISOString(),
+                    student: {
+                        fullName: 'John Medical Student',
+                        email: 'john.medical@student.edu',
+                        studentRegistrationNumber: 'MED/2024/001',
+                        nic: '199501012345V',
+                        dateOfBirth: '1995-01-01',
+                        age: '29',
+                        gender: 'male',
+                        nationality: 'sri-lankan',
+                        homeAddress: '123 Medical Street, Colombo',
+                        telephoneNumber: '0771234567',
+                        emergencyContact: {
+                            name: 'Jane Medical Parent',
+                            telephone: '0777654321',
+                            relationship: 'parent'
+                        }
+                    },
+                    examination: {
+                        physicalMeasurements: {
+                            weight: '72',
+                            height: '178',
+                            chestInspiration: '95',
+                            chestExpiration: '90'
+                        },
+                        vaccinationStatus: 'yes',
+                        examination: {
+                            circulation: {
+                                bloodPressure: '120/80',
+                                pulse: '72'
+                            },
+                            clinicalTests: {
+                                bloodGroup: 'O+',
+                                hemoglobin: '14.2'
+                            }
+                        },
+                        assessment: {
+                            fitForStudies: 'fit',
+                            specialistReferral: 'no',
+                            reason: 'Student is medically fit for studies'
+                        }
+                    }
+                },
+                {
+                    id: 'MED-' + Date.now() + '-002',
+                    timestamp: new Date().toISOString(),
+                    student: {
+                        fullName: 'Sarah Health Student',
+                        email: 'sarah.health@student.edu',
+                        studentRegistrationNumber: 'MED/2024/002',
+                        nic: '199603152468V',
+                        dateOfBirth: '1996-03-15',
+                        age: '28',
+                        gender: 'female',
+                        nationality: 'sri-lankan',
+                        homeAddress: '456 Health Avenue, Kandy',
+                        telephoneNumber: '0775678901',
+                        emergencyContact: {
+                            name: 'Mark Health Guardian',
+                            telephone: '0771234890',
+                            relationship: 'guardian'
+                        }
+                    },
+                    examination: {
+                        physicalMeasurements: {
+                            weight: '58',
+                            height: '165',
+                            chestInspiration: '88',
+                            chestExpiration: '85'
+                        },
+                        vaccinationStatus: 'yes',
+                        examination: {
+                            circulation: {
+                                bloodPressure: '115/75',
+                                pulse: '68'
+                            },
+                            clinicalTests: {
+                                bloodGroup: 'A+',
+                                hemoglobin: '13.8'
+                            }
+                        },
+                        assessment: {
+                            fitForStudies: 'fit',
+                            specialistReferral: 'no',
+                            reason: 'All medical parameters within normal range'
+                        }
+                    }
+                }
+            ];
+
+            // Store records in localStorage
+            records.forEach(record => {
+                localStorage.setItem(`medicalRecord_${record.id}`, JSON.stringify(record));
+                log(`Created medical record: ${record.id}`, 'success');
+            });
+
+            // Store latest record for fallback
+            localStorage.setItem('latestMedicalRecord', JSON.stringify(records[0]));
+
+            updateStatus('records-status', 
+                `✅ Created ${records.length} medical records successfully!<br/>` +
+                `📋 Records: ${records.map(r => r.id).join(', ')}`, 'success');
+            
+            updateStep(1, 'completed');
+            log('Medical records creation completed', 'success');
+        }
+
+        function checkExistingRecords() {
+            log('Checking existing medical records...', 'info');
+            
+            const allKeys = Object.keys(localStorage);
+            const recordKeys = allKeys.filter(key => key.startsWith('medicalRecord_'));
+            
+            let status = `📊 Found ${recordKeys.length} medical records:<br/>`;
+            
+            if (recordKeys.length === 0) {
+                status += 'No medical records found. Create some test records first.';
+                updateStatus('records-status', status, 'warning');
+            } else {
+                recordKeys.forEach(key => {
+                    try {
+                        const record = JSON.parse(localStorage.getItem(key));
+                        status += `• ${record.id}: ${record.student.fullName}<br/>`;
+                    } catch (e) {
+                        status += `• ${key}: Invalid record format<br/>`;
+                    }
+                });
+                updateStatus('records-status', status, 'info');
+            }
+            
+            log(`Found ${recordKeys.length} existing medical records`, 'info');
+        }
+
+        function clearAllRecords() {
+            log('Clearing all medical records...', 'warning');
+            
+            const allKeys = Object.keys(localStorage);
+            const recordKeys = allKeys.filter(key => 
+                key.startsWith('medicalRecord_') || 
+                key.startsWith('qrCodeData_') || 
+                key.startsWith('medicalRecordId_')
+            );
+            
+            recordKeys.forEach(key => localStorage.removeItem(key));
+            localStorage.removeItem('latestMedicalRecord');
+            
+            updateStatus('records-status', `🗑️ Cleared ${recordKeys.length} records`, 'warning');
+            log(`Cleared ${recordKeys.length} medical records`, 'warning');
+        }
+
+        // Step 2: Generate QR codes
+        function generateMedicalQRCodes() {
+            updateStep(2, 'active');
+            log('Generating medical QR codes...', 'info');
+            
+            const allKeys = Object.keys(localStorage);
+            const recordKeys = allKeys.filter(key => key.startsWith('medicalRecord_'));
+            
+            if (recordKeys.length === 0) {
+                updateStatus('qr-status', '❌ No medical records found. Create records first.', 'error');
+                return;
+            }
+
+            const qrContainer = document.getElementById('qr-codes');
+            qrContainer.innerHTML = '';
+
+            recordKeys.forEach((key, index) => {
+                try {
+                    const record = JSON.parse(localStorage.getItem(key));
+                    
+                    // Create QR data
+                    const qrData = {
+                        id: record.id,
+                        name: record.student.fullName,
+                        nic: record.student.nic,
+                        regNumber: record.student.studentRegistrationNumber,
+                        timestamp: record.timestamp,
+                        dataUrl: `http://localhost:3000/medical-record/${record.id}`
+                    };
+
+                    // Create QR card
+                    const qrCard = document.createElement('div');
+                    qrCard.className = 'qr-card';
+                    qrCard.innerHTML = `
+                        <h4>${record.student.fullName}</h4>
+                        <canvas id="qr-canvas-${index}" width="200" height="200" class="qr-canvas"></canvas>
+                        <p><strong>ID:</strong> ${record.id}</p>
+                        <p><strong>Reg:</strong> ${record.student.studentRegistrationNumber}</p>
+                        <button onclick="downloadQR('qr-canvas-${index}', '${record.student.fullName}')" class="btn-info">Download QR</button>
+                    `;
+                    qrContainer.appendChild(qrCard);
+
+                    // Generate QR code
+                    const canvas = document.getElementById(`qr-canvas-${index}`);
+                    QRCode.toCanvas(canvas, JSON.stringify(qrData), {
+                        width: 200,
+                        height: 200,
+                        color: {
+                            dark: '#000000',
+                            light: '#ffffff'
+                        }
+                    }, (error) => {
+                        if (error) {
+                            log(`QR generation failed for ${record.id}: ${error.message}`, 'error');
+                        } else {
+                            log(`QR code generated for ${record.student.fullName}`, 'success');
+                        }
+                    });
+
+                } catch (e) {
+                    log(`Error processing record ${key}: ${e.message}`, 'error');
+                }
+            });
+
+            updateStatus('qr-status', `✅ Generated ${recordKeys.length} medical QR codes!`, 'success');
+            updateStep(2, 'completed');
+            log('Medical QR code generation completed', 'success');
+        }
+
+        function generateTestQR() {
+            log('Generating simple test QR code...', 'info');
+            
+            const qrContainer = document.getElementById('qr-codes');
+            
+            const testCard = document.createElement('div');
+            testCard.className = 'qr-card';
+            testCard.innerHTML = `
+                <h4>Simple Test QR</h4>
+                <canvas id="test-qr-canvas" width="200" height="200" class="qr-canvas"></canvas>
+                <p><strong>Content:</strong> test message</p>
+                <button onclick="downloadQR('test-qr-canvas', 'TestQR')" class="btn-info">Download QR</button>
+            `;
+            qrContainer.appendChild(testCard);
+
+            const canvas = document.getElementById('test-qr-canvas');
+            QRCode.toCanvas(canvas, 'This is a test QR code for scanner testing', {
+                width: 200,
+                height: 200
+            }, (error) => {
+                if (error) {
+                    log(`Test QR generation failed: ${error.message}`, 'error');
+                } else {
+                    log('Simple test QR code generated', 'success');
+                }
+            });
+        }
+
+        function downloadQR(canvasId, fileName) {
+            const canvas = document.getElementById(canvasId);
+            const url = canvas.toDataURL();
+            const a = document.createElement('a');
+            a.download = `${fileName}_QR.png`;
+            a.href = url;
+            a.click();
+            log(`Downloaded QR code: ${fileName}`, 'success');
+        }
+
+        // Step 3: Scanner testing
+        function openMainApp() {
+            updateStep(3, 'active');
+            log('Opening main application...', 'info');
+            window.open('http://localhost:5173', '_blank');
+            
+            updateStatus('scanner-instructions', 
+                '🚀 Main application opened in new tab!<br/>' +
+                '👉 Login as receptionist and click "Scan QR Code" button<br/>' +
+                '📱 Allow camera access when prompted<br/>' +
+                '🔍 Point camera at one of the QR codes above', 'info');
+        }
+
+        function showDebugConsole() {
+            updateStatus('scanner-instructions',
+                '🛠️ <strong>Debug Tips:</strong><br/>' +
+                '• Open browser DevTools (F12) to see detailed console logs<br/>' +
+                '• Look for messages starting with 🔄, 📹, 🎯, ✅, ❌<br/>' +
+                '• Check Network tab for API calls<br/>' +
+                '• Verify camera permissions in browser settings<br/>' +
+                '• Test with different QR codes (medical vs simple text)', 'info');
+        }
+
+        // Step 4: Queue verification
+        function checkReceptionQueue() {
+            updateStep(4, 'active');
+            log('Checking reception queue...', 'info');
+            
+            const queue = JSON.parse(localStorage.getItem('receptionQueue') || '[]');
+            
+            let status = `📋 Reception Queue Status: ${queue.length} students<br/><br/>`;
+            
+            if (queue.length === 0) {
+                status += '✨ Queue is empty. Scan a QR code to add students.';
+                updateStatus('queue-status', status, 'info');
+            } else {
+                status += '<strong>Students in queue:</strong><br/>';
+                queue.forEach(student => {
+                    status += `• Queue #${student.queueNo}: ${student.studentName} (${student.status})<br/>`;
+                });
+                updateStatus('queue-status', status, 'success');
+                updateStep(4, 'completed');
+            }
+            
+            log(`Found ${queue.length} students in reception queue`, 'info');
+        }
+
+        function simulateQRScan() {
+            log('Simulating QR scan...', 'info');
+            
+            // Get a medical record to simulate
+            const recordKeys = Object.keys(localStorage).filter(key => key.startsWith('medicalRecord_'));
+            
+            if (recordKeys.length === 0) {
+                updateStatus('queue-status', '❌ No medical records available for simulation', 'error');
+                return;
+            }
+            
+            const record = JSON.parse(localStorage.getItem(recordKeys[0]));
+            
+            // Simulate the queue addition process
+            let queueCounter = parseInt(localStorage.getItem('queueCounter') || '100');
+            const queueNumber = String(queueCounter++).padStart(3, '0');
+            localStorage.setItem('queueCounter', queueCounter.toString());
+            
+            const queueEntry = {
+                queueNo: queueNumber,
+                studentName: record.student.fullName,
+                studentId: record.student.studentRegistrationNumber,
+                email: record.student.email,
+                nic: record.student.nic,
+                phone: record.student.telephoneNumber,
+                medicalRecordId: record.id,
+                medicalData: record,
+                status: 'Waiting',
+                priority: 'Normal',
+                addedTime: new Date().toISOString(),
+                waitTime: '0 min',
+                action: 'Call Now',
+                stage: 'reception'
+            };
+            
+            // Add to queue
+            const existingQueue = JSON.parse(localStorage.getItem('receptionQueue') || '[]');
+            existingQueue.push(queueEntry);
+            localStorage.setItem('receptionQueue', JSON.stringify(existingQueue));
+            
+            updateStatus('queue-status', 
+                `✅ Simulated QR scan successful!<br/>` +
+                `👤 Student: ${record.student.fullName}<br/>` +
+                `📋 Queue Number: ${queueNumber}<br/>` +
+                `🆔 Medical Record: ${record.id}`, 'success');
+            
+            log(`Simulated QR scan for ${record.student.fullName}`, 'success');
+        }
+
+        function clearQueue() {
+            localStorage.removeItem('receptionQueue');
+            localStorage.removeItem('queueCounter');
+            updateStatus('queue-status', '🗑️ Reception queue cleared', 'warning');
+            log('Reception queue cleared', 'warning');
+        }
+
+        // Utility functions
+        function updateStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = `<div class="${type}">${message}</div>`;
+            }
+        }
+
+        // Initialize
+        window.onload = function() {
+            log('QR Scanner Fix & Test page loaded', 'success');
+            log('Click "Create Medical Records" to start the test process', 'info');
+            
+            // Check if there are existing records
+            checkExistingRecords();
+        };
+    </script>
+</body>
+</html>
