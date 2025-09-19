@@ -13,18 +13,18 @@ body {
 }
 
 /* Hospital Container - Full Screen Override */
-.hospital-container {
+.hospital-containerr {
   margin: 0 !important;
   padding: 0 !important;
   min-height: 100vh !important;
-  background-color: #f5f5f5;
+  
 }
 
 /* Form Container */
 .form-container {
-  max-width: 900px;
+  max-width: 1100px;
   margin: 2rem auto;
-  background: white;
+ 
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   overflow: hidden;
