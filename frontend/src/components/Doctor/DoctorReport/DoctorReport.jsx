@@ -20,10 +20,9 @@ const DoctorReport = () => {
 
   const loadPatientMedicalData = (patient) => {
     if (!patient) return;
-    
+
     console.log('Loading patient medical data for:', patient);
-    
-    // Try multiple approaches to load patient data
+
     const possibleKeys = [
       patient.email,
       patient.studentId,
@@ -31,12 +30,12 @@ const DoctorReport = () => {
       `student_${patient.studentId}`,
       `student_${patient.email}`,
       `studentData_${patient.email}`,
-      `hospitalData_${patient.email}`
+      `hospitalData_${patient.email}`,
     ];
-    
+
     console.log('Trying keys:', possibleKeys);
 
-    // Load student form data (Part 1)
+    // Load student form data
     let foundStudentData = null;
     for (const key of possibleKeys) {
       const data = localStorage.getItem(`studentData_${key}`);
@@ -46,30 +45,12 @@ const DoctorReport = () => {
         break;
       }
     }
-    
+
     if (foundStudentData) {
-      console.log('Using found student data:', foundStudentData);
       setPatientData(foundStudentData);
-    } else {
-      console.log('No stored data found, creating fallback data');
-      // If no stored data found, create basic data from selectedPatient with fallbacks
-      const fallbackData = {
-        fullName: patient.studentName || patient.name || 'John Doe (Demo)',
-        studentId: patient.studentId || patient.id || 'STU001',
-        email: patient.email || 'student@example.com',
-        nic: patient.nic || patient.nicNumber || '199901234567',
-        telephoneNumber: patient.phone || patient.telephone || '+94771234567',
-        age: patient.age || calculateAge(patient.dateOfBirth) || 23,
-        dateOfBirth: patient.dateOfBirth || patient.dob || '1999-01-01',
-        gender: patient.gender || 'Male',
-        nationality: patient.nationality || 'Sri Lankan',
-        academicDivision: patient.academicDivision || patient.division || patient.medicalData?.student?.academicDivision || 'Information Technology'
-      };
-      console.log('Created fallback data:', fallbackData);
-      setPatientData(fallbackData);
     }
 
-    // Load hospital form data (Part 2)  
+    // Load hospital form data
     let foundHospitalData = null;
     for (const key of possibleKeys) {
       const data = localStorage.getItem(`hospitalData_${key}`);
@@ -78,7 +59,7 @@ const DoctorReport = () => {
         break;
       }
     }
-    
+
     if (foundHospitalData) {
       setHospitalData(foundHospitalData);
     }
@@ -105,10 +86,13 @@ const DoctorReport = () => {
   };
 
   const getStatusColor = (status) => {
-    switch(status?.toLowerCase()) {
-      case 'yes': return '#ef4444';
-      case 'no': return '#22c55e';
-      default: return '#6b7280';
+    switch (status?.toLowerCase()) {
+      case 'yes':
+        return '#ef4444';
+      case 'no':
+        return '#22c55e';
+      default:
+        return '#6b7280';
     }
   };
 
@@ -116,8 +100,8 @@ const DoctorReport = () => {
     if (!dateString) return 'Not Provided';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',  
-      day: 'numeric'
+      month: 'long',
+      day: 'numeric',
     });
   };
 
@@ -132,7 +116,10 @@ const DoctorReport = () => {
         <div className="no-patient">
           <div className="no-patient-icon">📋</div>
           <h2>No Patient Selected</h2>
-          <p>Please select a patient from the Doctor Dashboard or Queue to view their medical report.</p>
+          <p>
+            Please select a patient from the Doctor Dashboard or Queue to view
+            their medical report.
+          </p>
         </div>
       </div>
     );
@@ -146,13 +133,14 @@ const DoctorReport = () => {
           <div className="controls-left">
             <h1>📋 Medical Report</h1>
             <div className="patient-selector">
-              <span className="patient-name">{selectedPatient?.studentName || 'Unknown Patient'}</span>
-              <span className="queue-number">Queue #{selectedPatient?.queueNo}</span>
+              <span className="patient-name">
+                {selectedPatient?.studentName || selectedPatient?.name || 'N/A'}
+              </span>
             </div>
           </div>
           <div className="controls-right">
-            <select 
-              value={reportType} 
+            <select
+              value={reportType}
               onChange={(e) => setReportType(e.target.value)}
               className="report-type-select"
             >
@@ -181,10 +169,13 @@ const DoctorReport = () => {
           </div>
           <div className="report-meta">
             <div className="report-date">
-              <strong>Report Date:</strong> {formatDate(new Date().toISOString())}
+              <strong>Report Date:</strong>{' '}
+              {formatDate(new Date().toISOString())}
             </div>
             <div className="report-id">
-              <strong>Report ID:</strong> SMH-{selectedPatient?.queueNo || '001'}-{new Date().getFullYear()}
+              <strong>Report ID:</strong> SMH-
+              {selectedPatient?.queueNo || '001'}-
+              {new Date().getFullYear()}
             </div>
           </div>
         </div>
@@ -199,92 +190,106 @@ const DoctorReport = () => {
                 <div className="info-row">
                   <span className="label">Full Name:</span>
                   <span className="value">
-                    {patientData?.fullName || 
-                     patientData?.name || 
-                     selectedPatient?.studentName || 
-                     selectedPatient?.name || 
-                     'N/A'}
+                    {patientData?.fullName ||
+                      patientData?.name ||
+                      selectedPatient?.studentName ||
+                      selectedPatient?.name ||
+                      'N/A'}
                   </span>
                 </div>
                 <div className="info-row">
                   <span className="label">Student ID:</span>
                   <span className="value">
-                    {patientData?.studentRegistrationNumber || 
-                     patientData?.studentId || 
-                     patientData?.registrationNumber ||
-                     selectedPatient?.studentId || 
-                     selectedPatient?.id || 
-                     'N/A'}
+                    {patientData?.studentRegistrationNumber ||
+                      patientData?.studentId ||
+                      patientData?.registrationNumber ||
+                      selectedPatient?.studentId ||
+                      selectedPatient?.id ||
+                      'N/A'}
                   </span>
                 </div>
                 <div className="info-row">
                   <span className="label">NIC:</span>
                   <span className="value">
-                    {patientData?.nic || 
-                     patientData?.nicNumber ||
-                     selectedPatient?.nic || 
-                     selectedPatient?.nicNumber ||
-                     'N/A'}
+                    {patientData?.nic ||
+                      patientData?.nicNumber ||
+                      selectedPatient?.nic ||
+                      selectedPatient?.nicNumber ||
+                      'N/A'}
                   </span>
                 </div>
                 <div className="info-row">
                   <span className="label">Email:</span>
                   <span className="value">
-                    {patientData?.email || 
-                     selectedPatient?.email || 
-                     'N/A'}
+                    {patientData?.email || selectedPatient?.email || 'N/A'}
                   </span>
                 </div>
                 <div className="info-row">
                   <span className="label">Phone:</span>
                   <span className="value">
-                    {patientData?.telephoneNumber || 
-                     patientData?.telephone || 
-                     patientData?.phone ||
-                     selectedPatient?.phone || 
-                     selectedPatient?.telephone ||
-                     'N/A'}
+                    {patientData?.telephoneNumber ||
+                      patientData?.telephone ||
+                      patientData?.phone ||
+                      selectedPatient?.phone ||
+                      selectedPatient?.telephone ||
+                      'N/A'}
                   </span>
                 </div>
               </div>
             </div>
-            
+
             <div className="info-card">
               <h3>Personal Details</h3>
               <div className="info-rows">
                 <div className="info-row">
                   <span className="label">Age:</span>
                   <span className="value">
-                    {patientData?.age || selectedPatient?.age || calculateAge(patientData?.dateOfBirth || patientData?.dob || selectedPatient?.dateOfBirth) || 'N/A'}
+                    {patientData?.age ||
+                      selectedPatient?.age ||
+                      calculateAge(
+                        patientData?.dateOfBirth ||
+                          patientData?.dob ||
+                          selectedPatient?.dateOfBirth
+                      ) ||
+                      'N/A'}
                   </span>
                 </div>
                 <div className="info-row">
                   <span className="label">Date of Birth:</span>
                   <span className="value">
-                    {formatDate(patientData?.dateOfBirth || patientData?.dob || selectedPatient?.dateOfBirth)}
+                    {formatDate(
+                      patientData?.dateOfBirth ||
+                        patientData?.dob ||
+                        selectedPatient?.dateOfBirth
+                    )}
                   </span>
                 </div>
                 <div className="info-row">
                   <span className="label">Gender:</span>
                   <span className="value">
-                    {patientData?.gender || selectedPatient?.gender || 'N/A'}
+                    {patientData?.gender ||
+                      selectedPatient?.gender ||
+                      'N/A'}
                   </span>
                 </div>
                 <div className="info-row">
                   <span className="label">Nationality:</span>
                   <span className="value">
-                    {patientData?.nationality || selectedPatient?.nationality || 'N/A'}
+                    {patientData?.nationality ||
+                      selectedPatient?.nationality ||
+                      'N/A'}
                   </span>
                 </div>
                 <div className="info-row">
                   <span className="label">Academic Division:</span>
                   <span className="value">
-                    {patientData?.academicDivision || 
-                     patientData?.division ||
-                     selectedPatient?.academicDivision ||
-                     selectedPatient?.division ||
-                     selectedPatient?.medicalData?.student?.academicDivision || 
-                     'N/A'}
+                    {patientData?.academicDivision ||
+                      patientData?.division ||
+                      selectedPatient?.academicDivision ||
+                      selectedPatient?.division ||
+                      selectedPatient?.medicalData?.student
+                        ?.academicDivision ||
+                      'N/A'}
                   </span>
                 </div>
               </div>
@@ -296,45 +301,47 @@ const DoctorReport = () => {
                 <div className="info-row">
                   <span className="label">Name:</span>
                   <span className="value">
-                    {patientData?.emergencyName || 
-                     patientData?.emergencyContactName ||
-                     patientData?.emergencyContact?.name ||
-                     selectedPatient?.emergencyContact?.name ||
-                     selectedPatient?.medicalData?.student?.emergencyContact?.name || 
-                     'N/A'}
+                    {patientData?.emergencyName ||
+                      patientData?.emergencyContactName ||
+                      patientData?.emergencyContact?.name ||
+                      selectedPatient?.emergencyContact?.name ||
+                      selectedPatient?.medicalData?.student?.emergencyContact
+                        ?.name ||
+                      'N/A'}
                   </span>
                 </div>
                 <div className="info-row">
                   <span className="label">Phone:</span>
                   <span className="value">
-                    {patientData?.emergencyTelephone || 
-                     patientData?.emergencyPhone ||
-                     patientData?.emergencyContact?.telephone ||
-                     patientData?.emergencyContact?.phone ||
-                     selectedPatient?.emergencyContact?.telephone ||
-                     selectedPatient?.emergencyContact?.phone ||
-                     selectedPatient?.medicalData?.student?.emergencyContact?.telephone || 
-                     'N/A'}
+                    {patientData?.emergencyTelephone ||
+                      patientData?.emergencyPhone ||
+                      patientData?.emergencyContact?.telephone ||
+                      patientData?.emergencyContact?.phone ||
+                      selectedPatient?.emergencyContact?.telephone ||
+                      selectedPatient?.emergencyContact?.phone ||
+                      selectedPatient?.medicalData?.student?.emergencyContact
+                        ?.telephone ||
+                      'N/A'}
                   </span>
                 </div>
                 <div className="info-row">
                   <span className="label">Relationship:</span>
                   <span className="value">
-                    {patientData?.emergencyRelationship || 
-                     patientData?.emergencyContact?.relationship ||
-                     selectedPatient?.emergencyContact?.relationship ||
-                     'N/A'}
+                    {patientData?.emergencyRelationship ||
+                      patientData?.emergencyContact?.relationship ||
+                      selectedPatient?.emergencyContact?.relationship ||
+                      'N/A'}
                   </span>
                 </div>
                 <div className="info-row">
                   <span className="label">Address:</span>
                   <span className="value">
-                    {patientData?.emergencyAddress || 
-                     patientData?.address ||
-                     patientData?.emergencyContact?.address ||
-                     selectedPatient?.address ||
-                     selectedPatient?.emergencyContact?.address ||
-                     'N/A'}
+                    {patientData?.emergencyAddress ||
+                      patientData?.address ||
+                      patientData?.emergencyContact?.address ||
+                      selectedPatient?.address ||
+                      selectedPatient?.emergencyContact?.address ||
+                      'N/A'}
                   </span>
                 </div>
               </div>
