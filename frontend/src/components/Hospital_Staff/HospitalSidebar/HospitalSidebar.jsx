@@ -32,8 +32,9 @@ function HospitalSidebar() {
 
       <ul className="menu">
         <li>
-          <NavLink 
-            to="/hospital-staff" 
+          <NavLink
+            to="/hospital-staff"
+            end
             className={({ isActive }) => isActive ? "menu-button active" : "menu-button"}
           >
             <FiHome size={18} className="menu-icon" />
@@ -43,7 +44,7 @@ function HospitalSidebar() {
 
        
         <li>
-          <NavLink 
+          <NavLink
             to="/hospital-staff/settings"
             className={({ isActive }) => isActive ? "menu-button active" : "menu-button"}
           >
