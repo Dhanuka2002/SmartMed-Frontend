@@ -1,0 +1,416 @@
+/* Generic Sidebar Styles from App.css */
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: #0B1224;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-top: 30px;
+  position: fixed;
+  top: var(--topbar-height);
+  left: 0;
+  height: calc(100vh - var(--topbar-height));
+  z-index: 1000;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.sidebar li {
+  padding: 12px 20px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.sidebar .settings {
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  color: var(--sidebar-text);
+  background-color: var(--sidebar-bg);
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.sidebar .settings img {
+  width: 20px;
+  height: 10px;
+}
+
+/* Modern Receptionist-specific Sidebar Container Override */
+.sidebar {
+  width: 280px;
+  height: calc(100vh - 60px);
+  background: linear-gradient(180deg, #0f1419 0%, #1a2332 50%, #0e1b2c 100%);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 20px;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  position: fixed;
+  top: 60px;
+  left: 0;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #3A40DF 50%, transparent 100%);
+}
+
+/* Enhanced Logo */
+.logo-img {
+  height: 90px;
+  object-fit: contain;
+  margin-bottom: 40px;
+  filter: drop-shadow(0 4px 8px rgba(58, 64, 223, 0.2));
+  transition: filter 0.3s ease;
+}
+
+.logo-img:hover {
+  filter: drop-shadow(0 6px 12px rgba(58, 64, 223, 0.3));
+}
+
+/* Modern Menu Styles */
+.menu {
+  list-style: none;
+  padding: 0;
+  flex-grow: 1;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+}
+
+/* Enhanced Menu Items */
+.menu li {
+  margin-bottom: 0;
+  transform: translateX(0);
+  transition: transform 0.2s ease;
+}
+
+.menu li:hover {
+  transform: translateX(4px);
+}
+
+/* Modern Button Styling */
+.menu-button {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #e2e8f0;
+  padding: 12px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.025em;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Enhanced Icons */
+.menu-icon {
+  margin-right: 12px;
+  width: 20px;
+  height: 20px;
+  transition: all 0.3s ease;
+  opacity: 0.8;
+}
+
+/* Sophisticated Hover Effects */
+.menu-button:hover {
+  background: linear-gradient(135deg, rgba(58, 64, 223, 0.2) 0%, rgba(58, 64, 223, 0.1) 100%);
+  border-color: rgba(58, 64, 223, 0.3);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.menu-button:hover .menu-icon {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Active State with Gradient */
+.menu-button.active {
+  background: linear-gradient(135deg, #3A40DF 0%, #2563eb 100%);
+  border-color: #3A40DF;
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(58, 64, 223, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.menu-button.active .menu-icon {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Modern Settings Section */
+.settings {
+  cursor: pointer;
+  padding: 12px 10px;
+  border-radius: 12px;
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #e2e8f0;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.settings:hover {
+  background: linear-gradient(135deg, rgba(58, 64, 223, 0.2) 0%, rgba(58, 64, 223, 0.1) 100%);
+  border-color: rgba(58, 64, 223, 0.3);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* ===============================
+   RESPONSIVE SIDEBAR DESIGN
+   =============================== */
+
+/* Mobile First - Base Styles (320px and up) */
+@media screen and (min-width: 320px) {
+  .sidebar {
+    position: fixed;
+    top: var(--topbar-height);
+    left: -100%;
+    width: 100%;
+    height: calc(100vh - var(--topbar-height));
+    z-index: 999;
+    transition: left 0.3s ease;
+    padding: var(--spacing-lg) var(--spacing-md);
+    overflow-y: auto;
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+  
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    display: none;
+  }
+  
+  .sidebar-overlay.active {
+    display: block;
+  }
+  
+  .logo-img {
+    height: 60px;
+    width: 160px;
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .menu-button {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 0.9rem;
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  .menu-icon {
+    margin-right: var(--spacing-sm);
+    width: 18px;
+    height: 18px;
+  }
+  
+  .settings {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 0.9rem;
+    margin-top: var(--spacing-lg);
+  }
+}
+
+/* Small Mobile (480px and up) */
+@media screen and (min-width: 480px) {
+  .sidebar {
+    padding: var(--spacing-xl) var(--spacing-lg);
+  }
+  
+  .logo-img {
+    height: 70px;
+    width: 180px;
+  }
+  
+  .menu-button {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    font-size: 0.95rem;
+  }
+  
+  .settings {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    font-size: 0.95rem;
+  }
+}
+
+/* Tablet (768px and up) */
+@media screen and (min-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    width: var(--tablet-sidebar-width);
+    padding: var(--spacing-xl) var(--spacing-lg);
+  }
+  
+  .sidebar-overlay {
+    display: none !important;
+  }
+  
+  .logo-img {
+    height: 80px;
+    width: 200px;
+  }
+  
+  .menu-button {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 0.9rem;
+  }
+  
+  .settings {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 0.9rem;
+  }
+}
+
+/* Desktop (1024px and up) */
+@media screen and (min-width: 1024px) {
+  .sidebar {
+    width: var(--sidebar-width);
+    padding: var(--spacing-xl) var(--spacing-lg);
+  }
+  
+  .logo-img {
+    height: 90px;
+    width: 220px;
+    margin-bottom: var(--spacing-xl);
+  }
+  
+  .menu-button {
+    padding: var(--spacing-lg) var(--spacing-lg);
+    font-size: 0.95rem;
+  }
+  
+  .settings {
+    padding: var(--spacing-lg) var(--spacing-lg);
+    font-size: 0.95rem;
+  }
+}
+
+/* Large Desktop (1200px and up) */
+@media screen and (min-width: 1200px) {
+  .logo-img {
+    height: 100px;
+    width: 240px;
+  }
+  
+  .menu-button {
+    font-size: 1rem;
+  }
+  
+  .settings {
+    font-size: 1rem;
+  }
+}
+
+/* Landscape orientation adjustments for mobile */
+@media screen and (orientation: landscape) and (max-height: 600px) {
+  .sidebar {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+  
+  .logo-img {
+    height: 40px;
+    width: 120px;
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .menu-button {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.85rem;
+  }
+  
+  .settings {
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-top: var(--spacing-sm);
+  }
+}
+
+/* Touch-friendly adjustments */
+@media (pointer: coarse) {
+  .menu-button {
+    min-height: 48px;
+  }
+  
+  .settings {
+    min-height: 48px;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
+  
+  .menu li {
+    animation: none;
+  }
+  
+  .menu-button,
+  .settings {
+    transition: none;
+  }
+}
+
+/* Accessibility Enhancements */
+.menu-button:focus,
+.settings:focus {
+  outline: 2px solid rgba(58, 64, 223, 0.6);
+  outline-offset: 2px;
+}
+
+/* Subtle Animation for List Items */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.menu li {
+  animation: slideInLeft 0.3s ease-out forwards;
+}
+
+.menu li:nth-child(2) { animation-delay: 0.1s; }
+.menu li:nth-child(3) { animation-delay: 0.2s; }
+.menu li:nth-child(4) { animation-delay: 0.3s; }
+.menu li:nth-child(5) { animation-delay: 0.4s; }
+.menu li:nth-child(6) { animation-delay: 0.5s; }

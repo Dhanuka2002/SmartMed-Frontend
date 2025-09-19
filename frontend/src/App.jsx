@@ -55,6 +55,7 @@ import AdminDashboard from './components/Admin/AdminDashboard/AdminDashboard';
 import Users from './pages/Users';
 
 // ✅ Hospital Staff
+import HospitalSidebar from './components/Hospital_Staff/HospitalSidebar/HospitalSidebar';
 import HospitalStaff from './components/Hospital_Staff/Hospital_Staff';
 
 // ✅ Intro Page
@@ -72,11 +73,11 @@ function App() {
   const isDoctor = pathname.startsWith("/doctor");
   const isReceptionist = pathname.startsWith("/receptionist");
   const isAdmin = pathname.startsWith("/admin");
+  const isHospitalStaff = pathname.startsWith("/hospital-staff");
   const isRegister = pathname === "/register";
   const isLogin = pathname === "/login";
   const isChangePassword = pathname === "/change-password";
   const isUsers = pathname === "/users";
-  const isHospitalStaff = pathname === "/hospital-staff";
   const isIntro = pathname === "/intro" || pathname === "/";
 
   const isPharmacy = !isStudent && !isDoctor && !isReceptionist && !isAdmin && !isRegister && !isLogin && !isChangePassword && !isHospitalStaff && !isIntro;
@@ -119,6 +120,7 @@ function App() {
     if (isReceptionist) return "Receptionist";
     if (isAdmin) return "Admin";
     if (isPharmacy) return "Pharmacy";
+    if (isHospitalStaff) return "Hospital Staff";
     return "User";
   };
 
@@ -142,8 +144,8 @@ function App() {
     <MedicineInventoryProvider>
       <PrescriptionProvider>
         <div className="app-container">
-        {/* TopBar - Show for all authenticated users except admin, register, login, change password, hospital staff, and intro */}
-        {!isRegister && !isLogin && !isChangePassword && !isHospitalStaff && !isIntro && !isAdmin && (
+        {/* TopBar - Show for all authenticated users except admin, register, login, change password, and intro */}
+        {!isRegister && !isLogin && !isChangePassword && !isIntro && !isAdmin && (
           <TopBar 
             userRole={getUserRole()}
             userName={currentUser?.name || 'User'}
@@ -154,11 +156,12 @@ function App() {
         )}
 
         <div className={isAdmin ? "admin-content-wrapper" : "main-content"}>
-          {/* Sidebars - not shown for admin, register, login, change password, hospital staff, and intro */}
-          {!isRegister && !isLogin && !isChangePassword && !isHospitalStaff && !isIntro && !isAdmin && isStudent && <StudentSidebar />}
-          {!isRegister && !isLogin && !isChangePassword && !isHospitalStaff && !isIntro && !isAdmin && isDoctor && <DoctorSidebar />}
-          {!isRegister && !isLogin && !isChangePassword && !isHospitalStaff && !isIntro && !isAdmin && isReceptionist && <ReceptionistSidebar />}
-          {!isRegister && !isLogin && !isChangePassword && !isHospitalStaff && !isIntro && !isAdmin && isPharmacy && <PharmacySidebar />}
+          {/* Sidebars - not shown for admin, register, login, change password, and intro */}
+          {!isRegister && !isLogin && !isChangePassword && !isIntro && !isAdmin && isStudent && <StudentSidebar />}
+          {!isRegister && !isLogin && !isChangePassword && !isIntro && !isAdmin && isDoctor && <DoctorSidebar />}
+          {!isRegister && !isLogin && !isChangePassword && !isIntro && !isAdmin && isReceptionist && <ReceptionistSidebar />}
+          {!isRegister && !isLogin && !isChangePassword && !isIntro && !isAdmin && isPharmacy && <PharmacySidebar />}
+          {!isRegister && !isLogin && !isChangePassword && !isIntro && !isAdmin && isHospitalStaff && <HospitalSidebar />}
 
           <div className="content-area">
             <Routes>
@@ -320,6 +323,12 @@ function App() {
             <Route path="/hospital-staff" element={
               <ProtectedRoute allowedRoles={['Hospital Staff']}>
                 <HospitalStaff />
+              </ProtectedRoute>
+            } />
+
+              <Route path="/hospital-staff/settings" element={
+              <ProtectedRoute allowedRoles={['Hospital Staff']}>
+                <Settings />
               </ProtectedRoute>
             } />
 
