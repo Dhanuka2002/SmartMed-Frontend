@@ -31,6 +31,27 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      showError("Name is required", "Registration Unsuccessful");
+      return;
+    }
+    if (!formData.email.trim()) {
+      showError("Email is required", "Registration Unsuccessful");
+      return;
+    }
+    // Check for @ symbol in email
+    if (!formData.email.includes("@")) {
+      showError("Invalid Email format", "Registration Unsuccessful");
+      return;
+    }
+    if (!formData.password.trim()) {
+      showError("Password is required", "Registration Unsuccessful");
+      return;
+    }
+    if (!formData.confirmPassword.trim()) {
+      showError("Confirm Password is required", "Registration Unsuccessful");
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
       showError("Passwords do not match!", "Validation Error");
       return;
@@ -122,7 +143,6 @@ const Register = () => {
               placeholder="First Name"
               value={formData.firstName}
               onChange={handleChange}
-              required
             />
           </div>
 
@@ -134,19 +154,17 @@ const Register = () => {
               placeholder="Last Name"
               value={formData.lastName}
               onChange={handleChange}
-              required
             />
           </div>
 
           <div className="input-group">
             <FaEnvelope className="icon" />
             <input
-              type="email"
+              type="text" // <-- change from "email" to "text"
               name="email"
               placeholder="youremail@example.com"
               value={formData.email}
               onChange={handleChange}
-              required
             />
           </div>
 
@@ -158,7 +176,6 @@ const Register = () => {
               placeholder="Password"
               value={formData.password}
               onChange={handleChange}
-              required
             />
           </div>
 
@@ -170,7 +187,6 @@ const Register = () => {
               placeholder="Confirm Password"
               value={formData.confirmPassword}
               onChange={handleChange}
-              required
             />
           </div>
 
