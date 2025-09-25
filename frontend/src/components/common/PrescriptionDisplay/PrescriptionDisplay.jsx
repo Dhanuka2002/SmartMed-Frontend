@@ -2,6 +2,8 @@ import React, { useRef } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import SignatureDisplay from '../SignatureDisplay/SignatureDisplay';
+import AlertMessage from '../AlertMessage';
+import useAlert from '../../../hooks/useAlert';
 import './PrescriptionDisplay.css';
 
 const PrescriptionDisplay = ({ 
@@ -14,6 +16,7 @@ const PrescriptionDisplay = ({
   className = '' 
 }) => {
   const prescriptionRef = useRef();
+  const { alertState, showError, hideAlert } = useAlert();
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -300,7 +303,7 @@ const PrescriptionDisplay = ({
       
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
+      showError('Error generating PDF. Please try again.', 'PDF Generation Failed');
       
       // Restore button
       document.querySelector('.download-btn').innerHTML = originalButtonText;
@@ -310,6 +313,16 @@ const PrescriptionDisplay = ({
 
   return (
     <div className={`prescription-display-overlay ${className}`}>
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
       <div className="prescription-display-container">
         {/* Action Bar - Only visible on screen, not in PDF */}
         <div className="prescription-actions no-print">

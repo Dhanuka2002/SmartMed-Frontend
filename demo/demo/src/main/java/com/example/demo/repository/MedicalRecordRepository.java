@@ -26,4 +26,13 @@ public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, Lo
     );
     
     List<MedicalRecord> findAllByOrderByCreatedAtDesc();
+    
+    // Allergy-related queries
+    List<MedicalRecord> findByHasAllergies(String hasAllergies);
+    
+    List<MedicalRecord> findByHasAllergiesAndCreatedAtBetween(
+        String hasAllergies,
+        java.time.LocalDateTime startDate, 
+        java.time.LocalDateTime endDate
+    );
 }

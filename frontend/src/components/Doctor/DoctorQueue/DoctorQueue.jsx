@@ -2,9 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDoctorQueue, updateQueueEntryStatus } from "../../../services/queueService";
 import { getFullMedicalRecordById } from "../../../services/medicalRecordService";
+import AlertMessage from '../../Common/AlertMessage';
+import useAlert from '../../../hooks/useAlert';
 import "./DoctorQueue.css";
 
 function DoctorQueue() {
+  const { alertState, showSuccess, showError, showWarning, showInfo, hideAlert } = useAlert();
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
   const [queueData, setQueueData] = useState([]);
@@ -58,18 +61,27 @@ function DoctorQueue() {
         
         console.log('✅ Full patient data prepared:', fullPatientData);
         
-        // Navigate to Patients tab
-        navigate('/doctor/patients');
+        // Remove patient from doctor queue by changing stage to 'in-progress'
+        await updateQueueEntryStatus('doctor', patient.queueNo, { 
+          status: 'In Progress', 
+          stage: 'in-progress' 
+        });
+        
+        // Refresh queue to remove patient from UI immediately
+        loadQueueData();
+        
+        // Navigate to Patient tab
+        navigate('/doctor/patient');
         
         // Show success message
-        alert(`✅ Patient ${patient.studentName} (Queue #${patient.queueNo}) loaded successfully! Navigating to Patients tab...`);
+        showSuccess(`Patient ${patient.studentName} (Queue #${patient.queueNo}) loaded successfully! Navigating to Patient tab...`, 'Patient Loaded');
         
       } else {
         throw new Error(result.error || 'Failed to fetch medical record');
       }
     } catch (error) {
       console.error('❌ Error selecting patient:', error);
-      alert(`❌ Failed to load patient details: ${error.message}`);
+      showError(`Failed to load patient details: ${error.message}`, 'Error Loading Patient');
     } finally {
       setLoadingPatient(false);
     }
@@ -81,7 +93,7 @@ function DoctorQueue() {
       loadQueueData();
     } catch (error) {
       console.error('Error updating patient status:', error);
-      alert('Error updating patient status');
+      showError('Error updating patient status', 'Update Error');
     }
   };
 
@@ -278,6 +290,17 @@ function DoctorQueue() {
           </div>
         </div>
       )}
+
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
     </div>
   );
 }

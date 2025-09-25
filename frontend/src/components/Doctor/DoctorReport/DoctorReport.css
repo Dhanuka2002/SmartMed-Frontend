@@ -201,22 +201,24 @@
 }
 
 /* Patient Overview */
+.patient-overview {
+  background: #f8fafc;
+}
+
 .patient-info-grid {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.5rem;
-  visibility: visible !important;
+  margin-top: 1rem;
 }
 
 .info-card {
-  background: #f8fafc !important;
+  background: white;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 1.5rem;
   transition: all 0.2s ease;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .info-card:hover {
@@ -241,6 +243,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.info-row:last-child {
+  border-bottom: none;
 }
 
 .info-row .label {
@@ -721,6 +729,11 @@
   .conditions-grid,
   .vaccination-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .info-card {
+    margin-bottom: 1rem;
   }
   
   .report-header {
@@ -742,5 +755,172 @@
   .assessment-grid,
   .signatures-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Allergies Section Styles */
+.allergies-section {
+  border: 3px solid #dc2626;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fef2f2 0%, #fff5f5 100%);
+  margin: 2rem 0;
+  position: relative;
+}
+
+.allergies-section::before {
+  content: "⚠️ MEDICAL ALERT ⚠️";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #dc2626;
+  color: white;
+  padding: 0.25rem 1rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+
+.allergies-section .section-title {
+  color: #dc2626;
+  border-bottom: 2px solid #dc2626;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.allergies-content {
+  padding: 0.5rem 0;
+}
+
+.allergy-status {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.allergy-status.confirmed {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 2px solid #dc2626;
+}
+
+.allergy-status.none {
+  background: #f0fdf4;
+  color: #166534;
+  border: 2px solid #16a34a;
+}
+
+.allergy-status.unknown {
+  background: #fef3c7;
+  color: #92400e;
+  border: 2px solid #f59e0b;
+}
+
+.allergy-categories h3 {
+  color: #991b1b;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.allergy-category {
+  background: #fecaca;
+  border: 2px solid #ef4444;
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #991b1b;
+}
+
+.category-icon {
+  font-size: 1.2rem;
+}
+
+.allergy-details {
+  margin: 1.5rem 0;
+}
+
+.allergy-details h3 {
+  color: #991b1b;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.details-text {
+  background: white;
+  border: 2px solid #dc2626;
+  border-radius: 8px;
+  padding: 1rem;
+  color: #374151;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.allergy-warning {
+  background: #dc2626;
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 1rem;
+  margin-top: 1.5rem;
+}
+
+.no-allergies-note, .missing-info-note {
+  color: #6b7280;
+  font-style: italic;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+/* Print-specific styles for allergies */
+@media print {
+  .allergies-section {
+    border: 3px solid #000 !important;
+    background: white !important;
+    page-break-inside: avoid;
+  }
+  
+  .allergies-section::before {
+    background: #000 !important;
+    color: white !important;
+  }
+  
+  .allergy-status.confirmed {
+    background: #f3f4f6 !important;
+    color: #000 !important;
+    border: 2px solid #000 !important;
+  }
+  
+  .allergy-category {
+    background: #f3f4f6 !important;
+    border: 1px solid #000 !important;
+    color: #000 !important;
+  }
+  
+  .details-text {
+    border: 1px solid #000 !important;
+    background: white !important;
+  }
+  
+  .allergy-warning {
+    background: #000 !important;
+    color: white !important;
+    border: 2px solid #000 !important;
   }
 }

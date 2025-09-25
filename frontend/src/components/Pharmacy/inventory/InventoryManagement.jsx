@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./InventoryManagement.css";
+import AlertMessage from '../../Common/AlertMessage';
+import useAlert from '../../../hooks/useAlert';
 import { usePrescription } from "../../../contexts/PrescriptionContext";
 import { useMedicineInventory } from "../../../contexts/MedicineInventoryContext";
 
@@ -21,6 +23,8 @@ function InventoryManagement() {
     getExpiredMedicines,
     getNearExpiryMedicines
   } = useMedicineInventory();
+
+  const { alertState, showError, hideAlert } = useAlert();
 
   const [activeTab, setActiveTab] = useState("inventory");
 
@@ -68,7 +72,7 @@ function InventoryManagement() {
     });
 
     if (!canDispense) {
-      alert(`Cannot dispense prescription. Insufficient stock for: ${insufficientMedicines.join(", ")}`);
+      showError(`Cannot dispense prescription. Insufficient stock for: ${insufficientMedicines.join(", ")}`, 'Insufficient Stock');
       return;
     }
 
@@ -146,7 +150,7 @@ function InventoryManagement() {
     e.preventDefault();
     
     if (!formData.name || !formData.quantity || !formData.expiry || !formData.category || !formData.minStock || !formData.dosage || !formData.batchNumber) {
-      alert("Please fill in all fields");
+      showError('Please fill in all fields', 'Form Validation Error');
       return;
     }
 
@@ -184,6 +188,16 @@ function InventoryManagement() {
 
   return (
     <div className="inventory-container">
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
       {/* Navigation Tabs */}
       <div className="tab-navigation">
         <button 

@@ -39,6 +39,8 @@ import React, { useState, useEffect } from "react";
 import { addPrescriptionAndMoveToPharmacy } from "../../../services/queueService";
 import { usePrescription } from "../../../contexts/PrescriptionContext";
 import { useMedicineInventory } from "../../../contexts/MedicineInventoryContext";
+import AlertMessage from '../../Common/AlertMessage';
+import useAlert from '../../../hooks/useAlert';
 import "./DoctorPatient.css";
 import qr from "../../../assets/qr.png";
 import patientAvatar from "../../../assets/student.jpg";
@@ -46,6 +48,7 @@ import Avatar from "../../common/Avatar/Avatar";
 import DigitalSignature from "../../common/DigitalSignature/DigitalSignature";
 
 function DoctorPatient() {
+  const { alertState, showSuccess, showError, showWarning, showInfo, hideAlert } = useAlert();
   const { addPrescription } = usePrescription();
   const { medicines: medicineInventory, searchMedicines, getCategories, dispenseMedicines } = useMedicineInventory();
   const [prescriptionText, setPrescriptionText] = useState("");
@@ -79,20 +82,7 @@ function DoctorPatient() {
         const previousPatient = selectedPatient;
         setSelectedPatient(patient);
         
-        // Show notification when a new patient is selected
-        if (previousPatient && previousPatient.queueNo !== patient.queueNo) {
-          setNotification({
-            type: 'info',
-            message: `New patient selected: ${patient.studentName} (Queue #${patient.queueNo})`
-          });
-          setTimeout(() => setNotification(null), 5000);
-        } else if (!previousPatient) {
-          setNotification({
-            type: 'success',
-            message: `Patient loaded: ${patient.studentName} (Queue #${patient.queueNo})`
-          });
-          setTimeout(() => setNotification(null), 3000);
-        }
+        
         
         // Load medical data if available
         if (patient.medicalData && patient.medicalData.examination) {
@@ -466,18 +456,18 @@ function DoctorPatient() {
 
   const handleSign = async () => {
     if (!selectedPatient) {
-      alert("No patient selected.");
+      showWarning("Please select a patient before signing the prescription.", "No Patient Selected");
       return;
     }
 
     if (!signature) {
       setSignatureError('Digital signature is required before sending to pharmacy.');
-      alert("Please provide your digital signature before sending to pharmacy.");
+      showWarning("Please provide your digital signature before sending to pharmacy.", "Signature Required");
       return;
     }
 
     if (!prescriptionText.trim() && medications.length === 0 && prescriptionItems.length === 0) {
-      alert("Please add prescription details before signing.");
+      showWarning("Please add prescription details before signing.", "No Prescription Details");
       return;
     }
 
@@ -487,7 +477,7 @@ function DoctorPatient() {
     );
     
     if (invalidItems.length > 0) {
-      alert("Please complete all prescription item details before sending to pharmacy.");
+      showWarning("Please complete all prescription item details before sending to pharmacy.", "Incomplete Prescription");
       return;
     }
 
@@ -577,7 +567,7 @@ function DoctorPatient() {
         if (response.status === 409) {
           // Handle duplicate prescription
           const result = await response.json();
-          alert(`⚠️ DUPLICATE PRESCRIPTION DETECTED\n\n${result.message}\n\nThe prescription already exists and patient is in pharmacy queue.`);
+          showWarning(`${result.message}\n\nThe prescription already exists and patient is in pharmacy queue.`, 'Duplicate Prescription Detected');
           
           // Still move to pharmacy queue and clear form
           await addPrescriptionAndMoveToPharmacy(selectedPatient.queueNo, {
@@ -631,7 +621,7 @@ function DoctorPatient() {
           isDatabasePrescription: true
         });
         
-        alert(`Prescription #${result.prescriptionId} sent to pharmacy successfully! Patient ${patientInfo.name} moved to pharmacy queue.`);
+        showSuccess(`Prescription #${result.prescriptionId} sent to pharmacy successfully! Patient ${patientInfo.name} moved to pharmacy queue.`, 'Prescription Sent');
         
         // Clear the form
         setPrescriptionText("");
@@ -703,7 +693,7 @@ function DoctorPatient() {
 
           await addPrescriptionAndMoveToPharmacy(selectedPatient.queueNo, fallbackPrescription);
           
-          alert(`⚠️ Prescription #${prescriptionId} sent to pharmacy (using legacy system - database unavailable). Patient ${patientInfo.name} moved to pharmacy queue.`);
+          showWarning(`Prescription #${prescriptionId} sent to pharmacy (using legacy system - database unavailable). Patient ${patientInfo.name} moved to pharmacy queue.`, 'Prescription Sent (Legacy System)');
           
           // Clear the form
           setPrescriptionText("");
@@ -716,10 +706,10 @@ function DoctorPatient() {
           
         } catch (legacyError) {
           console.error('Legacy system also failed:', legacyError);
-          alert('❌ Error sending prescription to pharmacy. Both database and legacy systems failed. Please try again.');
+          showError('Error sending prescription to pharmacy. Both database and legacy systems failed. Please try again.', 'System Error');
         }
       } else {
-        alert('❌ Error sending prescription to pharmacy. Please try again.');
+        showError('Error sending prescription to pharmacy. Please try again.', 'Prescription Error');
       }
     } finally {
       setIsLoading(false);
@@ -1443,6 +1433,17 @@ function DoctorPatient() {
           )}
         </div>
       </div>
+
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
     </div>
   );
 }

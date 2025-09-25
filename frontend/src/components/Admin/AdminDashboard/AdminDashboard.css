@@ -145,11 +145,33 @@
   font-size: 1rem;
   font-weight: 500;
 }
+.create-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* centers children horizontally */
+  justify-content: center; /* centers vertically within available space */
+  min-height: 60vh; /* adjust as needed */
+  padding: 20px;
+  background-color: #f9f9f9; /* optional */
+  border-radius: 10px; /* optional */
+}
+
+.form-container {
+  width: 100%;
+  max-width: 500px; /* matches your previous form max-width */
+  padding: 25px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
 .create-user-form {
-  max-width: 500px;
   display: grid;
   gap: 20px;
+  width: 100%; /* make form take full container width */
 }
 
 .form-group {
@@ -201,6 +223,7 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
 
 .users-table {
   overflow-x: auto;

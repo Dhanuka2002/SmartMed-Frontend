@@ -1,11 +1,14 @@
 import React, { useState, useRef } from "react";
 import "./StudentEnteringDetails.css";
 import Avatar from "../../common/Avatar/Avatar";
+import AlertMessage from '../../Common/AlertMessage';
+import useAlert from '../../../hooks/useAlert';
 import { autoGenerateQRIfReady } from '../../../services/medicalRecordService';
 
 function StudentEnteringDetails() {
   // Get current user data and auto-populate
   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+  const { alertState, showSuccess, showError, hideAlert } = useAlert();
   
   const [formData, setFormData] = useState({
     // Basic Information - auto-populate from registration
@@ -66,12 +69,12 @@ function StudentEnteringDetails() {
     
     // Vaccinations
     vaccinations: {
-      bcg: "",
-      dpt: "",
-      mramur: "",
-      rubella: "",
-      hepatitisB: "",
-      chickenPox: ""
+      bcg: { taken: "", date: "" },
+      dpt: { taken: "", date: "" },
+      mramur: { taken: "", date: "" },
+      rubella: { taken: "", date: "" },
+      hepatitisB: { taken: "", date: "" },
+      chickenPox: { taken: "", date: "" }
     },
 
     // Certification
@@ -141,12 +144,17 @@ function StudentEnteringDetails() {
     }));
   };
 
-  const handleVaccinationChange = (vaccine, value) => {
+  const handleVaccinationChange = (vaccine, field, value) => {
     setFormData(prev => ({
       ...prev,
       vaccinations: {
         ...prev.vaccinations,
-        [vaccine]: value
+        [vaccine]: {
+          ...prev.vaccinations[vaccine],
+          [field]: value,
+          // Clear date if "No" is selected
+          ...(field === 'taken' && value === 'no' ? { date: '' } : {})
+        }
       }
     }));
   };
@@ -191,7 +199,7 @@ function StudentEnteringDetails() {
           localStorage.setItem(`studentData_${formData.email}`, JSON.stringify(formData));
         }
         
-        alert('Student details saved successfully!');
+        showSuccess('Student details saved successfully!', 'Form Submitted');
         console.log('Saved with ID:', result.studentId);
         
         // Auto-generate QR code if both forms are complete
@@ -200,7 +208,7 @@ function StudentEnteringDetails() {
           try {
             const qrResult = await autoGenerateQRIfReady(emailToCheck);
             if (qrResult.success && !qrResult.alreadyExists) {
-              alert('🎉 Both forms completed! Your medical QR code has been automatically generated. You can view it in the QR Code section.');
+              showSuccess('🎉 Both forms completed! Your medical QR code has been automatically generated. You can view it in the QR Code section.', 'QR Code Generated');
             }
           } catch (error) {
             console.error('Error auto-generating QR code:', error);
@@ -210,16 +218,26 @@ function StudentEnteringDetails() {
         // Trigger refresh event for dashboard
         window.dispatchEvent(new CustomEvent('studentDataUpdated'));
       } else {
-        alert('Error: ' + result.message);
+        showError('Error: ' + result.message, 'Submission Error');
       }
     } catch (error) {
       console.error('Error saving student details:', error);
-      alert('Failed to save student details. Please try again.');
+      showError('Failed to save student details. Please try again.', 'Save Failed');
     }
   };
 
   return (
     <div className="entering-details-container">
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
       <div className="form-header">
         <div className="header-content">
           <h1>Student</h1>
@@ -311,11 +329,16 @@ function StudentEnteringDetails() {
                 required
               >
                 <option value="">Select Academic Division</option>
-                <option value="faculty-of-medicine">Faculty of Medicine</option>
-                <option value="faculty-of-engineering">Faculty of Engineering</option>
-                <option value="faculty-of-science">Faculty of Science</option>
-                <option value="faculty-of-arts">Faculty of Arts</option>
-                <option value="faculty-of-management">Faculty of Management</option>
+                <option value="chemical-engineering-technology">Chemical Engineering Technology</option>
+                <option value="civil-engineering-technology">Civil Engineering Technology</option>
+                <option value="electrical-engineering-technology">Electrical Engineering Technology</option>
+                <option value="electronic-telecommunication-engineering-technology">Electronic & Telecommunication Engineering Technology</option>
+                <option value="information-technology">Information Technology</option>
+                <option value="marine-technology">Marine Technology</option>
+                <option value="mechanical-engineering-technology">Mechanical Engineering Technology</option>
+                <option value="nautical-studies">Nautical Studies</option>
+                <option value="polymer-technology">Polymer Technology</option>
+                <option value="textile-clothing-technology">Textile & Clothing Technology</option>
               </select>
             </div>
           </div>
@@ -701,6 +724,7 @@ function StudentEnteringDetails() {
           <div className="vaccination-table">
             <div className="table-header">
               <div className="header-cell">Vaccinations</div>
+              <div className="header-cell">Taken</div>
               <div className="header-cell">Date</div>
             </div>
             
@@ -717,10 +741,39 @@ function StudentEnteringDetails() {
                   <label>{vaccine.label}</label>
                 </div>
                 <div className="cell">
+                  <div className="radio-group">
+                    <label>
+                      <input
+                        type="radio"
+                        name={`${vaccine.key}_taken`}
+                        value="yes"
+                        checked={formData.vaccinations[vaccine.key].taken === "yes"}
+                        onChange={(e) => handleVaccinationChange(vaccine.key, "taken", e.target.value)}
+                      />
+                      Yes
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name={`${vaccine.key}_taken`}
+                        value="no"
+                        checked={formData.vaccinations[vaccine.key].taken === "no"}
+                        onChange={(e) => handleVaccinationChange(vaccine.key, "taken", e.target.value)}
+                      />
+                      No
+                    </label>
+                  </div>
+                </div>
+                <div className="cell">
                   <input
                     type="date"
-                    value={formData.vaccinations[vaccine.key]}
-                    onChange={(e) => handleVaccinationChange(vaccine.key, e.target.value)}
+                    value={formData.vaccinations[vaccine.key].date}
+                    onChange={(e) => handleVaccinationChange(vaccine.key, "date", e.target.value)}
+                    disabled={formData.vaccinations[vaccine.key].taken !== "yes"}
+                    style={{
+                      opacity: formData.vaccinations[vaccine.key].taken === "yes" ? 1 : 0.5,
+                      cursor: formData.vaccinations[vaccine.key].taken === "yes" ? "pointer" : "not-allowed"
+                    }}
                   />
                 </div>
               </div>
@@ -744,11 +797,11 @@ function StudentEnteringDetails() {
                 />
               </div>
               <div className="signature-field">
-                <label>Signature</label>
+                <label>Student Name</label>
                 <input 
                   type="text" 
                   name="signature"
-                  placeholder="Your signature" 
+                  placeholder="Member Name" 
                   value={formData.signature}
                   onChange={handleInputChange}
                   required 

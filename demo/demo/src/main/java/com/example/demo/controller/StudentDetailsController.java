@@ -205,17 +205,67 @@ public class StudentDetailsController {
             
             StudentDetails studentDetails = existingStudent.get();
             
-            // Update fields (similar logic as save method)
-            studentDetails.setFullName((String) requestData.get("fullName"));
-            studentDetails.setNic((String) requestData.get("nic"));
-            studentDetails.setAcademicDivision((String) requestData.get("academicDivision"));
+            // Update basic fields
+            if (requestData.containsKey("fullName")) {
+                studentDetails.setFullName((String) requestData.get("fullName"));
+            }
+            if (requestData.containsKey("nic")) {
+                studentDetails.setNic((String) requestData.get("nic"));
+            }
+            if (requestData.containsKey("academicDivision")) {
+                studentDetails.setAcademicDivision((String) requestData.get("academicDivision"));
+            }
+            if (requestData.containsKey("email")) {
+                studentDetails.setEmail((String) requestData.get("email"));
+            }
+            
+            // Personal Details
+            if (requestData.containsKey("dateOfBirth")) {
+                String dateOfBirthStr = (String) requestData.get("dateOfBirth");
+                if (dateOfBirthStr != null && !dateOfBirthStr.isEmpty()) {
+                    studentDetails.setDateOfBirth(LocalDate.parse(dateOfBirthStr));
+                }
+            }
+            
+            if (requestData.containsKey("positionOfFamily")) {
+                studentDetails.setPositionOfFamily((String) requestData.get("positionOfFamily"));
+            }
+            if (requestData.containsKey("gender")) {
+                studentDetails.setGender((String) requestData.get("gender"));
+            }
+            if (requestData.containsKey("age")) {
+                Object ageObj = requestData.get("age");
+                if (ageObj != null && !ageObj.toString().isEmpty()) {
+                    studentDetails.setAge(Integer.parseInt(ageObj.toString()));
+                }
+            }
+            
+            // Emergency Contact
+            if (requestData.containsKey("emergencyName")) {
+                studentDetails.setEmergencyName((String) requestData.get("emergencyName"));
+            }
+            if (requestData.containsKey("emergencyTelephone")) {
+                studentDetails.setEmergencyTelephone((String) requestData.get("emergencyTelephone"));
+            }
+            
+            // Update complex JSON objects
+            if (requestData.containsKey("familyHistory") && requestData.get("familyHistory") != null) {
+                studentDetails.setFamilyHistory(objectMapper.writeValueAsString(requestData.get("familyHistory")));
+            }
+            
+            if (requestData.containsKey("medicalHistory") && requestData.get("medicalHistory") != null) {
+                studentDetails.setMedicalHistory(objectMapper.writeValueAsString(requestData.get("medicalHistory")));
+            }
+            
+            // Update vaccinations with new structure
+            if (requestData.containsKey("vaccinations") && requestData.get("vaccinations") != null) {
+                studentDetails.setVaccinations(objectMapper.writeValueAsString(requestData.get("vaccinations")));
+            }
             
             // Profile Image
             if (requestData.containsKey("profileImage")) {
                 studentDetails.setProfileImage((String) requestData.get("profileImage"));
             }
-            
-            // Continue with other fields...
             
             StudentDetails updatedDetails = studentDetailsRepository.save(studentDetails);
             

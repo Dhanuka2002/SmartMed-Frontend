@@ -1,59 +1,119 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AlertMessage from '../../Common/AlertMessage';
+import useAlert from '../../../hooks/useAlert';
+import videoCallService from '../../../services/videoCallService.js';
 import './StudentTelemed.css';
 import telemeddoctor from '../../../assets/telemeddoctor.png';
 
 function StudentTelemed() {
   const [isRequestSent, setIsRequestSent] = useState(false);
   const [isWaitingResponse, setIsWaitingResponse] = useState(false);
+  const [currentRequestId, setCurrentRequestId] = useState(null);
   const navigate = useNavigate();
+  const { alertState, showError, showWarning, showSuccess, hideAlert } = useAlert();
 
-  const sendVideoCallRequest = () => {
+  // Initialize video call service with current user info
+  useEffect(() => {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    videoCallService.init(currentUser);
+
+    // Cleanup polling on component unmount
+    return () => {
+      videoCallService.stopPolling();
+    };
+  }, []);
+
+  const sendVideoCallRequest = async () => {
     setIsRequestSent(true);
     setIsWaitingResponse(true);
-    
-    const notification = {
-      type: 'video_call_request',
-      title: 'Video Conference Request',
-      message: 'A student is requesting a video conference consultation',
-      studentName: 'Student User', // In real app, get from auth context
-      studentId: 'STU001', // In real app, get from auth context
-      status: 'pending'
-    };
 
-    const existingNotifications = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
-    existingNotifications.push(notification);
-    localStorage.setItem('telemed_notifications', JSON.stringify(existingNotifications));
+    // Check if Jitsi API is available before proceeding
+    if (!window.JitsiMeetExternalAPI) {
+      console.error('Jitsi API not available');
+      showError('Video calling system is not ready. Please refresh the page and try again.', 'Video System Error');
+      setIsRequestSent(false);
+      setIsWaitingResponse(false);
+      return;
+    }
 
-    console.log('Video call request sent to doctor');
+    try {
+      console.log('Sending video call request to doctor...');
 
-    const checkForResponse = setInterval(() => {
-      const currentNotifications = JSON.parse(localStorage.getItem('telemed_notifications') || '[]');
-      const myRequest = currentNotifications.find(n => 
-        n.type === 'video_call_request' && 
-        n.studentId === 'STU001' && 
-        n.status === 'accepted'
-      );
+      // Send video call request using the new service
+      const requestResult = await videoCallService.sendVideoCallRequest();
 
-      if (myRequest) {
-        clearInterval(checkForResponse);
-        setIsWaitingResponse(false);
-        navigate('/student/telemed-call');
+      if (requestResult.success) {
+        setCurrentRequestId(requestResult.requestId);
+
+        if (requestResult.isOffline) {
+          showWarning('Request sent in offline mode. Doctor will see it when back online.', 'Offline Mode');
+        } else {
+          showSuccess('Video call request sent to doctor. Waiting for response...', 'Request Sent');
+        }
+
+        // Store room name for later use
+        localStorage.setItem('smartmed_room_name', requestResult.roomName);
+
+        console.log('Waiting for doctor response...');
+
+        // Wait for doctor response (30 seconds timeout)
+        const responseResult = await videoCallService.waitForDoctorResponse(requestResult.requestId, 30000);
+
+        if (responseResult.success && responseResult.status === 'accepted') {
+          setIsWaitingResponse(false);
+
+          if (responseResult.isOffline) {
+            showSuccess('Doctor accepted the call! Starting video conference...', 'Call Accepted');
+          } else {
+            showSuccess(`Dr. ${responseResult.doctorInfo?.name || 'Doctor'} accepted the call! Starting video conference...`, 'Call Accepted');
+          }
+
+          // Store room name and navigate to video call
+          localStorage.setItem('smartmed_room_name', responseResult.roomName);
+
+          setTimeout(() => {
+            navigate('/student/telemed-call');
+          }, 1500);
+
+        } else if (responseResult.status === 'declined') {
+          setIsWaitingResponse(false);
+          setIsRequestSent(false);
+          setCurrentRequestId(null);
+          showWarning('Doctor declined the video call request. Please try again later.', 'Call Declined');
+
+        } else if (responseResult.status === 'timeout') {
+          setIsWaitingResponse(false);
+          setIsRequestSent(false);
+          setCurrentRequestId(null);
+          showWarning('No response from doctor within 30 seconds. Please try again later.', 'No Response');
+        }
+
+      } else {
+        throw new Error(requestResult.error || 'Failed to send video call request');
       }
-    }, 1000);
 
-    setTimeout(() => {
-      clearInterval(checkForResponse);
-      if (isWaitingResponse) {
-        setIsWaitingResponse(false);
-        alert('No response from doctor. Please try again later.');
-        setIsRequestSent(false);
-      }
-    }, 30000);
+    } catch (error) {
+      console.error('Error sending video call request:', error);
+      setIsRequestSent(false);
+      setIsWaitingResponse(false);
+      setCurrentRequestId(null);
+      showError('Error sending video call request. Please check your connection and try again.', 'Request Error');
+    }
   };
 
   return (
     <div className="telemed-container">
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
       <div className="telemed-content">
         {/* Text & Action */}
         <div className="telemed-left">

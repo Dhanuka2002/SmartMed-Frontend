@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Register.css";
-
-import { FaUser, FaEnvelope, FaLock, FaUserTag, FaCheckCircle } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaLock, FaUserTag } from "react-icons/fa";
+import AlertMessage from "../Common/AlertMessage";
+import useAlert from "../../hooks/useAlert";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -14,7 +15,7 @@ const Register = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const { alertState, showSuccess, showError, hideAlert } = useAlert();
   const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
 
@@ -30,8 +31,29 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      showError("Name is required", "Registration Unsuccessful");
+      return;
+    }
+    if (!formData.email.trim()) {
+      showError("Email is required", "Registration Unsuccessful");
+      return;
+    }
+    // Check for @ symbol in email
+    if (!formData.email.includes("@")) {
+      showError("Invalid Email format", "Registration Unsuccessful");
+      return;
+    }
+    if (!formData.password.trim()) {
+      showError("Password is required", "Registration Unsuccessful");
+      return;
+    }
+    if (!formData.confirmPassword.trim()) {
+      showError("Confirm Password is required", "Registration Unsuccessful");
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      showError("Passwords do not match!", "Validation Error");
       return;
     }
 
@@ -54,7 +76,7 @@ const Register = () => {
       const result = await response.json();
 
       if (!response.ok) {
-        alert(result.message || "Registration failed");
+        showError(result.message || "Registration failed", "Registration Failed");
         setIsSubmitting(false);
         return;
       }
@@ -67,17 +89,22 @@ const Register = () => {
       };
       
       setUserData(userInfo);
-      setShowSuccess(true);
-
+      
       // Show success message for 4 seconds then navigate to login
+      showSuccess(
+        `Welcome to SmartMed, ${userInfo.name}! Your account has been created successfully. Redirecting to login page...`, 
+        "Registration Successful!", 
+        userInfo.name, 
+        4000
+      );
+
       setTimeout(() => {
-        setShowSuccess(false);
         navigate("/login");
       }, 4000);
 
     } catch (error) {
       console.error("Registration error:", error);
-      alert("Error occurred during registration!");
+      showError("An unexpected error occurred during registration. Please try again.", "Registration Error");
     } finally {
       setIsSubmitting(false);
     }
@@ -85,27 +112,17 @@ const Register = () => {
 
   return (
     <div className="register-wrapper">
-      {/* Beautiful Success Message Overlay */}
-      {showSuccess && (
-        <div className="success-overlay">
-          <div className="success-message">
-            <div className="success-icon-container">
-              <FaCheckCircle className="success-icon" />
-            </div>
-            <h2 className="success-title">Registration Successful!</h2>
-            <p className="success-subtitle">Welcome to SmartMed, {userData?.name}!</p>
-            <p className="success-info">Your account has been created successfully.</p>
-            <div className="success-loading">
-              <div className="loading-dots">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <p>Redirecting to login page...</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Alert Message */}
+      <AlertMessage
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+        show={alertState.show}
+        onClose={hideAlert}
+        autoClose={alertState.autoClose}
+        duration={alertState.duration}
+        userName={alertState.userName}
+      />
 
       <div className="register-card">
         <div className="register-header">
@@ -116,9 +133,7 @@ const Register = () => {
 
         <form className="register-form" onSubmit={handleSubmit}>
           <h2>Student Registration</h2>
-          <p style={{color: '#666', fontSize: '14px', marginBottom: '20px', textAlign: 'center'}}>
-            Only students can register here. Other roles are managed by admin.
-          </p>
+         
 
           <div className="input-group">
             <FaUser className="icon" />
@@ -128,7 +143,6 @@ const Register = () => {
               placeholder="First Name"
               value={formData.firstName}
               onChange={handleChange}
-              required
             />
           </div>
 
@@ -140,19 +154,17 @@ const Register = () => {
               placeholder="Last Name"
               value={formData.lastName}
               onChange={handleChange}
-              required
             />
           </div>
 
           <div className="input-group">
             <FaEnvelope className="icon" />
             <input
-              type="email"
+              type="text" // <-- change from "email" to "text"
               name="email"
               placeholder="youremail@example.com"
               value={formData.email}
               onChange={handleChange}
-              required
             />
           </div>
 
@@ -164,7 +176,6 @@ const Register = () => {
               placeholder="Password"
               value={formData.password}
               onChange={handleChange}
-              required
             />
           </div>
 
@@ -176,7 +187,6 @@ const Register = () => {
               placeholder="Confirm Password"
               value={formData.confirmPassword}
               onChange={handleChange}
-              required
             />
           </div>
 

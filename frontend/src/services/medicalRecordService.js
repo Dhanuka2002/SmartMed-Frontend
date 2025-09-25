@@ -134,6 +134,13 @@ export const mergeMedicalData = (studentData, hospitalData) => {
         }
       },
       
+      // Allergies
+      allergies: {
+        hasAllergies: hospitalData.hasAllergies,
+        categories: hospitalData.allergies,
+        details: hospitalData.allergyDetails
+      },
+
       // Medical Assessment
       assessment: {
         specialistReferral: hospitalData.specialistReferral,
@@ -145,9 +152,7 @@ export const mergeMedicalData = (studentData, hospitalData) => {
       // Certification
       certification: {
         date1: hospitalData.date1,
-        date2: hospitalData.date2,
-        medicalOfficerSignature: hospitalData.medicalOfficerSignature,
-        itumMedicalOfficerSignature: hospitalData.itumMedicalOfficerSignature
+        medicalOfficerSignature: hospitalData.medicalOfficerSignature
       }
     }
   };
@@ -581,6 +586,23 @@ const createEnhancedMockRecord = (recordId) => {
         }
       },
       
+      allergies: {
+        hasAllergies: numericSuffix % 4 === 0 ? "yes" : "no",
+        categories: numericSuffix % 4 === 0 ? {
+          "Food Allergies": numericSuffix % 2 === 0,
+          "Drug/Medication Allergies": numericSuffix % 3 === 0,
+          "Environmental Allergies": numericSuffix % 5 === 0,
+          "Seasonal Allergies": numericSuffix % 7 === 0
+        } : {},
+        details: numericSuffix % 4 === 0 ? [
+          "Mild reaction to shellfish causing hives and swelling. Patient advised to avoid seafood and carry antihistamine.",
+          "Penicillin allergy with history of rash and breathing difficulty. Alternative antibiotics must be used.",
+          "Seasonal allergic rhinitis with symptoms during spring pollen season. Managed with antihistamines.",
+          "Latex sensitivity causing contact dermatitis. Patient uses nitrile gloves instead of latex.",
+          "Tree nut allergy with potential for anaphylaxis. EpiPen prescribed and dietary restrictions advised."
+        ][numericSuffix % 5] : ""
+      },
+      
       assessment: {
         specialistReferral: numericSuffix % 12 === 0 ? "yes" : "no",
         medicalCondition: "healthy",
@@ -592,9 +614,7 @@ const createEnhancedMockRecord = (recordId) => {
       
       certification: {
         date1: new Date().toISOString(),
-        date2: new Date().toISOString(),
-        medicalOfficerSignature: "Dr. Sarah Johnson, MBBS",
-        itumMedicalOfficerSignature: "Dr. Michael Williams, MBBS, MD"
+        medicalOfficerSignature: "Dr. Sarah Johnson, MBBS"
       }
     }
   };
