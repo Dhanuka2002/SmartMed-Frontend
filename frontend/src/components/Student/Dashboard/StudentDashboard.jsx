@@ -153,7 +153,7 @@ function Dashboard() {
       <header className="dashboard-header">
         <div className="header-content">
           <div className="header-left">
-            <h1 className="dashboard-title">Student Dashbo</h1>
+            <h1 className="dashboard-title">Student Dashboard</h1>
             <p className="dashboard-subtitle">Welcome back to your health portal</p>
           </div>
           <div className="header-right">
