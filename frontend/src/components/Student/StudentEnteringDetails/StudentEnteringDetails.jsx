@@ -314,12 +314,7 @@ function StudentEnteringDetails() {
     if (!formData.emergencyAddress.trim()) errors.emergencyAddress = "Emergency contact address is required";
     if (!formData.emergencyRelationship) errors.emergencyRelationship = "Emergency contact relationship is required";
 
-    // Family Medical History - Mandatory fields
-    const familyMembers = ["father", "mother", "brothers", "sisters", "others"];
-    familyMembers.forEach(member => {
-      if (!formData.familyHistory[member].age) errors[`familyHistory_${member}_age`] = `${member.charAt(0).toUpperCase() + member.slice(1)} age is required`;
-      if (!formData.familyHistory[member].aliveState) errors[`familyHistory_${member}_aliveState`] = `${member.charAt(0).toUpperCase() + member.slice(1)} alive state is required`;
-    });
+    // Family Medical History - Optional fields (no validation required)
 
     // Medical History - Mandatory fields (all conditions must be answered)
     const medicalConditions = [

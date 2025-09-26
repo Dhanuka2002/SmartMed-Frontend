@@ -108,7 +108,7 @@
 .status-dot {
   width: 8px;
   height: 8px;
-  background: #10b981;
+  background: #10b981 !important;
   border-radius: 50%;
   animation: pulse 2s infinite;
 }
@@ -124,12 +124,10 @@
 .avatar-placeholder,
 .avatar-na,
 .avatar-loading {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  box-shadow: var(--shadow-lg);
-  transition: var(--transition);
+  width: 84px;
+  height: 84px;
+  border-radius: 50%
+  
 }
 
 .dashboard-avatar-image {
@@ -582,7 +580,7 @@
     width: 48px;
     height: 48px;
   }
-  
+
   .avatar-initials,
   .na-text {
     font-size: 1rem;
