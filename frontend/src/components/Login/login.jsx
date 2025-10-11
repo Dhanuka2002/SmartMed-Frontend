@@ -5,6 +5,7 @@ import { FaEnvelope, FaLock } from "react-icons/fa";
 import AlertMessage from "../Common/AlertMessage";
 import useAlert from "../../hooks/useAlert";
 import authService from "../../services/authService.js";
+import { FaStethoscope } from "react-icons/fa";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -67,13 +68,12 @@ const Login = () => {
         duration={alertState.duration}
         userName={alertState.userName}
       />
-
-      <div className="login-card">
-        <div className="login-header">
-          <h1>
-            Smart<span>Med</span>
-          </h1>
-        </div>
+<div className="login-card">
+  <div className="login-header">
+    <h1>
+      SmartMed <FaStethoscope className="stethoscope-icon" />
+    </h1>
+  </div>
 
         <form className="login-form" onSubmit={handleSubmit}>
           <h2>Sign In</h2>
