@@ -24,7 +24,7 @@ function InventoryManagement() {
     getNearExpiryMedicines
   } = useMedicineInventory();
 
-  const { alertState, showError, hideAlert } = useAlert();
+  const { alertState, showError, showSuccess, hideAlert } = useAlert();
 
   const [activeTab, setActiveTab] = useState("inventory");
 
@@ -79,6 +79,9 @@ function InventoryManagement() {
     // Use the context function to update medicine quantities
     dispenseMedicines(prescription.medicines);
     contextDispensePrescription(prescriptionId);
+
+    // Show success message
+    showSuccess(`Prescription #${prescriptionId} has been successfully dispensed for ${prescription.patientName}!`, 'Prescription Dispensed');
   };
 
   const getStatusClass = (status) => {
@@ -98,6 +101,12 @@ function InventoryManagement() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    // Prevent negative values for quantity and minStock fields
+    if ((name === 'quantity' || name === 'minStock') && value < 0) {
+      return; // Don't update the state if the value is negative
+    }
+
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -148,18 +157,32 @@ function InventoryManagement() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.quantity || !formData.expiry || !formData.category || !formData.minStock || !formData.dosage || !formData.batchNumber) {
       showError('Please fill in all fields', 'Form Validation Error');
       return;
     }
 
+    // Validate quantity is not negative and is a valid number
+    const quantity = parseInt(formData.quantity);
+    if (isNaN(quantity) || quantity < 0) {
+      showError('Quantity cannot be negative. Medicine not added.', 'Validation Error');
+      return;
+    }
+
+    // Validate minimum stock level is not negative and is a valid number
+    const minStock = parseInt(formData.minStock);
+    if (isNaN(minStock) || minStock < 0) {
+      showError('Minimum Stock Level cannot be negative. Medicine not added.', 'Validation Error');
+      return;
+    }
+
     const medicineData = {
       name: formData.name,
-      quantity: parseInt(formData.quantity),
+      quantity: quantity,
       expiry: formData.expiry,
       category: formData.category,
-      minStock: parseInt(formData.minStock),
+      minStock: minStock,
       dosage: formData.dosage,
       batchNumber: formData.batchNumber,
     };
@@ -167,17 +190,24 @@ function InventoryManagement() {
     if (editingMedicine) {
       // Edit existing medicine using context
       updateMedicine(editingMedicine.id, medicineData);
+      showSuccess(`${medicineData.name} has been successfully updated!`, 'Medicine Updated');
     } else {
       // Add new medicine using context
       addMedicine(medicineData);
+      showSuccess(`${medicineData.name} has been successfully added to inventory!`, 'Medicine Added');
     }
 
     closeModal();
   };
 
   const handleDeleteMedicine = (id) => {
+    // Find the medicine name before deletion for the success message
+    const medicineToDelete = medicines.find(med => med.id === id);
+    const medicineName = medicineToDelete ? medicineToDelete.name : 'Medicine';
+
     if (window.confirm("Are you sure you want to delete this medicine?")) {
       deleteMedicine(id);
+      showSuccess(`${medicineName} has been successfully deleted from inventory!`, 'Medicine Deleted');
     }
   };
 

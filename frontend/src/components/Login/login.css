@@ -223,6 +223,13 @@
   margin: 0;
 }
 
+.stethoscope-icon {
+  color: #2936eb; /* green tone for healthcare theme */
+  margin: 0 8px;
+  vertical-align: middle;
+}
+
+
 /* Animations */
 @keyframes fadeIn {
   from {
