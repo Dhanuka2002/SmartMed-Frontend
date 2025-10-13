@@ -48,6 +48,16 @@ const Register = () => {
       showError("Password is required", "Registration Unsuccessful");
       return;
     }
+    // Strong password validation
+    const password = formData.password;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      showError(
+        "Password must be at least 8 characters and include uppercase, lowercase, a number, and a symbol.",
+        "Registration Unsuccessful"
+      );
+      return;
+    }
     if (!formData.confirmPassword.trim()) {
       showError("Confirm Password is required", "Registration Unsuccessful");
       return;
