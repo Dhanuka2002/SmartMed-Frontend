@@ -170,7 +170,7 @@ const Register = () => {
           <div className="input-group">
             <FaEnvelope className="icon" />
             <input
-              type="text" // <-- change from "email" to "text"
+              type="email" // <-- change from "email" to "text"
               name="email"
               placeholder="youremail@example.com"
               value={formData.email}

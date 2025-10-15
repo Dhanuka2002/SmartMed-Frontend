@@ -305,20 +305,20 @@
   border-right: none;
 }
 
-.table-body {
+.tables-body {
   max-height: 600px;
   overflow-y: auto;
 }
 
-.table-row {
+.tables-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 2fr;
+  grid-template-columns: 2fr 1fr 2fr;
   border-bottom: 1px solid var(--gray-200);
   transition: all 0.2s ease;
   background: white;
 }
 
-.table-row:hover {
+.tables-row:hover {
   background: var(--gray-50);
   transform: translateX(2px);
   box-shadow: 2px 0 8px rgba(59, 130, 246, 0.15);
