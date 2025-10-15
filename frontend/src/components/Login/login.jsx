@@ -5,6 +5,8 @@ import { FaEnvelope, FaLock } from "react-icons/fa";
 import AlertMessage from "../Common/AlertMessage";
 import useAlert from "../../hooks/useAlert";
 import authService from "../../services/authService.js";
+import logo from "../../assets/smartmed_logo.png";  
+
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -13,6 +15,7 @@ const Login = () => {
   });
   const { alertState, showSuccess, showError, hideAlert } = useAlert();
   const [userData, setUserData] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false); // New state for tracking submission
 
   const navigate = useNavigate();
 
@@ -24,8 +27,12 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+
+    // All validation checks removed
+
+    setIsSubmitting(true); // Set submitting to true on form submission
 
     try {
       const result = await authService.login(formData);
@@ -50,7 +57,9 @@ const Login = () => {
       }
     } catch (error) {
       console.error(error);
-      showError("An unexpected error occurred. Please try again.", "Connection Error");
+      showError("Invalid email or password", "Login Failed");
+    } finally {
+      setIsSubmitting(false); // Reset submitting state
     }
   };
 
@@ -67,15 +76,15 @@ const Login = () => {
         duration={alertState.duration}
         userName={alertState.userName}
       />
+<div className="login-card">
+      <div className="login-header">
+    <img src={logo} alt="SmartMed Logo" className="logo-img" />
+    <h1>
+      SmartMed 
+    </h1>
+  </div>
 
-      <div className="login-card">
-        <div className="login-header">
-          <h1>
-            Smart<span>Med</span>
-          </h1>
-        </div>
-
-        <form className="login-form" onSubmit={handleSubmit}>
+        <form className="login-form" onSubmit={handleLogin}>
           <h2>Sign In</h2>
 
           <div className="input-group">
@@ -83,10 +92,9 @@ const Login = () => {
             <input
               type="email"
               name="email"
-              placeholder="E-mail"
+              placeholder="Email"
               value={formData.email}
               onChange={handleChange}
-              required
             />
           </div>
 
@@ -98,12 +106,11 @@ const Login = () => {
               placeholder="Password"
               value={formData.password}
               onChange={handleChange}
-              required
             />
           </div>
 
-          <button type="submit" className="login-btn">
-            Sign In
+          <button type="submit" className="login-btn" disabled={isSubmitting}>
+            {isSubmitting ? "Signing In..." : "Sign In"}
           </button>
           <p className="register-link">
             Don't have an account? <a href="/register">Register</a>

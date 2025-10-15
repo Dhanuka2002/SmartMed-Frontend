@@ -349,13 +349,12 @@ function PrescriptionQueue() {
             <div className="table-header">
               <div className="header-cell student-col">Student Name</div>
               <div className="header-cell id-col">Student ID</div>
-              <div className="header-cell status-col">Status</div>
               <div className="header-cell action-col">Action</div>
             </div>
             
-            <div className="table-body">
+            <div className="tables-body">
               {filteredPrescriptions.map((prescription) => (
-                <div className="table-row" key={prescription.queueNo}>
+                <div className="tables-row" key={prescription.queueNo}>
                   <div className="table-cell student-col">
                     <div className="student-info">
                       <FiUser size={16} className="student-icon" />
@@ -371,11 +370,7 @@ function PrescriptionQueue() {
                   <div className="table-cell id-col">
                     <span className="student-id">{prescription.studentId}</span>
                   </div>
-                  <div className="table-cell status-col">
-                    <div className={`status-badge ${getStatusClass(prescription.pharmacyStatus || 'Pending')}`}>
-                      {prescription.pharmacyStatus || 'Pending'}
-                    </div>
-                  </div>
+                 
                   <div className="table-cell action-col">
                     <div className="action-buttons">
                       <button 

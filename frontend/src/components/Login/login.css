@@ -6,7 +6,7 @@
   bottom: 0;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../../assets/bg3.jpg');  
+  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../../assets/bg1.jpeg');  
   background-size: cover;
   background-position: center;
   display: flex;
@@ -17,7 +17,12 @@
   z-index: 9999;
   overflow: auto;
 }
-
+.logo-img {
+  width: 120px;          /* adjust size as needed */
+  height: auto;
+  display: block;
+  margin: 0 auto 15px;   /* center it and add spacing below */
+}
 .login-card {
   background: #ffffff;
   width: 100%;
@@ -222,6 +227,13 @@
   font-size: 0.9rem;
   margin: 0;
 }
+
+.stethoscope-icon {
+  color: #2936eb; /* green tone for healthcare theme */
+  margin: 0 8px;
+  vertical-align: middle;
+}
+
 
 /* Animations */
 @keyframes fadeIn {

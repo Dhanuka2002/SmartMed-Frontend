@@ -48,6 +48,56 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
 }
 
+/* Validation Error Styles */
+.entering-details-container .error {
+  border: 2px solid #dc3545 !important;
+  background-color: #fff5f5 !important;
+}
+
+.entering-details-container .error:focus {
+  outline: none !important;
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.entering-details-container .error-message {
+  display: block !important;
+  color: #dc3545 !important;
+  font-size: 0.875rem !important;
+  margin-top: 0.25rem !important;
+  font-weight: 500 !important;
+}
+
+.entering-details-container .success-message {
+  display: block !important;
+  color: #155724 !important;
+  background-color: #d4edda !important;
+  border-left: 1px solid #c3e6cb !important;
+  border-right: 1px solid #c3e6cb !important;
+  border-bottom: 1px solid #c3e6cb !important;
+  border-radius: 0 0 6px 6px !important;
+  padding: 0.5rem 0.75rem !important;
+  margin-top: 0.5rem !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.15) !important;
+}
+
+.entering-details-container .mandatory-note {
+  text-align: center !important;
+  color: #6c757d !important;
+  font-size: 0.9rem !important;
+  margin-top: 1rem !important;
+  font-style: italic !important;
+}
+
+.entering-details-container .submit-btn:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  background-color: #6c757d !important;
+}
+
 .entering-details-container .header-content h2 {
   font-size: 1.5rem !important;
   font-weight: 400 !important;

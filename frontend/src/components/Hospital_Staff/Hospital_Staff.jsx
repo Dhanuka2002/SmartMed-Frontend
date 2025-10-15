@@ -17,9 +17,7 @@ const SignaturePad = ({ onSignatureChange, label, clearSignal, width = 300, heig
       ctx.lineWidth = 2;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      // Set white background
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+   
     }
   }, []);
 
@@ -380,7 +378,7 @@ const Hospital_Staff = () => {
   };
 
   return (
-    <div className="hospital-container">
+    <div className="hospital-containerr">
       <AlertMessage
         type={alertState.type}
         title={alertState.title}

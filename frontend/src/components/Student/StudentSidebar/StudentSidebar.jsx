@@ -3,16 +3,17 @@ import { NavLink, useNavigate } from "react-router-dom";
 import "./StudentSidebar.css";
 
 // Icons
-import { 
-  FiSettings, 
-  FiHome, 
-  FiClock, 
-  FiFileText, 
-  FiBarChart2, 
-  FiLogOut, 
+import {
+  FiSettings,
+  FiHome,
+  FiClock,
+  FiFileText,
+  FiBarChart2,
+  FiLogOut,
   FiVideo,
   FiEdit3,
-  FiActivity
+  FiActivity,
+  FiMessageCircle
 } from "react-icons/fi";
 
 // ✅ Correct import path (if logo is in src/assets)
@@ -71,7 +72,7 @@ function Sidebar() {
           </NavLink>
         </li>
         <li>
-          <NavLink 
+          <NavLink
             to="/student/entering-details"
             className={({ isActive }) => isActive ? "menu-button active" : "menu-button"}
           >
@@ -80,7 +81,16 @@ function Sidebar() {
           </NavLink>
         </li>
         <li>
-          <NavLink 
+          <NavLink
+            to="/student/chatbot"
+            className={({ isActive }) => isActive ? "menu-button active" : "menu-button"}
+          >
+            <FiMessageCircle size={18} className="menu-icon" />
+            ChatBot
+          </NavLink>
+        </li>
+        <li>
+          <NavLink
             to="/student/settings"
             className={({ isActive }) => isActive ? "menu-button active" : "menu-button"}
           >

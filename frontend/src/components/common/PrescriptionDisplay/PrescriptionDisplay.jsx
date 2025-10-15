@@ -394,12 +394,12 @@ const PrescriptionDisplay = ({
                 </svg>
               </div>
               <div className="clinic-info">
-                <h1>SmartMed Clinic</h1>
+                <h1>SmartMed</h1>
                 <p>Digital Healthcare Solutions</p>
                 <div className="clinic-details">
-                  <span>📍 Medical Campus, University Drive</span>
+                  <span>📍 Institute of Technology University of Moratuwa</span>
                   <span>📞 +1 (555) 123-4567</span>
-                  <span>📧 info@smartmedclinic.com</span>
+                  <span>📧 info@smartmed.com</span>
                 </div>
               </div>
             </div>
@@ -457,11 +457,9 @@ const PrescriptionDisplay = ({
             </div>
             <div className="doctor-details">
               <div className="doctor-name">
-                <span className="doctor-title">Dr.</span>
-                <span className="doctor-value">{prescription.prescription.doctorName}</span>
+                <span className="doctor-title">Dr.Sugath Dhanapala</span>
               </div>
               <div className="doctor-info">
-                <span>Medical License: MD-2024-001</span>
                 <span>Specialization: General Medicine</span>
               </div>
             </div>
