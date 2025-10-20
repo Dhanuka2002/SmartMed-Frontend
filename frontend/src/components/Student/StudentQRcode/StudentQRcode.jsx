@@ -20,6 +20,8 @@ function StudentQRCode() {
   const [formsStatus, setFormsStatus] = useState({ hasStudentData: false, hasHospitalData: false, bothComplete: false });
   const [allergiesData, setAllergiesData] = useState(null);
   const [loadingAllergies, setLoadingAllergies] = useState(false);
+  const [profileImage, setProfileImage] = useState(null);
+  const [loadingProfileImage, setLoadingProfileImage] = useState(false);
   const { alertState, showSuccess, showInfo, hideAlert } = useAlert();
 
   useEffect(() => {
@@ -74,6 +76,11 @@ function StudentQRCode() {
           setFormsStatus(status);
         }
       }
+
+      // Fetch profile image
+      if (currentUser) {
+        fetchProfileImageFromBackend(currentUser);
+      }
     };
 
     loadUserDataAndQR();
@@ -103,6 +110,44 @@ function StudentQRCode() {
       window.removeEventListener('qrCodeGenerated', handleQRGenerated);
     };
   }, []);
+
+  // Fetch profile image from backend
+  const fetchProfileImageFromBackend = async (user) => {
+    setLoadingProfileImage(true);
+    try {
+      // Clear any cached profile image first
+      setProfileImage(null);
+
+      // Strategy 1: Try to find by login email
+      let response = await fetch(`http://localhost:8081/api/student-details/profile-image/email/${encodeURIComponent(user.email)}`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.status === 'success' && result.profileImage) {
+          setProfileImage(result.profileImage);
+          return;
+        }
+      }
+
+      // Strategy 2: Try to find by name matching
+      const nameResponse = await fetch(`http://localhost:8081/api/student-details/search/${encodeURIComponent(user.name)}`);
+      if (nameResponse.ok) {
+        const nameResult = await nameResponse.json();
+        if (nameResult && nameResult.length > 0) {
+          // Find student with profile image
+          const studentWithImage = nameResult.find(student => student.profileImage);
+          if (studentWithImage && studentWithImage.profileImage) {
+            setProfileImage(studentWithImage.profileImage);
+            return;
+          }
+        }
+      }
+
+    } catch (error) {
+      console.error('Error fetching profile image:', error);
+    } finally {
+      setLoadingProfileImage(false);
+    }
+  };
 
   // Fetch allergies data from hospital form data
   const fetchAllergiesData = async (email) => {
@@ -240,9 +285,21 @@ function StudentQRCode() {
         {/* Header */}
         <div className="qr-header">
           <div className="qr-avatar">
-            <svg className="user-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 4V6C15 7.66 13.66 9 12 9S9 7.66 9 6V4L3 7V9H21ZM12 11C14.21 11 16 12.79 16 15V16L15 17V22H9V17L8 16V15C8 12.79 9.79 11 12 11Z"/>
-            </svg>
+            {loadingProfileImage ? (
+              <div className="avatar-loading">
+                <span>...</span>
+              </div>
+            ) : profileImage ? (
+              <img
+                src={profileImage}
+                alt={studentName}
+                className="profile-image"
+              />
+            ) : (
+              <svg className="user-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 4V6C15 7.66 13.66 9 12 9S9 7.66 9 6V4L3 7V9H21ZM12 11C14.21 11 16 12.79 16 15V16L15 17V22H9V17L8 16V15C8 12.79 9.79 11 12 11Z"/>
+              </svg>
+            )}
           </div>
           <h1 className="qr-greeting">Hello, {studentName}!</h1>
           <p className="qr-student-id">Email: {studentEmail}</p>
@@ -250,206 +307,177 @@ function StudentQRCode() {
 
         {/* QR Code Section */}
         <div className="qr-content">
-          <div className="qr-section-header">
-            <svg className="qr-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3,11H5V13H3V11M11,5H13V9H11V5M9,11H13V15H9V11M15,11H17V13H15V11M19,5H21V9H19V5M5,5H9V9H5V5M3,19H5V21H3V19M5,19H9V21H5V19M19,19H21V21H19V19M15,19H17V21H15V19M17,15H19V17H17V15M15,13H17V15H15V13M15,5H17V7H15V5M13,19H15V21H13V19M15,7H17V9H15V7M7,19H9V21H7V19M13,7H15V9H13V7M13,3H15V5H13V3M3,9H5V11H3V9M7,3H9V5H7V3M21,11H23V13H21V11M21,9H23V11H21V9M21,13H23V15H21V13M3,7H5V9H3V7M21,3H23V5H21V3M21,5H23V7H21V5M19,3H21V5H19V3M17,3H19V5H17V3M3,3H5V5H3V3M3,5H5V7H3V5M5,3H7V5H5V3M9,3H11V5H9V3M11,3H13V5H11V3"/>
-            </svg>
-            <span className="qr-section-title">
-              {qrCodeData ? "Your Medical QR Code" : "No Medical QR Code Available"}
-            </span>
-          </div>
-
-          <p className="qr-description">
-            {qrCodeData
-              ? "Scan this code to access your complete medical record."
-              : "Complete your medical forms to generate your QR code."}
-          </p>
-          
-          {/* Show form completion status */}
-          {studentEmail && (
-            <div className="form-status" style={{
-              background: formsStatus.bothComplete ? '#d4edda' : '#fff3cd',
-              border: `1px solid ${formsStatus.bothComplete ? '#c3e6cb' : '#ffeaa7'}`,
-              borderRadius: '8px',
-              padding: '1rem',
-              marginBottom: '1rem'
-            }}>
-              <h4 style={{margin: '0 0 0.5rem 0', color: '#495057'}}>
-                Form Completion Status: 
-                {formsStatus.bothComplete ? (
-                  <span style={{color: '#155724', marginLeft: '0.5rem'}}>✅ Complete</span>
-                ) : (
-                  <span style={{color: '#856404', marginLeft: '0.5rem'}}>⏳ Incomplete</span>
-                )}
-              </h4>
-              <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
-                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                  <span style={{
-                    width: '12px',
-                    height: '12px',
-                    borderRadius: '50%',
-                    background: formsStatus.hasStudentData ? '#28a745' : '#dc3545'
-                  }}></span>
-                  <span style={{fontSize: '0.9rem'}}>
-                    Student Details Form {formsStatus.hasStudentData ? '✓' : '✗'}
-                  </span>
-                </div>
-                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                  <span style={{
-                    width: '12px',
-                    height: '12px',
-                    borderRadius: '50%',
-                    background: formsStatus.hasHospitalData ? '#28a745' : '#dc3545'
-                  }}></span>
-                  <span style={{fontSize: '0.9rem'}}>
-                    Hospital Examination Form {formsStatus.hasHospitalData ? '✓' : '✗'}
-                  </span>
-                </div>
-                {formsStatus.bothComplete && !qrCodeData && (
-                  <div style={{
-                    marginTop: '0.5rem',
-                    padding: '0.5rem',
-                    background: '#b3d4fc',
-                    borderRadius: '4px',
-                    color: '#0c5460',
-                    fontSize: '0.85rem'
-                  }}>
-                    🔄 Both forms are complete! QR code should generate automatically. If not visible, try clicking "Generate Medical QR Code" below.
-                  </div>
-                )}
-                {!formsStatus.bothComplete && (
-                  <div style={{
-                    marginTop: '0.5rem',
-                    padding: '0.5rem',
-                    background: '#f8d7da',
-                    borderRadius: '4px',
-                    color: '#721c24',
-                    fontSize: '0.85rem'
-                  }}>
-                    📝 Complete both forms to generate your QR code automatically.
-                  </div>
-                )}
+          <div className="qr-layout-container">
+            {/* Left Side - Details */}
+            <div className="qr-details-section">
+              <div className="qr-section-header">
+                <svg className="qr-icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3,11H5V13H3V11M11,5H13V9H11V5M9,11H13V15H9V11M15,11H17V13H15V11M19,5H21V9H19V5M5,5H9V9H5V5M3,19H5V21H3V19M5,19H9V21H5V19M19,19H21V21H19V19M15,19H17V21H15V19M17,15H19V17H17V15M15,13H17V15H15V13M15,5H17V7H15V5M13,19H15V21H13V19M15,7H17V9H15V7M7,19H9V21H7V19M13,7H15V9H13V7M13,3H15V5H13V3M3,9H5V11H3V9M7,3H9V5H7V3M21,11H23V13H21V11M21,9H23V11H21V9M21,13H23V15H21V13M3,7H5V9H3V7M21,3H23V5H21V3M21,5H23V7H21V5M19,3H21V5H19V3M17,3H19V5H17V3M3,3H5V5H3V3M3,5H5V7H3V5M5,3H7V5H5V3M9,3H11V5H9V3M11,3H13V5H11V3"/>
+                </svg>
+                <span className="qr-section-title">
+                  {qrCodeData ? "Your Medical QR Code" : "No Medical QR Code Available"}
+                </span>
               </div>
-            </div>
-          )}
-          
-          {/* Email Input Section */}
-          {!qrCodeData && (
-            <div className="email-input-section" style={{margin: '1rem 0', padding: '1rem', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #e0e0e0'}}>
-              <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#333'}}>
-                Student Email Address:
-              </label>
-              <div style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
-                <input
-                  type="email"
-                  value={inputEmail}
-                  onChange={(e) => setInputEmail(e.target.value)}
-                  placeholder="Enter your email address"
-                  style={{
-                    flex: 1,
-                    padding: '0.5rem',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '1rem'
-                  }}
-                />
-                <button
-                  onClick={() => setInputEmail(studentEmail !== 'No Email' ? studentEmail : '')}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: '#6c757d',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  Use Saved
-                </button>
-              </div>
-              <small style={{color: '#666', marginTop: '0.25rem', display: 'block'}}>
-                This email should match the email used in both Student Details and Hospital Examination forms.
-              </small>
-            </div>
-          )}
-          
-          {error && (
-            <div className="error-message" style={{background: '#ffe6e6', border: '1px solid #ffb3b3', color: '#d63031', padding: '1rem', borderRadius: '8px', margin: '1rem 0'}}>
-              {error}
-            </div>
-          )}
 
-          <div className="qr-display-area">
-            <div className="qr-image-container">
-              {qrCodeData ? (
-                <div className="qr-code-wrapper" style={{background: 'white', padding: '1.5rem', borderRadius: '12px', display: 'inline-block', boxShadow: '0 4px 12px rgba(0,0,0,0.15)'}}>
-                  <QRCode
-                    value={qrValue}
-                    size={256}
-                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                    viewBox={`0 0 256 256`}
-                  />
-                  <div style={{textAlign: 'center', marginTop: '1rem', color: '#666'}}>
-                    <p style={{margin: 0, fontSize: '0.9rem'}}>Medical Record ID:</p>
-                    <p style={{margin: 0, fontSize: '0.8rem', fontFamily: 'monospace'}}>{medicalRecordId}</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="qr-missing-container" style={{textAlign: 'center', padding: '2rem'}}>
-                  <div style={{marginBottom: '1.5rem'}}>
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="#ccc" style={{marginBottom: '1rem'}}>
-                      <path d="M3,11H5V13H3V11M11,5H13V9H11V5M9,11H13V15H9V11M15,11H17V13H15V11M19,5H21V9H19V5M5,5H9V9H5V5M3,19H5V21H3V19M5,19H9V21H5V19M19,19H21V21H19V19M15,19H17V21H15V19M17,15H19V17H17V15M15,13H17V15H15V13M15,5H17V7H15V5M13,19H15V21H13V19M15,7H17V9H15V7M7,19H9V21H7V19M13,7H15V9H13V7M13,3H15V5H13V3M3,9H5V11H3V9M7,3H9V5H7V3M21,11H23V13H21V11M21,9H23V11H21V9M21,13H23V15H21V13M3,7H5V9H3V7M21,3H23V5H21V3M21,5H23V7H21V5M19,3H21V5H19V3M17,3H19V5H17V3M3,3H5V5H3V3M3,5H5V7H3V5M5,3H7V5H5V3M9,3H11V5H9V3M11,3H13V5H11V3"/>
-                    </svg>
-                  </div>
-                  <p className="qr-missing-text" style={{marginBottom: '1rem', color: '#666'}}>Medical QR code not generated yet</p>
-                  <p style={{marginBottom: '1.5rem', color: '#888', fontSize: '0.9rem'}}>
-                    Make sure both Student Details and Hospital Examination forms are completed with the same email address.
-                  </p>
-                  <button 
-                    onClick={generateMedicalQR} 
-                    disabled={isGenerating || !inputEmail}
-                    className="generate-qr-btn"
-                    style={{
-                      background: (!inputEmail || isGenerating) ? '#6c757d' : '#3498db',
-                      color: 'white',
-                      border: 'none',
-                      padding: '0.75rem 1.5rem',
-                      borderRadius: '6px',
-                      cursor: (!inputEmail || isGenerating) ? 'not-allowed' : 'pointer',
-                      fontSize: '1rem',
-                      opacity: (!inputEmail || isGenerating) ? 0.6 : 1,
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    {isGenerating ? (
-                      <>
-                        <span style={{marginRight: '0.5rem'}}>⏳</span>
-                        Generating...
-                      </>
+              <p className="qr-description">
+                {qrCodeData
+                  ? "Scan this code to access your complete medical record."
+                  : "Complete your medical forms to generate your QR code."}
+              </p>
+
+              {/* Show form completion status */}
+              {studentEmail && (
+                <div className={`form-status ${formsStatus.bothComplete ? 'complete' : 'incomplete'}`}>
+                  <h4>
+                    Form Completion Status:
+                    {formsStatus.bothComplete ? (
+                      <span className="status-complete">✅ Complete</span>
                     ) : (
-                      <>
-                        <span style={{marginRight: '0.5rem'}}>🔗</span>
-                        Generate Medical QR Code
-                      </>
+                      <span className="status-incomplete">⏳ Incomplete</span>
                     )}
-                  </button>
+                  </h4>
+                  <div className="form-status-items">
+                    <div className="form-status-item">
+                      <span className="form-status-text">
+                        Student Details Form
+                      </span>
+                      <span className={`status-mark ${formsStatus.hasStudentData ? 'complete' : 'incomplete'}`}>
+                        {formsStatus.hasStudentData ? (
+                          <svg className="status-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                          </svg>
+                        ) : (
+                          <svg className="status-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                          </svg>
+                        )}
+                      </span>
+                    </div>
+                    <div className="form-status-item">
+                      <span className="form-status-text">
+                        Hospital Examination Form
+                      </span>
+                      <span className={`status-mark ${formsStatus.hasHospitalData ? 'complete' : 'incomplete'}`}>
+                        {formsStatus.hasHospitalData ? (
+                          <svg className="status-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                          </svg>
+                        ) : (
+                          <svg className="status-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                          </svg>
+                        )}
+                      </span>
+                    </div>
+                    {formsStatus.bothComplete && !qrCodeData && (
+                      <div className="auto-generate-notice">
+                        🔄 Both forms are complete! QR code should generate automatically. If not visible, try clicking "Generate Medical QR Code" below.
+                      </div>
+                    )}
+                    {!formsStatus.bothComplete && (
+                      <div className="incomplete-notice">
+                        📝 Complete both forms to generate your QR code automatically.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Email Input Section */}
+              {!qrCodeData && (
+                <div className="email-input-section">
+                  <label className="email-input-label">
+                    Student Email Address:
+                  </label>
+                  <div className="email-input-container">
+                    <input
+                      type="email"
+                      value={inputEmail}
+                      onChange={(e) => setInputEmail(e.target.value)}
+                      placeholder="Enter your email address"
+                      className="email-input"
+                    />
+                    <button
+                      onClick={() => setInputEmail(studentEmail !== 'No Email' ? studentEmail : '')}
+                      className="use-saved-btn"
+                    >
+                      Use Saved
+                    </button>
+                  </div>
+                  <small className="email-input-help">
+                    This email should match the email used in both Student Details and Hospital Examination forms.
+                  </small>
+                </div>
+              )}
+
+              {error && (
+                <div className="error-message">
+                  {error}
+                </div>
+              )}
+
+              {qrCodeData && (
+                <div className="qr-actions">
+                  <div className="qr-btn-group">
+                    <button onClick={handleDownload} className="qr-btn qr-btn-secondary">
+                      Download QR
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
-          </div>
 
-          {qrCodeData && (
-            <div className="qr-actions">
-              <div className="qr-btn-group">
-                <button onClick={handleDownload} className="qr-btn qr-btn-secondary">
-                  Download QR
-                </button>
+            {/* Right Side - QR Code Display */}
+            <div className="qr-display-section">
+              <div className="qr-display-area">
+                <div className="qr-image-container">
+                  {qrCodeData ? (
+                    <div className="qr-code-wrapper">
+                      <QRCode
+                        value={qrValue}
+                        size={200}
+                        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                        viewBox={`0 0 200 200`}
+                      />
+                      <div className="qr-code-info">
+                        <p className="qr-code-id-label">Medical Record ID:</p>
+                        <p className="qr-code-id-value">{medicalRecordId}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="qr-missing-container">
+                      <div className="qr-missing-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="#ccc">
+                          <path d="M3,11H5V13H3V11M11,5H13V9H11V5M9,11H13V15H9V11M15,11H17V13H15V11M19,5H21V9H19V5M5,5H9V9H5V5M3,19H5V21H3V19M5,19H9V21H5V19M19,19H21V21H19V19M15,19H17V21H15V19M17,15H19V17H17V15M15,13H17V15H15V13M15,5H17V7H15V5M13,19H15V21H13V19M15,7H17V9H15V7M7,19H9V21H7V19M13,7H15V9H13V7M13,3H15V5H13V3M3,9H5V11H3V9M7,3H9V5H7V3M21,11H23V13H21V11M21,9H23V11H21V9M21,13H23V15H21V13M3,7H5V9H3V7M21,3H23V5H21V3M21,5H23V7H21V5M19,3H21V5H19V3M17,3H19V5H17V3M3,3H5V5H3V3M3,5H5V7H3V5M5,3H7V5H5V3M9,3H11V5H9V3M11,3H13V5H11V3"/>
+                        </svg>
+                      </div>
+                      <p className="qr-missing-text">Medical QR code not generated yet</p>
+                      <p className="qr-missing-description">
+                        Make sure both Student Details and Hospital Examination forms are completed with the same email address.
+                      </p>
+                      <button
+                        onClick={generateMedicalQR}
+                        disabled={isGenerating || !inputEmail}
+                        className={`generate-qr-btn ${(!inputEmail || isGenerating) ? 'disabled' : 'enabled'}`}
+                      >
+                        {isGenerating ? (
+                          <>
+                            <span>⏳</span>
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <span>🔗</span>
+                            Generate Medical QR Code
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          )}
-
-       
+          </div>
         </div>
 
         <div className="qr-footer">

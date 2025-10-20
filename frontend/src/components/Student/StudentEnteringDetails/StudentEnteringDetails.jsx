@@ -84,6 +84,290 @@ function StudentEnteringDetails() {
 
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Input restriction functions
+  const handleNameKeyPress = (e) => {
+    // Prevent numbers from being entered
+    if (/[0-9]/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const handleTelephoneKeyPress = (e) => {
+    // Allow only numbers, +, -, (, ), and space
+    if (!/[0-9+\-() ]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
+      e.preventDefault();
+    }
+  };
+
+  // NIC validation function
+  const validateNIC = (nic) => {
+    if (!nic) return { isValid: false, message: "NIC is required" };
+
+    // Remove spaces and convert to uppercase
+    const cleanNIC = nic.replace(/\s/g, '').toUpperCase();
+
+    // Old format: 9 digits + V (e.g., 123456789V)
+    const oldFormatRegex = /^[0-9]{9}[VX]$/;
+
+    // New format: 12 digits (e.g., 200012345678)
+    const newFormatRegex = /^[0-9]{12}$/;
+
+    if (oldFormatRegex.test(cleanNIC)) {
+      // Validate old format
+      const year = parseInt(cleanNIC.substring(0, 2));
+      const dayOfYear = parseInt(cleanNIC.substring(2, 5));
+
+      // Check if day of year is valid (1-366 for male, 501-866 for female)
+      if ((dayOfYear >= 1 && dayOfYear <= 366) || (dayOfYear >= 501 && dayOfYear <= 866)) {
+        return { isValid: true, message: "" };
+      } else {
+        return { isValid: false, message: "Invalid day of year in NIC" };
+      }
+    } else if (newFormatRegex.test(cleanNIC)) {
+      // Validate new format
+      const year = parseInt(cleanNIC.substring(0, 4));
+      const dayOfYear = parseInt(cleanNIC.substring(4, 7));
+
+      // Check if year is reasonable (1900-2050)
+      if (year < 1900 || year > 2050) {
+        return { isValid: false, message: "Invalid birth year in NIC" };
+      }
+
+      // Check if day of year is valid (1-366 for male, 501-866 for female)
+      if ((dayOfYear >= 1 && dayOfYear <= 366) || (dayOfYear >= 501 && dayOfYear <= 866)) {
+        return { isValid: true, message: "" };
+      } else {
+        return { isValid: false, message: "Invalid day of year in NIC" };
+      }
+    } else {
+      return {
+        isValid: false,
+        message: "Invalid NIC format. Use old format (123456789V) or new format (200012345678)"
+      };
+    }
+  };
+
+  // Student Registration Number validation function
+  const validateStudentRegistrationNumber = (regNumber) => {
+    if (!regNumber) return { isValid: false, message: "Student registration number is required" };
+
+    // Remove spaces and convert to uppercase
+    const cleanRegNumber = regNumber.replace(/\s/g, '').toUpperCase();
+
+    // Format: 2 digits + 2 letters + 4 digits
+    // Examples: 22IT0521, 21ME0423, 23EE0789
+    const regNumberRegex = /^[0-9]{2}[A-Z]{2}[0-9]{4}$/;
+
+    if (!regNumberRegex.test(cleanRegNumber)) {
+      return {
+        isValid: false,
+        message: "Invalid format. Use format: 22IT0521 (2 digits + 2 letters + 4 digits)"
+      };
+    }
+
+    // Extract parts for additional validation
+    const year = parseInt(cleanRegNumber.substring(0, 2));
+    const deptCode = cleanRegNumber.substring(2, 4);
+    const studentNumber = parseInt(cleanRegNumber.substring(4, 8));
+
+    // Validate year (reasonable range 20-30 for 2020-2030)
+    if (year < 20 || year > 30) {
+      return { isValid: false, message: "Invalid year. Year should be between 20-30 (2020-2030)" };
+    }
+
+    // Validate department codes based on academic divisions
+    const validDeptCodes = [
+      'CT', 'CE', 'EE', 'ET', 'IT', 'MT', 'ME', 'NS', 'PT', 'TC',
+      'CH', 'CI', 'EL', 'IN', 'MA', 'MC', 'NA', 'PO', 'TX'
+    ];
+
+    if (!validDeptCodes.includes(deptCode)) {
+      return {
+        isValid: false,
+        message: `Invalid department code "${deptCode}". Valid codes: CT, CE, EE, ET, IT, MT, ME, NS, PT, TC`
+      };
+    }
+
+    // Validate student number (should be reasonable range)
+    if (studentNumber < 1 || studentNumber > 9999) {
+      return { isValid: false, message: "Invalid student number. Should be between 0001-9999" };
+    }
+
+    return { isValid: true, message: "" };
+  };
+
+  // Email validation function
+  const validateEmail = (email) => {
+    if (!email) return { isValid: false, message: "Email address is required" };
+
+    // Remove spaces
+    const cleanEmail = email.trim();
+
+    // Basic email regex pattern
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
+    if (!emailRegex.test(cleanEmail)) {
+      return {
+        isValid: false,
+        message: "Please enter a valid email address (e.g., student@example.com)"
+      };
+    }
+
+    // Check for minimum length
+    if (cleanEmail.length < 5) {
+      return { isValid: false, message: "Email address is too short" };
+    }
+
+    // Check for maximum length
+    if (cleanEmail.length > 254) {
+      return { isValid: false, message: "Email address is too long" };
+    }
+
+    // Check for valid domain structure
+    const parts = cleanEmail.split('@');
+    if (parts.length !== 2) {
+      return { isValid: false, message: "Email must contain exactly one @ symbol" };
+    }
+
+    const [localPart, domain] = parts;
+
+    // Validate local part (before @)
+    if (localPart.length < 1 || localPart.length > 64) {
+      return { isValid: false, message: "Email username part is invalid length" };
+    }
+
+    // Check for consecutive dots
+    if (cleanEmail.includes('..')) {
+      return { isValid: false, message: "Email cannot contain consecutive dots" };
+    }
+
+    // Check for leading/trailing dots in local part
+    if (localPart.startsWith('.') || localPart.endsWith('.')) {
+      return { isValid: false, message: "Email username cannot start or end with a dot" };
+    }
+
+    // Validate domain part (after @)
+    if (domain.length < 1 || domain.length > 253) {
+      return { isValid: false, message: "Email domain part is invalid" };
+    }
+
+    // Check if domain has at least one dot
+    if (!domain.includes('.')) {
+      return { isValid: false, message: "Email domain must contain at least one dot" };
+    }
+
+    // Check for valid domain ending
+    const domainParts = domain.split('.');
+    const tld = domainParts[domainParts.length - 1];
+    if (tld.length < 2) {
+      return { isValid: false, message: "Email domain ending is too short" };
+    }
+
+    return { isValid: true, message: "" };
+  };
+
+  // Validation function
+  const validateForm = () => {
+    const errors = {};
+
+    // Basic Information - Mandatory fields
+    if (!formData.firstName.trim()) errors.firstName = "First name is required";
+    if (!formData.lastName.trim()) errors.lastName = "Last name is required";
+
+    // NIC validation
+    const nicValidation = validateNIC(formData.nic);
+    if (!nicValidation.isValid) errors.nic = nicValidation.message;
+
+    // Student Registration Number validation
+    const regNumberValidation = validateStudentRegistrationNumber(formData.studentRegistrationNumber);
+    if (!regNumberValidation.isValid) errors.studentRegistrationNumber = regNumberValidation.message;
+
+    if (!formData.academicDivision) errors.academicDivision = "Academic division is required";
+
+    // Email validation
+    const emailValidation = validateEmail(formData.email);
+    if (!emailValidation.isValid) errors.email = emailValidation.message;
+
+    if (!formData.profileImage) errors.profileImage = "Profile image is required";
+
+    // Personal Details - Mandatory fields
+    if (!formData.dateOfBirth) errors.dateOfBirth = "Date of birth is required";
+    if (!formData.positionOfFamily) errors.positionOfFamily = "Position of family is required";
+    if (!formData.gender) errors.gender = "Gender is required";
+    if (!formData.lastAttendSchool.trim()) errors.lastAttendSchool = "Last attended school is required";
+    if (!formData.religion) errors.religion = "Religion is required";
+    if (!formData.occupationOfFather.trim()) errors.occupationOfFather = "Father's occupation is required";
+    if (!formData.singleMarried) errors.singleMarried = "Marital status is required";
+    if (!formData.occupationOfMother.trim()) errors.occupationOfMother = "Mother's occupation is required";
+    if (!formData.age) errors.age = "Age is required";
+    if (!formData.homeAddress.trim()) errors.homeAddress = "Home address is required";
+    if (!formData.nationality) errors.nationality = "Nationality is required";
+    if (!formData.telephoneNumber.trim()) errors.telephoneNumber = "Telephone number is required";
+    if (!formData.extraCurricularActivities.trim()) errors.extraCurricularActivities = "Extra-curricular activities information is required";
+
+    // Emergency Contact - Mandatory fields
+    if (!formData.emergencyName.trim()) errors.emergencyName = "Emergency contact name is required";
+    if (!formData.emergencyTelephone.trim()) errors.emergencyTelephone = "Emergency contact telephone is required";
+    if (!formData.emergencyAddress.trim()) errors.emergencyAddress = "Emergency contact address is required";
+    if (!formData.emergencyRelationship) errors.emergencyRelationship = "Emergency contact relationship is required";
+
+    // Family Medical History - Optional fields (no validation required)
+
+    // Medical History - Mandatory fields (all conditions must be answered)
+    const medicalConditions = [
+      "infectiousDiseases", "wormInfestations", "respiratory", "circulatory",
+      "ent", "eye", "nervousSystem", "surgical", "misc", "allergicHistory",
+      "menstrualHistory", "disability"
+    ];
+    medicalConditions.forEach(condition => {
+      if (!formData.medicalHistory[condition].status) {
+        errors[`medicalHistory_${condition}`] = `Please answer the question about ${condition.replace(/([A-Z])/g, ' $1').toLowerCase()}`;
+      }
+      // If status is "yes", details are required
+      if (formData.medicalHistory[condition].status === "yes" && !formData.medicalHistory[condition].details.trim()) {
+        errors[`medicalHistory_${condition}_details`] = `Please provide details for ${condition.replace(/([A-Z])/g, ' $1').toLowerCase()}`;
+      }
+    });
+
+    // Vaccinations - Mandatory fields (all must be answered)
+    const vaccines = ["bcg", "dpt", "mramur", "rubella", "hepatitisB", "chickenPox"];
+    vaccines.forEach(vaccine => {
+      if (!formData.vaccinations[vaccine].taken) {
+        errors[`vaccinations_${vaccine}`] = `Please indicate if you have taken ${vaccine.toUpperCase()} vaccination`;
+      }
+      // If taken is "yes", date is required
+      if (formData.vaccinations[vaccine].taken === "yes" && !formData.vaccinations[vaccine].date) {
+        errors[`vaccinations_${vaccine}_date`] = `Please provide date for ${vaccine.toUpperCase()} vaccination`;
+      }
+    });
+
+    // Certification - Mandatory fields
+    if (!formData.certificationDate) errors.certificationDate = "Certification date is required";
+    if (!formData.signature.trim()) errors.signature = "Student signature/name is required";
+
+    // Age validation
+    if (formData.age && (formData.age < 16 || formData.age > 100)) {
+      errors.age = "Please enter a valid age between 16 and 100";
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Helper function to get error class
+  const getErrorClass = (fieldName) => {
+    return validationErrors[fieldName] ? 'error' : '';
+  };
+
+  // Helper function to render error message
+  const renderError = (fieldName) => {
+    return validationErrors[fieldName] ? (
+      <span className="error-message">{validationErrors[fieldName]}</span>
+    ) : null;
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -91,14 +375,49 @@ function StudentEnteringDetails() {
       ...formData,
       [name]: value
     };
-    
+
     // Auto-update fullName when firstName or lastName changes
     if (name === 'firstName' || name === 'lastName') {
       const firstName = name === 'firstName' ? value : formData.firstName;
       const lastName = name === 'lastName' ? value : formData.lastName;
       updatedData.fullName = `${firstName} ${lastName}`.trim();
     }
-    
+
+    // Real-time NIC validation and formatting
+    if (name === 'nic') {
+      // Clean and format NIC input
+      const cleanValue = value.replace(/[^0-9VXvx]/g, '').toUpperCase();
+      updatedData.nic = cleanValue;
+
+      const nicValidation = validateNIC(cleanValue);
+      setValidationErrors(prev => ({
+        ...prev,
+        nic: nicValidation.isValid ? undefined : nicValidation.message
+      }));
+    }
+
+    // Real-time Student Registration Number validation and formatting
+    if (name === 'studentRegistrationNumber') {
+      // Clean and format registration number input (allow only alphanumeric)
+      const cleanValue = value.replace(/[^0-9A-Za-z]/g, '').toUpperCase();
+      updatedData.studentRegistrationNumber = cleanValue;
+
+      const regNumberValidation = validateStudentRegistrationNumber(cleanValue);
+      setValidationErrors(prev => ({
+        ...prev,
+        studentRegistrationNumber: regNumberValidation.isValid ? undefined : regNumberValidation.message
+      }));
+    }
+
+    // Real-time Email validation
+    if (name === 'email') {
+      const emailValidation = validateEmail(value);
+      setValidationErrors(prev => ({
+        ...prev,
+        email: emailValidation.isValid ? undefined : emailValidation.message
+      }));
+    }
+
     setFormData(updatedData);
   };
 
@@ -161,7 +480,22 @@ function StudentEnteringDetails() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setIsSubmitting(true);
+
+    // Validate form
+    if (!validateForm()) {
+      const errorCount = Object.keys(validationErrors).length;
+      showError(`Please fix ${errorCount} error(s) in the form before submitting.`, 'Form Validation Error');
+      setIsSubmitting(false);
+
+      // Scroll to first error
+      const firstErrorField = document.querySelector('.error');
+      if (firstErrorField) {
+        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+
     try {
       const response = await fetch('http://localhost:8081/api/student-details/save', {
         method: 'POST',
@@ -223,6 +557,8 @@ function StudentEnteringDetails() {
     } catch (error) {
       console.error('Error saving student details:', error);
       showError('Failed to save student details. Please try again.', 'Save Failed');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -254,21 +590,25 @@ function StudentEnteringDetails() {
               <input
                 type="text"
                 name="firstName"
-                placeholder="First Name"
+                placeholder="First Name *"
                 value={formData.firstName}
                 onChange={handleInputChange}
+                className={getErrorClass('firstName')}
                 required
               />
+              {renderError('firstName')}
             </div>
             <div className="form-group">
               <input
                 type="text"
                 name="lastName"
-                placeholder="Last Name"
+                placeholder="Last Name *"
                 value={formData.lastName}
                 onChange={handleInputChange}
+                className={getErrorClass('lastName')}
                 required
               />
+              {renderError('lastName')}
             </div>
             <div className="upload-section">
               <div className="upload-box">
@@ -288,8 +628,9 @@ function StudentEnteringDetails() {
                   style={{ display: 'none' }}
                 />
                 <div className="upload-text">
-                  {imagePreview ? 'Click to change image' : 'Click to upload your image'}
+                  {imagePreview ? 'Click to change image' : 'Click to upload your image *'}
                 </div>
+                {renderError('profileImage')}
               </div>
             </div>
           </div>
@@ -299,11 +640,18 @@ function StudentEnteringDetails() {
               <input
                 type="text"
                 name="nic"
-                placeholder="NIC"
+                placeholder="NIC * (e.g., 123456789V or 200012345678)"
                 value={formData.nic}
                 onChange={handleInputChange}
+                className={getErrorClass('nic')}
+                maxLength="12"
+                style={{ textTransform: 'uppercase' }}
                 required
               />
+              {renderError('nic')}
+              {formData.nic && !validationErrors.nic && (
+                <span className="success-message">✓ Valid NIC format</span>
+              )}
             </div>
           </div>
           
@@ -312,11 +660,18 @@ function StudentEnteringDetails() {
               <input
                 type="text"
                 name="studentRegistrationNumber"
-                placeholder="Student Registration Number"
+                placeholder="Student Registration Number * (e.g., 22IT0521, 21ME0423)"
                 value={formData.studentRegistrationNumber}
                 onChange={handleInputChange}
+                className={getErrorClass('studentRegistrationNumber')}
+                maxLength="8"
+                style={{ textTransform: 'uppercase' }}
                 required
               />
+              {renderError('studentRegistrationNumber')}
+              {formData.studentRegistrationNumber && !validationErrors.studentRegistrationNumber && (
+                <span className="success-message">✓ Valid Registration Number format</span>
+              )}
             </div>
           </div>
           
@@ -348,11 +703,16 @@ function StudentEnteringDetails() {
               <input
                 type="email"
                 name="email"
-                placeholder="Email Address"
+                placeholder="Email Address *"
                 value={formData.email}
                 onChange={handleInputChange}
+                className={getErrorClass('email')}
                 required
               />
+              {renderError('email')}
+              {formData.email && !validationErrors.email && (
+                <span className="success-message">✓ Valid email address</span>
+              )}
             </div>
           </div>
         </div>
@@ -557,6 +917,7 @@ function StudentEnteringDetails() {
                 placeholder="Name"
                 value={formData.emergencyName}
                 onChange={handleInputChange}
+                onKeyPress={handleNameKeyPress}
                 required
               />
             </div>
@@ -567,6 +928,7 @@ function StudentEnteringDetails() {
                 placeholder="Telephone Number"
                 value={formData.emergencyTelephone}
                 onChange={handleInputChange}
+                onKeyPress={handleTelephoneKeyPress}
                 required
               />
             </div>
@@ -813,9 +1175,12 @@ function StudentEnteringDetails() {
 
         {/* Submit Button */}
         <div className="form-actions">
-          <button type="submit" className="submit-btn">
-            Submit Medical Form
+          <button type="submit" className="submit-btn" disabled={isSubmitting}>
+            {isSubmitting ? 'Submitting...' : 'Submit Medical Form'}
           </button>
+          <p className="mandatory-note">
+            * All fields marked with asterisk are mandatory
+          </p>
         </div>
       </form>
     </div>
