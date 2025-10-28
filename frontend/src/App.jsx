@@ -23,6 +23,7 @@ import StudentTelemed from './components/Student/StudentTelemed/StudentTelemed';
 import StudentTelemedCall from './components/Student/StudentTelemedCall/StudentTelemedCall';
 import StudentQRcode from './components/Student/StudentQRcode/StudentQRcode';
 import StudentEnteringDetails from './components/Student/StudentEnteringDetails/StudentEnteringDetails';
+import StudentChatBot from './components/Student/StudentChatBot/StudentChatBot';
 
 // Doctor
 import DoctorSidebar from './components/Doctor/DoctorSidebar/DoctorSidebar';
@@ -232,6 +233,11 @@ function App() {
             <Route path="/student/entering-details" element={
               <ProtectedRoute allowedRoles={['Student']}>
                 <StudentEnteringDetails />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/chatbot" element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <StudentChatBot />
               </ProtectedRoute>
             } />
             <Route path="/student/settings" element={

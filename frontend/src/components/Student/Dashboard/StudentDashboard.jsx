@@ -176,7 +176,7 @@ function Dashboard() {
                   <span>...</span>
                 </div>
               ) : (profileImage || studentFormData?.profileImage || studentData?.profileImage) ? (
-                <img 
+                <img
                   src={profileImage || studentFormData?.profileImage || studentData?.profileImage}
                   alt={currentUser?.name || studentData?.fullName || 'Student'}
                   className="dashboard-avatar-image"
