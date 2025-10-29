@@ -354,7 +354,7 @@ function StudentEnteringDetails() {
     }
 
     setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    return { isValid: Object.keys(errors).length === 0, errors };
   };
 
   // Helper function to get error class
@@ -482,18 +482,19 @@ function StudentEnteringDetails() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Validate form
-    if (!validateForm()) {
-      const errorCount = Object.keys(validationErrors).length;
-      showError(`Please fix ${errorCount} error(s) in the form before submitting.`, 'Form Validation Error');
-      setIsSubmitting(false);
-
-      // Scroll to first error
-      const firstErrorField = document.querySelector('.error');
-      if (firstErrorField) {
-        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      return;
+    // Run validation to populate inline error messages, BUT do NOT block submission.
+    // This lets the form be submitted even when some validation rules fail.
+    const { isValid, errors } = validateForm();
+    if (!isValid) {
+      // Keep errors in state (so inline messages display), but continue submitting.
+      console.debug('Form validation produced errors but submission will continue:', errors);
+      // Optionally, scroll to the first error to help the user see issues (non-blocking)
+      setTimeout(() => {
+        const firstErrorFieldByClass = document.querySelector('.error');
+        if (firstErrorFieldByClass) {
+          firstErrorFieldByClass.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
     }
 
     try {
@@ -512,25 +513,55 @@ function StudentEnteringDetails() {
         const currentUserData = localStorage.getItem('currentUser');
         const currentUser = currentUserData ? JSON.parse(currentUserData) : null;
         
-        if (currentUser && currentUser.email) {
-          // Save student data to localStorage with user-specific keys
-          localStorage.setItem(`studentFormData_${currentUser.email}`, JSON.stringify(formData));
-          localStorage.setItem(`studentData_${currentUser.email}`, JSON.stringify(formData));
-          
-          // Also save with form email for backward compatibility
-          if (formData.email !== currentUser.email) {
-            localStorage.setItem(`studentData_${formData.email}`, JSON.stringify(formData));
+        // Safely persist some student info locally. Avoid saving large base64 images to localStorage
+        const safeSetItem = (key, value) => {
+          try {
+            localStorage.setItem(key, value);
+            return true;
+          } catch (err) {
+            // Handle quota exceeded and other storage errors. Try sessionStorage as a fallback.
+            try {
+              if (sessionStorage) {
+                sessionStorage.setItem(key, value);
+                console.warn(`localStorage failed for ${key}; saved to sessionStorage instead.`);
+                return true;
+              }
+            } catch (se) {
+              // both failed — log and continue (do not block submission)
+              console.warn(`Failed to persist ${key} to sessionStorage as fallback:`, se);
+            }
+            console.warn(`Failed to persist ${key} to localStorage:`, err);
+            return false;
           }
-          
-          localStorage.setItem('studentName', formData.fullName);
-          localStorage.setItem('studentEmail', formData.email || currentUser.email || 'No Email');
-          
-          // Clear any old general storage
-          localStorage.removeItem('studentFormData');
+        };
+
+        const sanitizedDataForStorage = { ...formData };
+        // profileImage can be a large base64 string; skip it to avoid quota issues
+        if (sanitizedDataForStorage.profileImage) {
+          // Keep a small flag indicating image exists, but do not store the data URI
+          sanitizedDataForStorage.profileImage = null;
+          sanitizedDataForStorage.hasProfileImage = true;
+        }
+
+        if (currentUser && currentUser.email) {
+          // Save student data to localStorage with user-specific keys (safely)
+          safeSetItem(`studentFormData_${currentUser.email}`, JSON.stringify(sanitizedDataForStorage));
+          safeSetItem(`studentData_${currentUser.email}`, JSON.stringify(sanitizedDataForStorage));
+
+          // Also save with form email for backward compatibility
+          if (formData.email && formData.email !== currentUser.email) {
+            safeSetItem(`studentData_${formData.email}`, JSON.stringify(sanitizedDataForStorage));
+          }
+
+          safeSetItem('studentName', formData.fullName || '');
+          safeSetItem('studentEmail', formData.email || currentUser.email || 'No Email');
+
+          // Clear any old general storage if present (wrap in try/catch)
+          try { localStorage.removeItem('studentFormData'); } catch (e) { /* ignore */ }
         } else {
-          // Fallback for older system
-          localStorage.setItem('studentFormData', JSON.stringify(formData));
-          localStorage.setItem(`studentData_${formData.email}`, JSON.stringify(formData));
+          // Fallback for older system — save sanitized data
+          safeSetItem('studentFormData', JSON.stringify(sanitizedDataForStorage));
+          if (formData.email) safeSetItem(`studentData_${formData.email}`, JSON.stringify(sanitizedDataForStorage));
         }
         
         showSuccess('Student details saved successfully!', 'Form Submitted');

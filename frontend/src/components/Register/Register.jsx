@@ -48,6 +48,16 @@ const Register = () => {
       showError("Password is required", "Registration Unsuccessful");
       return;
     }
+    // Strong password validation
+    const password = formData.password;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      showError(
+        "Password must be at least 8 characters and include uppercase, lowercase, a number, and a symbol.",
+        "Registration Unsuccessful"
+      );
+      return;
+    }
     if (!formData.confirmPassword.trim()) {
       showError("Confirm Password is required", "Registration Unsuccessful");
       return;
@@ -160,7 +170,7 @@ const Register = () => {
           <div className="input-group">
             <FaEnvelope className="icon" />
             <input
-              type="text" // <-- change from "email" to "text"
+              type="email" // <-- change from "email" to "text"
               name="email"
               placeholder="youremail@example.com"
               value={formData.email}
