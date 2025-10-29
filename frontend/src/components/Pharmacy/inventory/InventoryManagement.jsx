@@ -234,7 +234,7 @@ function InventoryManagement() {
           className={activeTab === "inventory" ? "tab-button active" : "tab-button"}
           onClick={() => setActiveTab("inventory")}
         >
-          Inventory Management hiiiiiiiiiiiiiiii
+          Inventory Management
         </button>
         <button 
           className={activeTab === "prescriptions" ? "tab-button active" : "tab-button"}
