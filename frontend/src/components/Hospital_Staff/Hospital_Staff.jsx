@@ -1154,11 +1154,7 @@ const Hospital_Staff = () => {
                 />
               </div>
             </div>
-            <div className="signature-actions">
-              <button type="button" className="clear-signature-btn" onClick={clearAllSignatures}>
-                Clear Signature
-              </button>
-            </div>
+           
           </div>
 
           <div className="submit-section">
