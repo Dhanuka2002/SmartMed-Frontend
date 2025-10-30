@@ -412,7 +412,7 @@ const Hospital_Staff = () => {
         <div className="medical-form">
           {/* Student Email Input */}
           <div className="form-section">
-            <label className="form-label">Student Email Address</label>
+            <label className="form-label">Student's Email Address</label>
             <input
               type="email"
               name="studentEmail"
@@ -432,7 +432,7 @@ const Hospital_Staff = () => {
           </div>
           {/* Vaccination Status */}
           <div className="form-section">
-            <label className="form-label">a. Has the student been successfully vaccinated?</label>
+            <label className="form-label"> Has the student been successfully vaccinated?</label>
             <div className="radio-group">
               <label>
                 <input 
