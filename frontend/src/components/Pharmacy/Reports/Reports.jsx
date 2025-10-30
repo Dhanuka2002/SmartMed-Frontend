@@ -27,8 +27,6 @@ const Reports = () => {
   } = prescriptionContext || {};
 
   const [refreshInterval, setRefreshInterval] = useState(Date.now());
-  const [selectedTimeRange, setSelectedTimeRange] = useState('30d');
-  const [selectedCategory, setSelectedCategory] = useState('all');
 
   // Auto-refresh data every 30 seconds
   useEffect(() => {
@@ -186,26 +184,7 @@ const Reports = () => {
     };
   }, [medicines, prescriptions, dispensedPrescriptions, getCategories, getLowStockMedicines, getExpiredMedicines, getNearExpiryMedicines, refreshInterval]);
 
-  // Filter data based on selected filters
-  const filteredMedicines = useMemo(() => {
-    return medicines.filter(med => {
-      if (selectedCategory === 'all') return true;
-      return med.category?.toLowerCase() === selectedCategory.toLowerCase();
-    });
-  }, [medicines, selectedCategory]);
-
-  const categories = useMemo(() => {
-    return [
-      { value: 'all', label: 'All Categories' },
-      ...getCategories().map(cat => ({ value: cat.toLowerCase(), label: cat }))
-    ];
-  }, [getCategories, refreshInterval]);
-
-  const handleExportReport = (reportType) => {
-    // Implement CSV export functionality
-    console.log(`Exporting ${reportType} report...`);
-    showSuccess(`${reportType} report exported successfully!`, 'Export Complete');
-  };
+  // Note: category filters, duration selection and export buttons removed per request.
 
   if (!medicineContext || !prescriptionContext) {
     return (
@@ -240,33 +219,7 @@ const Reports = () => {
         </div>
         
         <div className="reports-controls">
-          <select 
-            value={selectedCategory} 
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="filter-select"
-          >
-            {categories.map(cat => (
-              <option key={cat.value} value={cat.value}>{cat.label}</option>
-            ))}
-          </select>
-          
-          <select 
-            value={selectedTimeRange} 
-            onChange={(e) => setSelectedTimeRange(e.target.value)}
-            className="filter-select"
-          >
-            <option value="7d">Last 7 Days</option>
-            <option value="30d">Last 30 Days</option>
-            <option value="90d">Last 90 Days</option>
-            <option value="1y">Last Year</option>
-          </select>
-          
-          <button 
-            onClick={() => handleExportReport('comprehensive')}
-            className="export-btn"
-          >
-            📋 Export Report
-          </button>
+          {/* Category filter, time-range selector and export button removed */}
         </div>
       </div>
 
@@ -354,11 +307,6 @@ const Reports = () => {
             </h2>
             <div className="chart-controls">
               <span className="live-indicator">🔴 Live Updates</span>
-              <select className="chart-period-select">
-                <option value="daily">Daily View</option>
-                <option value="weekly">Weekly View</option>
-                <option value="monthly">Monthly View</option>
-              </select>
             </div>
           </div>
           <LineChartComponent
@@ -474,9 +422,6 @@ const Reports = () => {
         <div className="report-card">
           <div className="card-header">
             <h2>Inventory Value by Category</h2>
-            <button onClick={() => handleExportReport('inventory-value')} className="mini-export-btn">
-              📋
-            </button>
           </div>
           <div className="table-container">
             <table className="data-table">

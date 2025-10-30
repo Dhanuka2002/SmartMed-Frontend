@@ -2,16 +2,10 @@ import React, { useState, useEffect } from "react";
 import "./InventoryManagement.css";
 import AlertMessage from '../../Common/AlertMessage';
 import useAlert from '../../../hooks/useAlert';
-import { usePrescription } from "../../../contexts/PrescriptionContext";
 import { useMedicineInventory } from "../../../contexts/MedicineInventoryContext";
 
 function InventoryManagement() {
-  const { 
-    prescriptions, 
-    dispensedPrescriptions, 
-    dispensePrescription: contextDispensePrescription,
-    addPrescription 
-  } = usePrescription();
+  // Prescriptions tab removed; prescription context not needed here
 
   const {
     medicines,
@@ -56,33 +50,7 @@ function InventoryManagement() {
     }
   };
 
-  const dispensePrescription = (prescriptionId) => {
-    const prescription = prescriptions.find(p => p.id === prescriptionId);
-    if (!prescription) return;
-
-    let canDispense = true;
-    const insufficientMedicines = [];
-
-    prescription.medicines.forEach(prescMed => {
-      const medicine = medicines.find(m => m.id === prescMed.medicineId);
-      if (!medicine || medicine.quantity < prescMed.quantity) {
-        canDispense = false;
-        insufficientMedicines.push(prescMed.medicineName);
-      }
-    });
-
-    if (!canDispense) {
-      showError(`Cannot dispense prescription. Insufficient stock for: ${insufficientMedicines.join(", ")}`, 'Insufficient Stock');
-      return;
-    }
-
-    // Use the context function to update medicine quantities
-    dispenseMedicines(prescription.medicines);
-    contextDispensePrescription(prescriptionId);
-
-    // Show success message
-    showSuccess(`Prescription #${prescriptionId} has been successfully dispensed for ${prescription.patientName}!`, 'Prescription Dispensed');
-  };
+  // Prescription dispensing removed from this view. Use a dedicated prescription component if needed.
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -228,25 +196,12 @@ function InventoryManagement() {
         duration={alertState.duration}
         userName={alertState.userName}
       />
-      {/* Navigation Tabs */}
+      {/* Navigation Tabs (only Inventory) */}
       <div className="tab-navigation">
         <button 
-          className={activeTab === "inventory" ? "tab-button active" : "tab-button"}
-          onClick={() => setActiveTab("inventory")}
+          className="tab-button active"
         >
           Inventory Management
-        </button>
-        <button 
-          className={activeTab === "prescriptions" ? "tab-button active" : "tab-button"}
-          onClick={() => setActiveTab("prescriptions")}
-        >
-          Prescription Queue ({prescriptions.length})
-        </button>
-        <button 
-          className={activeTab === "dispensed" ? "tab-button active" : "tab-button"}
-          onClick={() => setActiveTab("dispensed")}
-        >
-          Dispensed History
         </button>
       </div>
 
@@ -339,117 +294,6 @@ function InventoryManagement() {
         </>
       )}
 
-      {/* Prescription Queue Tab Content */}
-      {activeTab === "prescriptions" && (
-        <div className="prescriptions-section">
-          <div className="section-header">
-            <h2>Prescription Queue</h2>
-            <p>Prescriptions waiting to be dispensed</p>
-          </div>
-          
-          {prescriptions.length === 0 ? (
-            <div className="empty-state">
-              <p>No pending prescriptions.</p>
-            </div>
-          ) : (
-            <div className="prescriptions-grid">
-              {prescriptions.map((prescription) => (
-                <div key={prescription.id} className="prescription-card">
-                  <div className="prescription-header">
-                    <h3>Prescription #{prescription.id}</h3>
-                    <span className="prescription-date">{prescription.prescriptionDate}</span>
-                  </div>
-                  
-                  <div className="patient-info">
-                    <p><strong>Patient:</strong> {prescription.patientName} (ID: {prescription.patientId})</p>
-                    <p><strong>Doctor:</strong> {prescription.doctorName}</p>
-                  </div>
-                  
-                  <div className="medicines-list">
-                    <h4>Prescribed Medicines:</h4>
-                    {prescription.medicines.map((med, index) => {
-                      const availableMedicine = medicines.find(m => m.id === med.medicineId);
-                      const isAvailable = availableMedicine && availableMedicine.quantity >= med.quantity;
-                      
-                      return (
-                        <div key={index} className={`medicine-item ${!isAvailable ? 'insufficient' : ''}`}>
-                          <div className="medicine-details">
-                            <span className="medicine-name">{med.medicineName} ({med.dosage})</span>
-                            <span className="medicine-quantity">Qty: {med.quantity}</span>
-                            {!isAvailable && (
-                              <span className="availability-warning">
-                                ⚠️ Available: {availableMedicine ? availableMedicine.quantity : 0}
-                              </span>
-                            )}
-                          </div>
-                          <p className="instructions">{med.instructions}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  
-                  <div className="prescription-actions">
-                    <button 
-                      className="dispense-btn"
-                      onClick={() => dispensePrescription(prescription.id)}
-                    >
-                      Dispense Prescription
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Dispensed History Tab Content */}
-      {activeTab === "dispensed" && (
-        <div className="dispensed-section">
-          <div className="section-header">
-            <h2>Dispensed Prescriptions History</h2>
-            <p>Previously dispensed prescriptions</p>
-          </div>
-          
-          {dispensedPrescriptions.length === 0 ? (
-            <div className="empty-state">
-              <p>No prescriptions have been dispensed yet.</p>
-            </div>
-          ) : (
-            <div className="dispensed-grid">
-              {dispensedPrescriptions.map((prescription) => (
-                <div key={prescription.id} className="dispensed-card">
-                  <div className="prescription-header">
-                    <h3>Prescription #{prescription.id}</h3>
-                    <div className="dates">
-                      <span className="prescription-date">Prescribed: {prescription.prescriptionDate}</span>
-                      <span className="dispensed-date">Dispensed: {prescription.dispensedDate} at {prescription.dispensedTime}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="patient-info">
-                    <p><strong>Patient:</strong> {prescription.patientName} (ID: {prescription.patientId})</p>
-                    <p><strong>Doctor:</strong> {prescription.doctorName}</p>
-                  </div>
-                  
-                  <div className="medicines-list">
-                    <h4>Dispensed Medicines:</h4>
-                    {prescription.medicines.map((med, index) => (
-                      <div key={index} className="medicine-item dispensed">
-                        <div className="medicine-details">
-                          <span className="medicine-name">{med.medicineName} ({med.dosage})</span>
-                          <span className="medicine-quantity">Qty: {med.quantity}</span>
-                        </div>
-                        <p className="instructions">{med.instructions}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Modal */}
       {showModal && (

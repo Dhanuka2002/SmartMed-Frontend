@@ -47,13 +47,13 @@ export const MedicineInventoryProvider = ({ children }) => {
       id: 3,
       name: "Aspirin",
       quantity: 200,
-      expiry: "2024-06-20",
+      expiry: "2026-06-20",
       category: "Analgesic",
       minStock: 25,
       dosage: "75mg",
       batchNumber: "ASP003",
       addedBy: "System",
-      addedDate: "2024-01-01"
+      addedDate: "2026-01-01"
     },
     {
       id: 4,
