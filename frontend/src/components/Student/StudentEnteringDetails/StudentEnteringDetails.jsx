@@ -1,3 +1,20 @@
+/**
+ * StudentEnteringDetails Component
+ * 
+ * A comprehensive medical examination form for students to enter their personal,
+ * medical history, family medical history, and vaccination details.
+ * 
+ * Features:
+ * - Multi-section form with validation
+ * - Profile image upload with preview
+ * - Real-time NIC, registration number, and email validation
+ * - Automatic QR code generation upon completion
+ * - localStorage integration for data persistence
+ * - Emergency contact information collection
+ * 
+ * @component
+ */
+
 import React, { useState, useRef } from "react";
 import "./StudentEnteringDetails.css";
 import Avatar from "../../common/Avatar/Avatar";
@@ -6,10 +23,25 @@ import useAlert from '../../../hooks/useAlert';
 import { autoGenerateQRIfReady } from '../../../services/medicalRecordService';
 
 function StudentEnteringDetails() {
-  // Get current user data and auto-populate
+  
+  // STATE MANAGEMENT & INITIALIZATION
+ 
+  /**
+   * Retrieve current logged-in user from localStorage
+   * Used to auto-populate form fields like name and email
+   */
   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+  
+  /**
+   * Alert hook for displaying success/error messages to the user
+   */
   const { alertState, showSuccess, showError, hideAlert } = useAlert();
   
+  /**
+   * Main form data state object containing all student information
+   * Organized into sections: Basic Info, Personal Details, Emergency Contact,
+   * Family Medical History, Medical History, Vaccinations, and Certification
+   */
   const [formData, setFormData] = useState({
     // Basic Information - auto-populate from registration
     firstName: currentUser.name ? currentUser.name.split(' ')[0] : "",
@@ -82,12 +114,36 @@ function StudentEnteringDetails() {
     signature: ""
   });
 
+  /**
+   * State for storing the preview URL of the uploaded profile image
+   */
   const [imagePreview, setImagePreview] = useState(null);
+  
+  /**
+   * Reference to the hidden file input element for profile image upload
+   */
   const fileInputRef = useRef(null);
+  
+  /**
+   * Object storing validation error messages for each form field
+   * Key: field name, Value: error message string
+   */
   const [validationErrors, setValidationErrors] = useState({});
+  
+  /**
+   * Flag to prevent duplicate form submissions
+   */
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Input restriction functions
+
+  // INPUT VALIDATION & RESTRICTION FUNCTIONS
+
+  /**
+   * Prevents numeric characters from being entered in name fields
+   * Ensures names contain only alphabetic characters and spaces
+   * 
+   * @param {KeyboardEvent} e - The keyboard event from input field
+   */
   const handleNameKeyPress = (e) => {
     // Prevent numbers from being entered
     if (/[0-9]/.test(e.key)) {
@@ -95,6 +151,12 @@ function StudentEnteringDetails() {
     }
   };
 
+  /**
+   * Restricts telephone input to valid phone number characters only
+   * Allows: digits (0-9), +, -, (, ), space, and navigation keys
+   * 
+   * @param {KeyboardEvent} e - The keyboard event from telephone input
+   */
   const handleTelephoneKeyPress = (e) => {
     // Allow only numbers, +, -, (, ), and space
     if (!/[0-9+\-() ]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
@@ -102,7 +164,23 @@ function StudentEnteringDetails() {
     }
   };
 
-  // NIC validation function
+  /**
+   * Validates Sri Lankan National Identity Card (NIC) number
+   * Supports both old format (9 digits + V/X) and new format (12 digits)
+   * 
+   * Old format validation:
+   * - 9 digits followed by V or X
+   * - First 2 digits: Year of birth
+   * - Next 3 digits: Day of year (1-366 for male, 501-866 for female)
+   * 
+   * New format validation:
+   * - 12 digits total
+   * - First 4 digits: Year of birth (1900-2050)
+   * - Next 3 digits: Day of year (1-366 for male, 501-866 for female)
+   * 
+   * @param {string} nic - The NIC number to validate
+   * @returns {Object} - {isValid: boolean, message: string}
+   */
   const validateNIC = (nic) => {
     if (!nic) return { isValid: false, message: "NIC is required" };
 
@@ -150,7 +228,19 @@ function StudentEnteringDetails() {
     }
   };
 
-  // Student Registration Number validation function
+  /**
+   * Validates university student registration number format
+   * 
+   * Format: YYDDNNNN
+   * - YY: 2-digit year (20-30 for 2020-2030)
+   * - DD: 2-letter department code (EE, ET, IT, MT, ME, TT, PT,CT, etc.)
+   * - NNNN: 4-digit student number (0001-9999)
+   * 
+   * Example valid formats: 22IT0521, 21ME0423, 23EE0789
+   * 
+   * @param {string} regNumber - The registration number to validate
+   * @returns {Object} - {isValid: boolean, message: string}
+   */
   const validateStudentRegistrationNumber = (regNumber) => {
     if (!regNumber) return { isValid: false, message: "Student registration number is required" };
 
@@ -199,7 +289,22 @@ function StudentEnteringDetails() {
     return { isValid: true, message: "" };
   };
 
-  // Email validation function
+  /**
+   * Validates email address format according to RFC standards
+   * 
+   * Validation checks:
+   * - Basic RFC email regex pattern
+   * - Length constraints (5-254 characters)
+   * - Single @ symbol
+   * - Valid local part (before @) - 1-64 characters
+   * - Valid domain part (after @) - 1-253 characters with at least one dot
+   * - No consecutive dots
+   * - No leading/trailing dots in local part
+   * - Valid TLD (top-level domain) length
+   * 
+   * @param {string} email - The email address to validate
+   * @returns {Object} - {isValid: boolean, message: string}
+   */
   const validateEmail = (email) => {
     if (!email) return { isValid: false, message: "Email address is required" };
 
@@ -269,7 +374,19 @@ function StudentEnteringDetails() {
     return { isValid: true, message: "" };
   };
 
-  // Validation function
+  /**
+   * Comprehensive form validation function
+   * Validates all required fields across all form sections:
+   * - Basic Information (name, NIC, registration number, email, image)
+   * - Personal Details (DOB, gender, address, contacts, etc.)
+   * - Emergency Contact (name, phone, address, relationship)
+   * - Medical History (all conditions must be answered)
+   * - Vaccinations (all vaccines must be indicated)
+   * - Certification (date and signature)
+   * 
+   * @returns {boolean} - True if form is valid, false otherwise
+   * Side effect: Updates validationErrors state with error messages
+   */
   const validateForm = () => {
     const errors = {};
 
@@ -357,18 +474,41 @@ function StudentEnteringDetails() {
     return Object.keys(errors).length === 0;
   };
 
-  // Helper function to get error class
+  /**
+   * Returns CSS error class if field has validation error
+   * Used to highlight invalid input fields in red
+   * 
+   * @param {string} fieldName - The name of the form field
+   * @returns {string} - 'error' if field has error, empty string otherwise
+   */
   const getErrorClass = (fieldName) => {
     return validationErrors[fieldName] ? 'error' : '';
   };
 
-  // Helper function to render error message
+  /**
+   * Renders error message element for a specific field if validation failed
+   * Displays the error message below the input field
+   * 
+   * @param {string} fieldName - The name of the form field
+   * @returns {JSX.Element|null} - Error message span or null if no error
+   */
   const renderError = (fieldName) => {
     return validationErrors[fieldName] ? (
       <span className="error-message">{validationErrors[fieldName]}</span>
     ) : null;
   };
 
+  // EVENT HANDLERS
+  
+  /**
+   * Handles changes to basic form input fields
+   * - Updates formData state
+   * - Auto-generates fullName when firstName or lastName changes
+   * - Performs real-time validation for NIC, registration number, and email
+   * - Formats and sanitizes input for specific fields
+   * 
+   * @param {Event} e - The input change event
+   */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     const updatedData = {
@@ -421,6 +561,14 @@ function StudentEnteringDetails() {
     setFormData(updatedData);
   };
 
+  /**
+   * Handles profile image file upload
+   * - Reads the selected image file
+   * - Converts to base64 data URL for preview and storage
+   * - Updates both imagePreview and formData.profileImage
+   * 
+   * @param {Event} e - The file input change event
+   */
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -437,6 +585,14 @@ function StudentEnteringDetails() {
     }
   };
 
+  /**
+   * Handles changes to family medical history fields
+   * Updates nested state for specific family member and field
+   * 
+   * @param {string} member - Family member key (father, mother, brothers, sisters, others)
+   * @param {string} field - Field name (age, aliveState, deadAge, causeOfDeath)
+   * @param {string} value - New value for the field
+   */
   const handleFamilyHistoryChange = (member, field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -450,6 +606,14 @@ function StudentEnteringDetails() {
     }));
   };
 
+  /**
+   * Handles changes to medical history condition fields
+   * Updates nested state for specific medical condition
+   * 
+   * @param {string} condition - Medical condition key (infectiousDiseases, respiratory, etc.)
+   * @param {string} field - Field name (status or details)
+   * @param {string} value - New value for the field
+   */
   const handleMedicalHistoryChange = (condition, field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -463,6 +627,15 @@ function StudentEnteringDetails() {
     }));
   };
 
+  /**
+   * Handles changes to vaccination record fields
+   * - Updates nested state for specific vaccine
+   * - Automatically clears date field when 'No' is selected for 'taken' status
+   * 
+   * @param {string} vaccine - Vaccine key (bcg, dpt, mramur, rubella, hepatitisB, chickenPox)
+   * @param {string} field - Field name (taken or date)
+   * @param {string} value - New value for the field
+   */
   const handleVaccinationChange = (vaccine, field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -478,6 +651,20 @@ function StudentEnteringDetails() {
     }));
   };
 
+  /**
+   * Handles form submission
+   * 
+   * Process flow:
+   * 1. Prevent default form submission
+   * 2. Validate all form fields
+   * 3. Submit data to backend API
+   * 4. Save data to localStorage with user-specific keys
+   * 5. Attempt to auto-generate QR code if both forms are complete
+   * 6. Display success/error messages
+   * 7. Trigger dashboard refresh event
+   * 
+   * @param {Event} e - The form submit event
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -562,8 +749,13 @@ function StudentEnteringDetails() {
     }
   };
 
+
+  // JSX RENDER
+
+  
   return (
     <div className="entering-details-container">
+      {/* Alert message component for displaying success/error notifications */}
       <AlertMessage
         type={alertState.type}
         title={alertState.title}
@@ -574,16 +766,20 @@ function StudentEnteringDetails() {
         duration={alertState.duration}
         userName={alertState.userName}
       />
+      
+      {/* Form header with title */}
       <div className="form-header">
         <div className="header-content">
           <h1>Student</h1>
           <h2>Medical Examination Report</h2>
-          
         </div>
       </div>
 
+      {/* Main medical examination form */}
       <form onSubmit={handleSubmit} className="medical-form">
-        {/* Basic Information Section */}
+        
+        {/* ===== SECTION 1: Basic Information ===== */}
+        {/* Collects name, NIC, registration number, division, email, and profile image */}
         <div className="form-section">
           <div className="form-row">
             <div className="form-group">
@@ -717,7 +913,8 @@ function StudentEnteringDetails() {
           </div>
         </div>
 
-        {/* Health History Form */}
+        {/* ===== Health History Form Introduction ===== */}
+        {/* Confidentiality notice and completion instructions */}
         <div className="form-section">
           <h3>Health History Form</h3>
           <p className="form-description">
@@ -731,7 +928,8 @@ function StudentEnteringDetails() {
           </p>
         </div>
 
-        {/* Part 1 - Personal Information */}
+        {/* ===== SECTION 2: Part 1 - Personal Information ===== */}
+        {/* To be completed by the student - personal and family details */}
         <div className="form-section">
           <h4>Part 1</h4>
           <p>To be completed by the student</p>
@@ -905,7 +1103,8 @@ function StudentEnteringDetails() {
           </div>
         </div>
 
-        {/* Emergency Contact */}
+        {/* ===== SECTION 3: Emergency Contact Information ===== */}
+        {/* Person to notify in case of emergency with contact details */}
         <div className="form-section">
           <h4>Person to notify in case of emergency</h4>
           
@@ -963,7 +1162,8 @@ function StudentEnteringDetails() {
           </div>
         </div>
 
-        {/* Family Medical History */}
+        {/* ===== SECTION 4: Family Medical History ===== */}
+        {/* Table format capturing health status of immediate family members */}
         <div className="form-section">
           <h4>Family Medical History</h4>
           <div className="family-history-table">
@@ -1021,7 +1221,8 @@ function StudentEnteringDetails() {
           </div>
         </div>
 
-        {/* Student Medical History */}
+        {/* ===== SECTION 5: Student Medical History ===== */}
+        {/* Comprehensive list of medical conditions with Yes/No responses and details */}
         <div className="form-section">
           <h4>Student Medical History</h4>
           <p>Have you suffered from any of the following?</p>
@@ -1080,7 +1281,8 @@ function StudentEnteringDetails() {
           </div>
         </div>
 
-        {/* Immunization Section */}
+        {/* ===== SECTION 6: Immunization Records ===== */}
+        {/* Table of vaccinations with taken status and dates */}
         <div className="form-section">
           <h4>13. Immunization</h4>
           <div className="vaccination-table">
@@ -1143,7 +1345,8 @@ function StudentEnteringDetails() {
           </div>
         </div>
 
-        {/* Certification */}
+        {/* ===== SECTION 7: Certification ===== */}
+        {/* Student's declaration and signature */}
         <div className="form-section">
           <div className="certification">
             <p>I certify that the information furnished by me are true and correct.</p>
@@ -1173,7 +1376,8 @@ function StudentEnteringDetails() {
           </div>
         </div>
 
-        {/* Submit Button */}
+        {/* ===== Form Submission Button ===== */}
+        {/* Submit button with disabled state during submission */}
         <div className="form-actions">
           <button type="submit" className="submit-btn" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting...' : 'Submit Medical Form'}

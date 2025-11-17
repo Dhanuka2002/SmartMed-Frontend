@@ -1,63 +1,130 @@
+// React core imports for component functionality
 import React, { useState, useEffect } from "react";
+// React Router for navigation between pages
 import { useNavigate } from "react-router-dom";
+// Component-specific styles
 import "./StudentDashboard.css";
 
-
+/**
+ * Student Dashboard Component
+ * 
+ * Main dashboard interface for students to:
+ * - View personal information and profile
+ * - Access quick actions (Medical Reports, Update Profile, QR Code)
+ * - Display user-specific data from localStorage and backend
+ * - Manage profile images from multiple sources
+ * 
+ * @component
+ * @returns {JSX.Element} Complete dashboard interface with header, actions, and personal info
+ */
 function Dashboard() {
+ 
+  // STATE MANAGEMENT
+
+  // Navigation hook for programmatic routing
   const navigate = useNavigate();
+  
+  // Stores detailed student information from localStorage
   const [studentData, setStudentData] = useState(null);
+  
+  // Stores current logged-in user's basic info (name, email)
   const [currentUser, setCurrentUser] = useState(null);
+  
+  // Stores form submission data including profile image
   const [studentFormData, setStudentFormData] = useState(null);
+  
+  // Stores profile image fetched from backend
   const [profileImage, setProfileImage] = useState(null);
+  
+  // Tracks loading state while fetching profile image
   const [loading, setLoading] = useState(false);
 
+
+  // LIFECYCLE HOOKS
+
+  /**
+   * Initial data load on component mount
+   * Fetches user data from localStorage and backend
+   */
   useEffect(() => {
     loadUserData();
   }, []);
 
-  // Listen for storage changes to refresh when user submits form
+  /**
+   * Storage change listener
+   * Monitors localStorage changes across tabs/windows and custom events
+   * Automatically refreshes data when student information is updated
+   */
   useEffect(() => {
+    /**
+     * Handles storage events from other tabs/windows
+     * @param {StorageEvent} e - Storage event object
+     */
     const handleStorageChange = (e) => {
+      // Check if the changed key is related to student data
       if (e.key && (e.key.includes('studentFormData_') || e.key.includes('studentData_'))) {
         // Refresh user data when form data is updated
         loadUserData();
       }
     };
 
+    // Listen for cross-tab storage changes
     window.addEventListener('storage', handleStorageChange);
     
-    // Also listen for custom events within the same window
+    /**
+     * Handles custom events within the same window
+     * Used for same-tab updates that don't trigger storage events
+     */
     const handleCustomRefresh = () => {
       loadUserData();
     };
     
+    // Listen for custom studentDataUpdated event
     window.addEventListener('studentDataUpdated', handleCustomRefresh);
     
+    // Cleanup function to remove event listeners
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('studentDataUpdated', handleCustomRefresh);
     };
   }, []);
 
+  // ========================================
+  // DATA LOADING FUNCTIONS
+  // ========================================
+  
+  /**
+   * Loads user data from localStorage and backend
+   * 
+   * Process:
+   * 1. Retrieves current user from localStorage
+   * 2. Clears cached data from other users
+   * 3. Loads user-specific student data
+   * 4. Migrates old general storage to user-specific storage
+   * 5. Fetches profile image from backend
+   */
   const loadUserData = () => {
     // Get current user data from localStorage
     const userData = localStorage.getItem('currentUser');
     if (userData) {
+      // Parse JSON string to object
       const user = JSON.parse(userData);
       setCurrentUser(user);
       
       // Clear any cached data that might belong to other users
       clearOtherUsersData(user.email);
       
+      // === LOAD STUDENT DATA ===
       // Get detailed student data if available for this specific user
       let detailedData = localStorage.getItem(`studentData_${user.email}`);
       if (detailedData) {
         setStudentData(JSON.parse(detailedData));
       } else {
-        // Check for old general studentFormData and migrate if it belongs to current user
+        // Migration: Check for old general studentFormData and migrate if it belongs to current user
         const oldStudentData = localStorage.getItem('studentFormData');
         if (oldStudentData) {
           const parsedStudentData = JSON.parse(oldStudentData);
+          // Verify email matches before migration
           if (parsedStudentData.email === user.email) {
             localStorage.setItem(`studentData_${user.email}`, oldStudentData);
             setStudentData(parsedStudentData);
@@ -65,108 +132,170 @@ function Dashboard() {
         }
       }
       
+      // === LOAD FORM DATA ===
       // Get student form data for profile image (only for current user)
       const formData = localStorage.getItem(`studentFormData_${user.email}`);
       if (formData) {
         setStudentFormData(JSON.parse(formData));
       } else {
-        // Check for old general studentFormData and migrate if it belongs to current user
+        // Migration: Check for old general studentFormData and migrate if it belongs to current user
         const oldFormData = localStorage.getItem('studentFormData');
         if (oldFormData) {
           const parsedFormData = JSON.parse(oldFormData);
+          // Verify email matches before migration
           if (parsedFormData.email === user.email) {
             localStorage.setItem(`studentFormData_${user.email}`, oldFormData);
             setStudentFormData(parsedFormData);
           }
-          localStorage.removeItem('studentFormData'); // Clean up old general storage
+          // Clean up old general storage after migration
+          localStorage.removeItem('studentFormData');
         }
       }
       
-      // Fetch profile image from backend
+      // Fetch profile image from backend API
       fetchProfileImageFromBackend(user);
     }
   };
 
+  /**
+   * Clears cached data that belongs to other users
+   * Prevents data mixing between different user sessions
+   * 
+   * @param {string} currentUserEmail - Email of the currently logged-in user
+   */
   const clearOtherUsersData = (currentUserEmail) => {
     // Clear any general cached form data that might not belong to current user
     const formData = localStorage.getItem('studentFormData');
     if (formData) {
       const parsedFormData = JSON.parse(formData);
+      // Check if cached data belongs to a different user
       if (parsedFormData.email !== currentUserEmail) {
+        // Remove invalid cached data
         localStorage.removeItem('studentFormData');
         setStudentFormData(null);
       }
     }
     
-    // Clear profile image if it was for a different user
+    // Clear profile image to prevent showing wrong user's image
+    // Will be reloaded from backend for current user
     setProfileImage(null);
   };
 
+  /**
+   * Fetches profile image from backend using multiple strategies
+   * 
+   * Strategy 1: Search by email (most reliable)
+   * Strategy 2: Search by name (fallback method)
+   * 
+   * @async
+   * @param {Object} user - User object containing email and name
+   * @param {string} user.email - User's email address
+   * @param {string} user.name - User's full name
+   */
   const fetchProfileImageFromBackend = async (user) => {
+    // Set loading state to show loading indicator
     setLoading(true);
     try {
-      // Clear any cached profile image first
+      // Clear any cached profile image first to prevent showing old data
       setProfileImage(null);
       
-      // Strategy 1: Try to find by login email
+      // === STRATEGY 1: Search by Email ===
+      // Most reliable method as email is unique
       let response = await fetch(`http://localhost:8081/api/student-details/profile-image/email/${encodeURIComponent(user.email)}`);
       if (response.ok) {
         const result = await response.json();
+        // Check if response contains valid profile image
         if (result.status === 'success' && result.profileImage) {
           setProfileImage(result.profileImage);
-          return;
+          return; // Exit early on success
         }
       }
       
-      // Strategy 2: Try to find by name matching
+      // === STRATEGY 2: Search by Name ===
+      // Fallback method if email search fails
       const nameResponse = await fetch(`http://localhost:8081/api/student-details/search/${encodeURIComponent(user.name)}`);
       if (nameResponse.ok) {
         const nameResult = await nameResponse.json();
         if (nameResult && nameResult.length > 0) {
-          // Find student with profile image
+          // Find first student record that has a profile image
           const studentWithImage = nameResult.find(student => student.profileImage);
           if (studentWithImage && studentWithImage.profileImage) {
             setProfileImage(studentWithImage.profileImage);
-            return;
+            return; // Exit after finding image
           }
         }
       }
       
     } catch (error) {
+      // Log error but don't crash the application
       console.error('Error fetching profile image:', error);
     } finally {
+      // Always set loading to false, regardless of success or failure
       setLoading(false);
     }
   };
 
-  // Navigation handlers
+  // ========================================
+  // NAVIGATION HANDLERS
+  // ========================================
+  
+  /**
+   * Navigates to the Medical Reports page
+   * Allows students to view their complete medical history
+   */
   const handleViewReports = () => {
     navigate('/student/reports');
   };
 
+  /**
+   * Navigates to the QR Code page
+   * Displays student's medical QR code for appointments
+   */
   const handleViewQRCode = () => {
     navigate('/student/qrcode');
   };
+  // ========================================
+  // RENDER
+  // ========================================
+  
   return (
     <div className="dashboard-container">
-      {/* Header Section */}
+      {/* ===================================
+          HEADER SECTION
+          - Displays dashboard title and subtitle
+          - Shows user greeting and status
+          - Displays profile avatar with multiple fallbacks
+          =================================== */}
       <header className="dashboard-header">
         <div className="header-content">
+          {/* Left side: Dashboard title and subtitle */}
           <div className="header-left">
             <h1 className="dashboard-title">Student Dashboard</h1>
             <p className="dashboard-subtitle">Welcome back to your health portal</p>
           </div>
+          
+          {/* Right side: User info and avatar */}
           <div className="header-right">
             <div className="user-info">
+              {/* Greeting with cascading fallback values */}
               <span className="greeting">
                 Hello, {currentUser?.name || studentData?.fullName || 'Student'}!
               </span>
+              {/* Active status indicator */}
               <div className="user-status">
                 <span className="status-dot"></span>
                 <span className="status-text">Active</span>
               </div>
             </div>
+            
+            {/* Avatar display with conditional rendering */}
             <div className="avatar-container">
+              {/* Avatar display logic with 4 states:
+                  1. No user logged in - show N/A
+                  2. Loading profile image from backend - show loading indicator
+                  3. Profile image exists - show image
+                  4. No image available - show initials placeholder
+              */}
               {!currentUser ? (
                 <div className="avatar-na">
                   <span className="na-text">NA</span>
@@ -184,6 +313,7 @@ function Dashboard() {
               ) : (
                 <div className="avatar-placeholder">
                   <span className="avatar-initials">
+                    {/* Extract first letter of each word, uppercase, max 2 letters */}
                     {(currentUser?.name || studentData?.fullName || 'Student').split(' ').map(name => name[0]).join('').toUpperCase().slice(0, 2)}
                   </span>
                 </div>
@@ -193,11 +323,21 @@ function Dashboard() {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* ===================================
+          MAIN CONTENT SECTION
+          - Quick action cards (Reports, Profile, QR Code)
+          - Personal information card
+          =================================== */}
       <main className="dashboard-main">
-        {/* Quick Actions Section */}
+        
+        {/* ===================================
+            QUICK ACTIONS GRID
+            Three action cards for main features
+            =================================== */}
         <section className="quick-actions">
           <div className="quick-actions-grid">
+            
+            {/* Action Card 1: Medical Reports */}
             <div className="action-card">
               <div className="action-icon health">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -211,6 +351,7 @@ function Dashboard() {
             </div>
 
 
+            {/* Action Card 2: Update Profile */}
             <div className="action-card">
               <div className="action-icon profile">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -223,6 +364,7 @@ function Dashboard() {
               <a href="/student/entering-details" className="action-btn">Update</a>
             </div>
 
+            {/* Action Card 3: QR Code */}
             <div className="action-card">
               <div className="action-icon qr">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -242,7 +384,11 @@ function Dashboard() {
           </div>
         </section>
 
-        {/* Student Information Card - Full Width */}
+        {/* ===================================
+            PERSONAL INFORMATION CARD
+            Displays detailed student information
+            Three states: No user, Incomplete profile, Complete profile
+            =================================== */}
         <section className="info-card">
           <div className="card-header">
             <h2 className="card-title">Personal Information</h2>
@@ -254,6 +400,11 @@ function Dashboard() {
             </div>
           </div>
           
+          {/* Conditional rendering based on user authentication and data availability
+              State 1: No user logged in - Show authentication required notice
+              State 2: User logged in but no student data - Show complete profile notice
+              State 3: User logged in with complete data - Show personal information
+          */}
           {!currentUser ? (
             <div className="no-user-notice">
               <div className="notice-icon">
@@ -286,6 +437,7 @@ function Dashboard() {
           ) : (
             <div className="student-details">
               <div className="details-grid">
+                {/* Left column: Name, ID, Email, Academic Division */}
                 <div className="detail-group">
                   <div className="detail-row">
                     <span className="detail-label">Full Name</span>
@@ -316,6 +468,7 @@ function Dashboard() {
                   </div>
                 </div>
                 
+                {/* Right column: Age, Gender, Contact, Emergency Contact */}
                 <div className="detail-group">
                   <div className="detail-row">
                     <span className="detail-label">Age</span>
@@ -357,4 +510,5 @@ function Dashboard() {
   );
 }
 
+// Export Dashboard component as default export for use in routing
 export default Dashboard;

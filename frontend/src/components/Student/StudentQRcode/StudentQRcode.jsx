@@ -1,30 +1,104 @@
+/**
+ * StudentQRCode Component
+ * 
+ * Displays and manages student medical QR codes for the SmartMed system.
+ * This component provides functionality to generate, view, download, and share
+ * medical QR codes that contain complete student medical records.
+ * 
+ * Features:
+ * - Auto-generation of QR codes when both forms are complete
+ * - Profile image display with fallback strategies
+ * - Form completion status tracking
+ * - QR code download functionality
+ * - Real-time QR generation monitoring
+ * - Event-driven QR code updates
+ * 
+ * @component
+ */
+
 import React, { useState, useEffect } from 'react';
-import QRCode from 'react-qr-code';
-import QRScanner from '../../QRScanner/QRScanner';
-import AlertMessage from '../../Common/AlertMessage';
-import useAlert from '../../../hooks/useAlert';
-import { processCompleteMedicalRecordByEmail, checkFormsCompletion } from '../../../services/medicalRecordService';
+import QRCode from 'react-qr-code'; // QR code rendering library
+import QRScanner from '../../QRScanner/QRScanner'; // QR code scanner component
+import AlertMessage from '../../Common/AlertMessage'; // Alert notification component
+import useAlert from '../../../hooks/useAlert'; // Custom hook for alert management
+import { processCompleteMedicalRecordByEmail, checkFormsCompletion } from '../../../services/medicalRecordService'; // Medical record service functions
 import './StudentQRcode.css';
 
 function StudentQRCode() {
+  
+  // STATE MANAGEMENT
+  
+  /** Flag indicating if QR code link was copied to clipboard */
   const [copied, setCopied] = useState(false);
+  
+  /** Student's full name retrieved from localStorage or backend */
   const [studentName, setStudentName] = useState("");
+  
+  /** Student's email address used as unique identifier */
   const [studentEmail, setStudentEmail] = useState("");
+  
+  /** Base64 encoded QR code image data */
   const [qrCodeData, setQrCodeData] = useState("");
+  
+  /** Unique medical record ID associated with the QR code */
   const [medicalRecordId, setMedicalRecordId] = useState("");
+  
+  /** Controls visibility of the QR scanner modal */
   const [showScanner, setShowScanner] = useState(false);
+  
+  /** Flag indicating QR code generation is in progress */
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  /** Error message to display if QR generation fails */
   const [error, setError] = useState("");
+  
+  /** Controls visibility of manual email input section */
   const [showEmailInput, setShowEmailInput] = useState(false);
+  
+  /** User-entered email for manual QR generation */
   const [inputEmail, setInputEmail] = useState("");
+  
+  /** 
+   * Form completion status object
+   * @property {boolean} hasStudentData - Student details form completed
+   * @property {boolean} hasHospitalData - Hospital examination form completed
+   * @property {boolean} bothComplete - Both forms completed (enables QR generation)
+   */
   const [formsStatus, setFormsStatus] = useState({ hasStudentData: false, hasHospitalData: false, bothComplete: false });
+  
+  /** Student's allergies information from hospital examination form */
   const [allergiesData, setAllergiesData] = useState(null);
+  
+  /** Loading state for allergies data fetch */
   const [loadingAllergies, setLoadingAllergies] = useState(false);
+  
+  /** Base64 encoded profile image from backend */
   const [profileImage, setProfileImage] = useState(null);
+  
+  /** Loading state for profile image fetch */
   const [loadingProfileImage, setLoadingProfileImage] = useState(false);
+  
+  /** Alert hook for displaying success/info messages */
   const { alertState, showSuccess, showInfo, hideAlert } = useAlert();
 
+
+  // INITIALIZATION & DATA LOADING
+
+  /**
+   * Main initialization effect
+   * Executes on component mount to:
+   * 1. Load current user data from localStorage
+   * 2. Check for existing QR code
+   * 3. Verify form completion status
+   * 4. Auto-generate QR if forms complete but QR missing
+   * 5. Set up event listener for QR generation events
+   * 6. Fetch profile image from backend
+   */
   useEffect(() => {
+    /**
+     * Async function to load user data and QR code information
+     * Handles both new user-specific storage and legacy fallback
+     */
     const loadUserDataAndQR = async () => {
       // Load current user data
       const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
@@ -83,9 +157,16 @@ function StudentQRCode() {
       }
     };
 
+    // Execute initial data load
     loadUserDataAndQR();
 
-    // Listen for QR code generation events
+    /**
+     * Event handler for 'qrCodeGenerated' custom events
+     * Listens for QR code generation completion from other components
+     * Updates local state when QR is generated for current user
+     * 
+     * @param {CustomEvent} event - Custom event with detail: {email, recordId}
+     */
     const handleQRGenerated = (event) => {
       const { email, recordId } = event.detail;
       const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
@@ -104,14 +185,35 @@ function StudentQRCode() {
       }
     };
 
+    // Register event listener for QR generation notifications
     window.addEventListener('qrCodeGenerated', handleQRGenerated);
     
+    /**
+     * Cleanup function to remove event listener
+     * Prevents memory leaks when component unmounts
+     */
     return () => {
       window.removeEventListener('qrCodeGenerated', handleQRGenerated);
     };
-  }, []);
+  }, []); // Empty dependency array - runs once on mount
 
-  // Fetch profile image from backend
+  // ============================================================================
+  // DATA FETCHING FUNCTIONS
+  // ============================================================================
+  
+  /**
+   * Fetches student profile image from backend using two-strategy approach
+   * 
+   * Strategy 1: Search by login email (primary method)
+   * Strategy 2: Search by name matching (fallback method)
+   * 
+   * This dual approach ensures profile images can be found even if
+   * email addresses differ between registration and form submission.
+   * 
+   * @param {Object} user - User object containing email and name
+   * @param {string} user.email - User's email address
+   * @param {string} user.name - User's full name
+   */
   const fetchProfileImageFromBackend = async (user) => {
     setLoadingProfileImage(true);
     try {
@@ -149,7 +251,13 @@ function StudentQRCode() {
     }
   };
 
-  // Fetch allergies data from hospital form data
+  /**
+   * Fetches student allergies information from hospital examination form data
+   * Attempts to retrieve from user-specific localStorage first,
+   * then falls back to general hospital form data
+   * 
+   * @param {string} email - Student's email address to match with form data
+   */
   const fetchAllergiesData = async (email) => {
     setLoadingAllergies(true);
     try {
@@ -185,14 +293,33 @@ function StudentQRCode() {
     }
   };
 
-  // Load allergies data when email changes
+  /**
+   * Effect to load allergies data whenever student email changes
+   * Only fetches if valid email exists
+   */
   useEffect(() => {
     if (studentEmail && studentEmail !== 'No Email') {
       fetchAllergiesData(studentEmail);
     }
-  }, [studentEmail]);
+  }, [studentEmail]); // Re-run when studentEmail changes
 
-  // Generate QR code from medical data using email
+
+  // QR CODE GENERATION & MANAGEMENT
+
+  
+  /**
+   * Generates medical QR code from complete student medical records
+   * 
+   * Process:
+   * 1. Validates email address availability
+   * 2. Calls backend service to merge student and hospital data
+   * 3. Generates QR code containing medical record ID
+   * 4. Updates state with generated QR code and record information
+   * 5. Displays success message or error
+   * 
+   * @async
+   * @throws {Error} If email is missing or QR generation fails
+   */
   const generateMedicalQR = async () => {
     setIsGenerating(true);
     setError("");
@@ -222,6 +349,11 @@ function StudentQRCode() {
     }
   };
   
+  /**
+   * Constructs JSON string value for QR code encoding
+   * Contains medical record ID, student name, timestamp, and data URL
+   * This value is what gets encoded in the visual QR code
+   */
   const qrValue = medicalRecordId ? JSON.stringify({
     id: medicalRecordId,
     name: studentName,
@@ -229,6 +361,15 @@ function StudentQRCode() {
     dataUrl: `${window.location.origin}/api/medical-records/${medicalRecordId}`
   }) : "";
 
+ 
+  // USER INTERACTION HANDLERS
+
+  /**
+   * Copies QR code data to clipboard
+   * Provides visual feedback by temporarily setting copied state to true
+   * 
+   * @async
+   */
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(qrValue);
@@ -239,6 +380,11 @@ function StudentQRCode() {
     }
   };
 
+  /**
+   * Downloads QR code as PNG image file
+   * Creates temporary anchor element to trigger download
+   * Filename format: {studentName}-medical-qr-code.png
+   */
   const handleDownload = () => {
     if (!qrCodeData) return;
     
@@ -248,6 +394,12 @@ function StudentQRCode() {
     link.click();
   };
 
+  /**
+   * Shares QR code using native Web Share API (if supported)
+   * Fallback: Does nothing if Web Share API not available
+   * 
+   * @async
+   */
   const handleShare = async () => {
     if (navigator.share && qrCodeData) {
       try {
@@ -262,6 +414,14 @@ function StudentQRCode() {
     }
   };
   
+  /**
+   * Callback handler for QR scanner results
+   * Processes scanned medical data and displays info message
+   * 
+   * @param {Object} medicalData - Decoded medical record data from QR scan
+   * @param {Object} medicalData.student - Student information object
+   * @param {string} medicalData.student.fullName - Student's full name
+   */
   const handleScanResult = (medicalData) => {
     console.log('Scanned medical data:', medicalData);
     // You can handle the scanned data here (e.g., display in a modal)
@@ -269,8 +429,11 @@ function StudentQRCode() {
     setShowScanner(false);
   };
 
+  // JSX RENDER
+ 
   return (
     <div className="qr-main-container">
+      {/* Alert notification component for displaying messages */}
       <AlertMessage
         type={alertState.type}
         title={alertState.title}
@@ -281,9 +444,13 @@ function StudentQRCode() {
         duration={alertState.duration}
         userName={alertState.userName}
       />
+      
       <div className="qr-card-wrapper">
-        {/* Header */}
+        
+        {/* ===== HEADER SECTION ===== */}
+        {/* Displays profile avatar, greeting, and student email */}
         <div className="qr-header">
+          {/* Profile avatar with loading state and fallback icon */}
           <div className="qr-avatar">
             {loadingProfileImage ? (
               <div className="avatar-loading">
@@ -305,11 +472,15 @@ function StudentQRCode() {
           <p className="qr-student-id">Email: {studentEmail}</p>
         </div>
 
-        {/* QR Code Section */}
+        {/* ===== QR CODE CONTENT SECTION ===== */}
+        {/* Two-column layout: Details (left) and QR Display (right) */}
         <div className="qr-content">
           <div className="qr-layout-container">
-            {/* Left Side - Details */}
+            
+            {/* ===== LEFT COLUMN: Details & Actions ===== */}
+            {/* Contains section header, description, form status, and actions */}
             <div className="qr-details-section">
+              {/* Section header with QR icon and dynamic title */}
               <div className="qr-section-header">
                 <svg className="qr-icon" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3,11H5V13H3V11M11,5H13V9H11V5M9,11H13V15H9V11M15,11H17V13H15V11M19,5H21V9H19V5M5,5H9V9H5V5M3,19H5V21H3V19M5,19H9V21H5V19M19,19H21V21H19V19M15,19H17V21H15V19M17,15H19V17H17V15M15,13H17V15H15V13M15,5H17V7H15V5M13,19H15V21H13V19M15,7H17V9H15V7M7,19H9V21H7V19M13,7H15V9H13V7M13,3H15V5H13V3M3,9H5V11H3V9M7,3H9V5H7V3M21,11H23V13H21V11M21,9H23V11H21V9M21,13H23V15H21V13M3,7H5V9H3V7M21,3H23V5H21V3M21,5H23V7H21V5M19,3H21V5H19V3M17,3H19V5H17V3M3,3H5V5H3V3M3,5H5V7H3V5M5,3H7V5H5V3M9,3H11V5H9V3M11,3H13V5H11V3"/>
@@ -325,7 +496,8 @@ function StudentQRCode() {
                   : "Complete your medical forms to generate your QR code."}
               </p>
 
-              {/* Show form completion status */}
+              {/* ===== Form Completion Status Widget ===== */}
+              {/* Shows which forms are complete and provides guidance */}
               {studentEmail && (
                 <div className={`form-status ${formsStatus.bothComplete ? 'complete' : 'incomplete'}`}>
                   <h4>
@@ -383,7 +555,8 @@ function StudentQRCode() {
                 </div>
               )}
 
-              {/* Email Input Section */}
+              {/* ===== Email Input Section ===== */}
+              {/* Manual email entry for QR generation when not auto-generated */}
               {!qrCodeData && (
                 <div className="email-input-section">
                   <label className="email-input-label">
@@ -410,12 +583,14 @@ function StudentQRCode() {
                 </div>
               )}
 
+              {/* Error message display */}
               {error && (
                 <div className="error-message">
                   {error}
                 </div>
               )}
 
+              {/* Action buttons (visible only when QR code exists) */}
               {qrCodeData && (
                 <div className="qr-actions">
                   <div className="qr-btn-group">
@@ -427,11 +602,14 @@ function StudentQRCode() {
               )}
             </div>
 
-            {/* Right Side - QR Code Display */}
+            {/* ===== RIGHT COLUMN: QR Code Display ===== */}
+            {/* Shows generated QR code or placeholder with generation button */}
             <div className="qr-display-section">
               <div className="qr-display-area">
                 <div className="qr-image-container">
+                  {/* Conditional rendering: Show QR code if generated, else show placeholder */}
                   {qrCodeData ? (
+                    /* QR Code exists - render visual QR with record ID */
                     <div className="qr-code-wrapper">
                       <QRCode
                         value={qrValue}
@@ -445,6 +623,7 @@ function StudentQRCode() {
                       </div>
                     </div>
                   ) : (
+                    /* QR Code not generated - show placeholder with generation button */
                     <div className="qr-missing-container">
                       <div className="qr-missing-icon">
                         <svg width="64" height="64" viewBox="0 0 24 24" fill="#ccc">
@@ -480,6 +659,8 @@ function StudentQRCode() {
           </div>
         </div>
 
+        {/* ===== FOOTER SECTION ===== */}
+        {/* Security reminder message */}
         <div className="qr-footer">
           <p className="qr-footer-text">
             Keep this QR code safe — it contains your complete medical record!
@@ -487,6 +668,8 @@ function StudentQRCode() {
         </div>
       </div>
       
+      {/* ===== QR SCANNER MODAL ===== */}
+      {/* Conditionally rendered modal for scanning other QR codes */}
       {showScanner && (
         <QRScanner
           onScanResult={handleScanResult}

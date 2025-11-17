@@ -1,15 +1,71 @@
+/**
+ * StudentReports Component
+ * 
+ * Comprehensive medical report dashboard for students displaying:
+ * - Personal information and profile
+ * - Health statistics (allergies, age, gender, vaccinations)
+ * - Vaccination timeline and history
+ * - Medical conditions overview
+ * - Hospital staff examination results (Part 2)
+ * - Emergency contact information
+ * - Health metrics with visual progress indicators
+ * 
+ * Data Sources:
+ * - Student Details Form (Part 1): Personal info, medical history, vaccinations
+ * - Hospital Examination Form (Part 2): Clinical measurements, assessments
+ * - localStorage: User-specific data storage
+ * 
+ * @component
+ */
+
 import React, { useState, useEffect } from "react";
 import "./StudentReports.css";
-import qrCode from "../../../assets/qr.png";
-import studentAvatar from "../../../assets/student.jpg";
-import Avatar from "../../common/Avatar/Avatar";
+import qrCode from "../../../assets/qr.png"; // Static QR code image
+import studentAvatar from "../../../assets/student.jpg"; // Default avatar fallback
+import Avatar from "../../common/Avatar/Avatar"; // Reusable avatar component
 
 function StudentReports() {
+  // ============================================================================
+  // STATE MANAGEMENT
+  // ============================================================================
+  
+  /** 
+   * Detailed student medical data from student details form (Part 1)
+   * Includes: personal info, medical history, vaccinations, emergency contacts
+   */
   const [studentData, setStudentData] = useState(null);
+  
+  /** 
+   * Current logged-in user information
+   * Contains: name, email, role from localStorage
+   */
   const [currentUser, setCurrentUser] = useState(null);
+  
+  /** 
+   * Student form data specifically for profile image
+   * May differ from studentData due to storage migration
+   */
   const [studentFormData, setStudentFormData] = useState(null);
+  
+  /** 
+   * Hospital examination data from medical staff (Part 2)
+   * Includes: physical measurements, clinical tests, system examinations
+   */
   const [hospitalData, setHospitalData] = useState(null);
 
+  // ============================================================================
+  // DATA LOADING & INITIALIZATION
+  // ============================================================================
+  
+  /**
+   * Effect hook to load all student data from localStorage on component mount
+   * 
+   * Loading sequence:
+   * 1. Current user authentication data
+   * 2. User-specific student details (Part 1)
+   * 3. General student form data (for profile image fallback)
+   * 4. User-specific hospital examination data (Part 2)
+   */
   useEffect(() => {
     // Get current user data from localStorage
     const userData = localStorage.getItem('currentUser');
@@ -41,7 +97,26 @@ function StudentReports() {
     }
   }, []);
 
-  // Extract allergies from medical history and hospital staff form
+  // ============================================================================
+  // DATA EXTRACTION & PROCESSING FUNCTIONS
+  // ============================================================================
+  
+  /**
+   * Extracts and merges allergy information from multiple sources
+   * 
+   * Data sources:
+   * 1. Student medical history (Part 1) - allergicHistory.details (comma-separated)
+   * 2. Hospital staff form (Part 2) - allergies object + allergyDetails text
+   * 
+   * Handles:
+   * - String to array conversion
+   * - JSON parsing for hospital allergies object
+   * - Category extraction (boolean flags)
+   * - Detail text parsing
+   * - Duplicate removal using Set
+   * 
+   * @returns {string[]} Array of unique allergy names
+   */
   const getAllergies = () => {
     try {
       const allergies = [];
@@ -94,7 +169,21 @@ function StudentReports() {
     }
   };
 
-  // Extract vaccination data
+  /**
+   * Extracts and formats vaccination data from student records
+   * 
+   * Handles two data formats:
+   * 1. String format: Direct date string
+   * 2. Object format: {taken: boolean, date: string}
+   * 
+   * Process:
+   * - Iterates through vaccinations object
+   * - Normalizes date formats
+   * - Determines status (Complete/Pending)
+   * - Sorts by date (newest first)
+   * 
+   * @returns {Array<{name: string, date: string, status: string}>} Sorted vaccination records
+   */
   const getVaccinations = () => {
     try {
       if (!studentData?.vaccinations) return [];
@@ -142,7 +231,17 @@ function StudentReports() {
     }
   };
 
-  // Calculate age from date of birth
+  /**
+   * Calculates current age from date of birth
+   * 
+   * Logic:
+   * - Calculates year difference
+   * - Adjusts for birthday not yet occurred this year
+   * - Handles month and day comparison for accuracy
+   * 
+   * @param {string} dob - Date of birth in ISO format (YYYY-MM-DD)
+   * @returns {number|null} Age in years, or null if dob invalid
+   */
   const calculateAge = (dob) => {
     if (!dob) return null;
     const birth = new Date(dob);
@@ -155,7 +254,18 @@ function StudentReports() {
     return age;
   };
 
-  // Get medical conditions count
+  /**
+   * Extracts medical conditions from student medical history
+   * 
+   * Process:
+   * - Iterates through medicalHistory object
+   * - Filters conditions where status === "yes"
+   * - Formats condition names (camelCase to Title Case)
+   * - Collects details for each condition
+   * 
+   * @returns {{total: number, conditions: Array<{name: string, details: string}>}} 
+   *          Total count and array of active medical conditions
+   */
   const getMedicalConditionsData = () => {
     if (!studentData?.medicalHistory) return { total: 0, conditions: [] };
     
@@ -175,16 +285,33 @@ function StudentReports() {
     return { total: totalConditions, conditions };
   };
 
-  // Recalculate allergies whenever studentData or hospitalData changes
+  // ============================================================================
+  // COMPUTED VALUES (MEMOIZED)
+  // ============================================================================
+  
+  /**
+   * Memoized allergies array
+   * Recalculates only when studentData or hospitalData changes
+   * Improves performance by avoiding unnecessary getAllergies() calls
+   */
   const allergies = React.useMemo(() => {
     return getAllergies() || [];
   }, [studentData, hospitalData]);
   
+  /** Vaccination records array - computed on every render */
   const vaccinations = getVaccinations() || [];
+  
+  /** Medical conditions summary - computed on every render */
   const medicalConditions = getMedicalConditionsData() || { total: 0, conditions: [] };
 
+  // ============================================================================
+  // JSX RENDER
+  // ============================================================================
+  
   return (
     <div className="student-reports">
+      {/* ===== AUTHENTICATION CHECK ===== */}
+      {/* Show login prompt if user not authenticated */}
       {!currentUser ? (
         <div className="no-user-notice">
           <h2>Please log in to view your medical reports</h2>
@@ -192,9 +319,12 @@ function StudentReports() {
         </div>
       ) : (
         <>
-          {/* Main Profile Card */}
+          {/* ===== MAIN PROFILE CARD ===== */}
+          {/* Displays student profile, stats, health overview, and vaccination timeline */}
           <div className="profile-card">
-            {/* Profile Header */}
+            
+            {/* ===== PROFILE HEADER ===== */}
+            {/* Avatar, name, student ID, division, and QR code section */}
             <div className="profile-header">
               <div className="profile-info">
                 <div className="profile-avatar-wrapper">
@@ -229,7 +359,8 @@ function StudentReports() {
               </div>
             </div>
 
-        {/* Stats Grid */}
+        {/* ===== STATS GRID ===== */}
+        {/* Four-card grid showing key health metrics: allergies, age, gender, vaccinations */}
         <div className="stats-grid">
           <div className="stat-card allergies-count">
             <div className="stat-icon">⚠️</div>
@@ -269,7 +400,8 @@ function StudentReports() {
           </div>
         </div>
 
-        {/* Health Overview Charts */}
+        {/* ===== HEALTH OVERVIEW CHARTS ===== */}
+        {/* Circular progress indicators for vaccination coverage, allergies count, medical conditions */}
         <div className="health-charts">
           <div className="chart-card">
             <h3 className="chart-title">Health Overview</h3>
@@ -310,7 +442,8 @@ function StudentReports() {
           </div>
         </div>
 
-        {/* Vaccination Timeline */}
+        {/* ===== VACCINATION TIMELINE ===== */}
+        {/* Timeline visualization of all vaccinations with dates (conditionally rendered) */}
         {vaccinations.length > 0 && (
           <div className="timeline-chart">
             <h3 className="chart-title">Vaccination Timeline</h3>
@@ -334,7 +467,8 @@ function StudentReports() {
         )}
         </div>
 
-      {/* Hospital Staff Examination Results */}
+      {/* ===== HOSPITAL STAFF EXAMINATION RESULTS (PART 2) ===== */}
+      {/* Comprehensive medical examination data from hospital staff - conditionally rendered */}
       {hospitalData && (
         <div className="hospital-examination-section">
           <div className="section-header">
@@ -342,7 +476,8 @@ function StudentReports() {
             <span className="section-subtitle">Part 2 - Medical Officer Assessment</span>
           </div>
 
-          {/* Physical Measurements */}
+          {/* ===== Physical Measurements Subsection ===== */}
+          {/* Grid of 4 cards: Weight, Height, Blood Pressure, Pulse */}
           <div className="measurements-overview">
             <h3 className="subsection-title">Physical Measurements</h3>
             <div className="measurements-grid">
@@ -369,7 +504,8 @@ function StudentReports() {
             </div>
           </div>
 
-          {/* Clinical Test Results */}
+          {/* ===== Clinical Test Results Subsection ===== */}
+          {/* Blood Group, Hemoglobin, Vaccination Status */}
           <div className="clinical-results">
             <h3 className="subsection-title">Clinical Test Results</h3>
             <div className="clinical-grid">
@@ -397,7 +533,8 @@ function StudentReports() {
             </div>
           </div>
 
-          {/* Medical Assessment */}
+          {/* ===== Medical Assessment Subsection ===== */}
+          {/* Fitness for Studies evaluation and Specialist Referral status */}
           <div className="medical-assessment">
             <h3 className="subsection-title">Medical Assessment</h3>
             <div className="assessment-grid">
@@ -432,11 +569,13 @@ function StudentReports() {
             </div>
           </div>
 
-          {/* System Examinations */}
+          {/* ===== System Examinations Subsection ===== */}
+          {/* Detailed findings for: Dental, Hearing & Speech, Vision, Cardiovascular */}
           <div className="system-examinations">
             <h3 className="subsection-title">System Examinations</h3>
             <div className="systems-grid">
-              {/* Dental Health */}
+              
+              {/* Dental Health Card: Decayed, Missing, Gingivitis status */}
               <div className="system-card">
                 <div className="system-header">
                   <span className="system-icon">🦷</span>
@@ -464,7 +603,7 @@ function StudentReports() {
                 </div>
               </div>
 
-              {/* Hearing & Speech */}
+              {/* Hearing & Speech Card: Right ear, Left ear, Speech assessment */}
               <div className="system-card">
                 <div className="system-header">
                   <span className="system-icon">👂</span>
@@ -486,7 +625,7 @@ function StudentReports() {
                 </div>
               </div>
 
-              {/* Vision */}
+              {/* Vision Card: Right/Left eye vision without glasses, Color vision */}
               <div className="system-card">
                 <div className="system-header">
                   <span className="system-icon">👁️</span>
@@ -510,7 +649,7 @@ function StudentReports() {
                 </div>
               </div>
 
-              {/* Cardiovascular */}
+              {/* Cardiovascular Card: Heart disease history, Heart sound, Murmurs */}
               <div className="system-card">
                 <div className="system-header">
                   <span className="system-icon">❤️</span>
@@ -536,9 +675,12 @@ function StudentReports() {
         </div>
       )}
 
-      {/* Medical Information */}
+      {/* ===== MEDICAL INFORMATION GRID ===== */}
+      {/* Two-card layout: Allergies Card (left) and Vaccination Card (right) */}
       <div className="medical-grid">
-        {/* Allergies Card */}
+        
+        {/* ===== Allergies Card ===== */}
+        {/* Lists all known allergies from both student and hospital forms */}
         <div className="medical-card allergies-card">
           <div className="card-header">
             <div className="card-icon allergies-icon">⚠️</div>
@@ -570,7 +712,8 @@ function StudentReports() {
           </div>
         </div>
 
-        {/* Vaccination Card */}
+        {/* ===== Vaccination Card ===== */}
+        {/* Table format showing vaccination name, date, and status */}
         <div className="medical-card vaccination-card">
           <div className="card-header">
             <div className="card-icon vaccination-icon">💉</div>
@@ -597,7 +740,8 @@ function StudentReports() {
         </div>
       </div>
 
-      {/* Emergency Contact */}
+      {/* ===== EMERGENCY CONTACT CARD ===== */}
+      {/* Displays emergency contact person details from student form */}
       <div className="emergency-card">
         <div className="card-header">
           <div className="card-icon emergency-icon">🚨</div>
@@ -646,6 +790,8 @@ function StudentReports() {
       </div>
 
 
+      {/* ===== INCOMPLETE PROFILE NOTICE ===== */}
+      {/* Prompt to complete medical profile if studentData is missing */}
       {!studentData && (
         <div className="incomplete-profile-notice">
           <h3>Complete Your Medical Profile</h3>
